@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+<style> 
+body {
+  background-color: #FFCA02;
+}
+img {
+  width: 70%;
+  margin-left:auto;
+  margin-right:auto;
+  display:block;
+}
+.membership {
+  height: 500px;
+  color: #fff;
+  background-color: #fff;
+  border-radius: 10px;
+  margin:60px 0;
+}
+.membership2 {
+  margin: 15px;
+  height: 200px;
+  border-radius: 10px;
+}
+.member_grade_img {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-ms-flex-direction: column;
+	flex-direction: column;
+	-webkit-box-pack: center;
+	-ms-flex-pack: center;
+	justify-content: center;
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+	align-items: center;
+	background-color:#fff;
+	height:240px;
+}
+.member_grade_img img {
+	max-width:80%;
+}
+</style>
+</head>
+<body>
+<form id="membership_frm">
+  <input name="USER_ID" type="hidden" value="MOBILE">
+  <input id="CUST_ID" name="CUST_ID" type="hidden">
+</form>
+<div style="margin:0 8%;">
+  <div style="margin:40px 0; color:#fff;">
+    <i id="back" class="fas fa-chevron-left"></i>
+  </div>
+  <div class="nsB" style="height:45px; color:#fff; font-size:14px; line-height:25px;">
+    <span style="font-size:20px;">나의 멤버십</span><br>회원님의 등급상황을 확인하실 수 있습니다.
+  </div>
+
+  <div id="welcome" class="membership" style="display:none;">
+    <div style="height:30px;"></div>
+    <div class="member_grade_img">
+      <img src="/images/icon/Welcome.png">
+    </div>
+    <div class="membership2" style="background-color:#FFCA02;">
+      <div style="margin:0 3%; line-height:160%; padding-top: 15px;font-size:14px;">
+        <span style="font-size:20px;">Welcome</span><br>
+        플레이 멤버스에 오신 것을 환영합니다!<br>
+        혜택안내<br>
+        - 사용금액의 3%적립 (다회권은 적립이 제외됩니다.)<br>
+        - 가입기념 3000원 할인쿠폰 증정<br>
+        - 1회 이용시 등급상향<br>
+      </div>
+    </div>
+  </div>
+  <div id="friend" class="membership" style="display:none;">
+      <div style="height:30px;"></div>
+      <div class="member_grade_img">
+        <img src="/images/icon/Friend.png">
+      </div>
+      <div class="membership2" style="background-color:#0388cf;">
+        <div style="margin:0 3%; line-height:160%; padding-top: 15px;font-size:14px;">
+          <span style="font-size:20px;">Friend</span><br>
+          플레이 멤버스의 친구가 되셨습니다!<br>
+          혜택안내<br>
+          - 사용금액의 3%적립 (다회권은 적립이 제외됩니다.)<br>
+          - 생일시 50% 할인쿠폰 증정<br>
+          - 3회 이용시 등급상향<br>
+        </div>
+      </div>
+    </div>
+    <div id="family" class="membership" style="display:none;">
+        <div style="height:30px;"></div>
+        <div class="member_grade_img">
+          <img src="/images/icon/Famiy.png">
+        </div>
+        <div class="membership2" style="background-color:#f05a20;">
+          <div style="margin:0 3%; line-height:160%; padding-top: 15px;font-size:14px;">
+            <span style="font-size:20px;">Family</span><br>
+            플레이 멤버스의 가족이 되셨습니다!<br>
+            혜택안내<br>
+            - 사용금액의 3%적립 (다회권은 적립이 제외됩니다.)<br>
+            - 생일시 1회 무료 이용쿠폰 증정<br>
+            - 3회 이용시 등급상향<br>
+          </div>
+        </div>
+      </div>
+      <div id="vip" class="membership" style="display:none;">
+          <div style="height:30px;"></div>
+          <div class="member_grade_img">
+            <img src="/images/icon/vip.png">
+          </div>
+          <div class="membership2" style="background-color:#000;">
+            <div style="margin:0 3%; line-height:160%; padding-top: 15px;font-size:14px;">
+              <span style="font-size:20px;">V.I.P</span><br>
+              플레이 멤버스의 V.I.P가 되셨습니다!<br>
+              혜택안내<br>
+              - 사용금액의 3%적립 (다회권은 적립이 제외됩니다.)<br>
+              - 생일시 1회 무료 이용쿠폰 증정<br>
+              - 6개월마다 30분 무료 혜택<br>
+            </div>
+          </div>
+        </div>
+
+
+<script src="https://code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+<script src="/js/sweetalert.min.js"></script>
+<script type="text/javascript">
+  function setCookie(cName, cValue, cDay){
+      var expire = new Date();
+      expire.setDate(expire.getDate() + cDay);
+      cookies = cName + '=' + escape(cValue) + '; path=/ '; // 한글 깨짐을 막기위해 escape(cValue)를 합니다.
+      if(typeof cDay != 'undefined') cookies += ';expires=' + expire.toGMTString() + ';';
+      document.cookie = cookies;
+  }
+  function getCookie(cName) {
+      cName = cName + '=';
+      var cookieData = document.cookie;
+      var start = cookieData.indexOf(cName);
+      var cValue = '';
+      if(start != -1){
+          start += cName.length;
+          var end = cookieData.indexOf(';', start);
+          if(end == -1)end = cookieData.length;
+          cValue = cookieData.substring(start, end);
+      }
+      return unescape(cValue);
+  }
+$(document).on('ready', function() {
+  $("#back").click(function() {
+    document.location.href="/mypage.html";
+  });
+  
+  var cookie = getCookie('user');
+  $("#CUST_ID").val(cookie);
+  var url = "/api/mbl_0500.jsp";
+  var datas = $("#membership_frm").serialize();
+  $.ajax({
+      url : url,
+      type : 'POST',
+      dataType : 'JSON',
+      data : datas,
+        success:function(response){
+          if(response.RET_CD == "0001") {
+            if(response.RESULT[0].LVL_CD == "101") {
+              $("#welcome").show();
+            }else if(response.RESULT[0].LVL_CD == "102") {
+              $("#friend").show();
+            }else if(response.RESULT[0].LVL_CD == "103") {
+              $("#family").show();
+            }else if(response.RESULT[0].LVL_CD == "104") {
+              $("#vip").show();
+            }
+          }else {
+            swal({
+              button: false,
+              title: "안내.",
+              // text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+              text: response.RET_MSG
+            });
+            document.location.href="/mypage.html";
+          }
+        }
+  })
+
+});
+</script>
+</body>
+</html>

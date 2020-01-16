@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='MAIN_Q'><![CDATA[
+    SELECT  1 , ${SCH_GUBUN}, ${SCH_DATE_GUBUN}, ${SCH_STOR_CD}, ${SCH_GFR_DATE}  , ${SCH_GTO_DATE}
+      FROM  DUAL
+     ORDER  BY 1
+     
+]]></query>
+</SQLResource>

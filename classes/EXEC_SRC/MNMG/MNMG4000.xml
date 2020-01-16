@@ -1,0 +1,338 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='W_MENU_Q'><![CDATA[
+    SELECT  NVL(L.LANG_MENU_NM, M.MENU_NM)      AS MENU_NM
+         ,  M.MENU_CD
+         ,  LEVEL                               AS MENU_LVL
+         ,  M.MENU_REF
+         ,  M.PROG_TP
+         ,  M.COMP_CD
+      FROM  (
+                SELECT  M.*
+                  FROM  W_MENU          M
+                     ,  W_MENU_USER     MU
+                 WHERE  M.COMP_CD       = MU.COMP_CD
+                   AND  M.MENU_CD       = MU.MENU_CD
+                   AND  M.COMP_CD       = ${SCH_COMP_CD}
+                   AND  M.USE_YN        = 'Y'
+                   AND  MU.USER_ID      = ${SCH_USER_ID}
+                   AND  MU.USE_YN       = 'Y'
+            )   M
+         ,  (
+                SELECT  PK_COL      AS LANG_MENU_CD
+                     ,  LANG_NM     AS LANG_MENU_NM
+                  FROM  LANG_TABLE 
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'W_MENU'
+                   AND  COL_NM      = 'MENU_NM_KOR'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  M.MENU_CD = L.LANG_MENU_CD(+)
+   CONNECT  BY   M.MENU_REF = PRIOR M.MENU_CD
+     START  WITH M.MENU_REF = '0'
+     ORDER  SIBLINGS BY M.MENU_IDX, M.MENU_CD
+]]></query>
+
+<query name='HQ_USER_Q'><![CDATA[
+    SELECT  A1.COMP_CD
+         ,  A1.USER_ID
+         ,  NVL(L.LANG_NM, A1.USER_NM)  AS USER_NM 
+         ,  A1.DUTY_CD 
+         ,  A2.CODE_NM      AS DUTY_NM
+         ,  A1.USE_YN
+      FROM  HQ_USER A1 
+         ,  (
+                SELECT  C.CODE_CD, NVL(L.CODE_NM, C.CODE_NM)    AS CODE_NM
+                  FROM  COMMON  C
+                     ,  LANG_COMMON L
+                 WHERE  C.COMP_CD = L.COMP_CD(+)
+                   AND  C.CODE_TP = L.CODE_TP(+)
+                   AND  C.CODE_CD = L.CODE_CD(+)
+                   AND  C.COMP_CD = ${SCH_COMP_CD}
+                   AND  C.CODE_TP ='00780'
+                   AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+                   AND  C.USE_YN  = 'Y'
+            )   A2
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'HQ_USER'
+                   AND  COL_NM      = 'USER_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)  = A1.COMP_CD
+       AND  L.PK_COL(+)   = LPAD(A1.USER_ID, 10, ' ')
+       AND  A1.COMP_CD    = ${SCH_COMP_CD}
+       AND  A1.USE_YN     = 'Y'
+       AND  A1.DUTY_CD    = A2.CODE_CD(+)
+       AND  (NVL(LENGTH(${SCH_USER_TXT} ),0)=0 OR (NVL(LENGTH(${SCH_USER_TXT} ),0)>0
+       AND  (A1.USER_NM LIKE ('%'|| ${SCH_USER_TXT} || '%') OR A1.USER_ID LIKE ('%'|| ${SCH_USER_TXT} || '%')) ))
+       @B_DUTY_CD@
+     ORDER  BY A1.USER_ID , A1.DUTY_CD  
+]]></query>
+
+<query name='W_MENU_USER_Q'><![CDATA[
+    SELECT  MENU_CD
+         ,  MENU_NM
+         ,  PROG_NM
+         ,  MENU_REF
+         ,  MENU_IDX
+         ,  MENU_DIV
+         ,  PROG_TP
+         ,  COMP_CD
+         ,  USE_YN  
+         ,  LEVEL       AS MENU_LVL
+      FROM  (
+                SELECT  1              AS MENU_CD
+                     ,  NVL(L.LANG_NM, A.USER_NM) || B.WORD_NM   AS MENU_NM
+                     ,  ''             AS PROG_NM
+                     ,  0              AS MENU_REF
+                     ,  0              AS MENU_IDX
+                     ,  ''             AS MENU_DIV
+                     ,  ''             AS PROG_TP
+                     ,  ''             AS COMP_CD
+                     ,  ''             AS USE_YN  
+                  FROM  HQ_USER  A
+                     ,  (
+                            SELECT  ${SCH_USER_ID}   AS USER_ID
+                                 ,  WORD_NM
+                              FROM  WORDPACK
+                             WHERE  KEY_WORD_CD  = 'USER_MENU_MSG'
+                               AND  LANGUAGE_TP  = ${SCH_LANGUAGE_TP}
+                        )   B
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'HQ_USER'
+                               AND  COL_NM      = 'USER_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.COMP_CD(+)  = A.COMP_CD
+                   AND  L.PK_COL(+)   = LPAD(A.USER_ID, 10, ' ')
+                   AND  A.COMP_CD = ${SCH_COMP_CD}
+                   AND  A.USER_ID = B.USER_ID(+)
+                   AND  A.USER_ID = ${SCH_USER_ID}
+                UNION 
+                SELECT  A.MENU_CD                               AS MENU_CD
+                     ,  NVL(C.LANG_MENU_NM, A.MENU_NM)          AS MENU_NM
+                     ,  A.PROG_NM                               AS PROG_NM
+                     ,  DECODE(A.MENU_REF , 0 , 1, A.MENU_REF)  AS MENU_REF
+                     ,  A.MENU_IDX                              AS MENU_IDX
+                     ,  A.MENU_DIV                              AS MENU_DIV
+                     ,  A.PROG_TP                               AS PROG_TP
+                     ,  A.COMP_CD 
+                     ,  A.USE_YN                                AS USE_YN  
+                  FROM  W_MENU      A
+                     ,  W_MENU_USER B
+                     ,  (
+                            SELECT  PK_COL      AS LANG_MENU_CD
+                                 ,  LANG_NM     AS LANG_MENU_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'W_MENU'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   C
+                 WHERE  A.COMP_CD = B.COMP_CD
+                   AND  A.MENU_CD = B.MENU_CD
+                   AND  A.COMP_CD = ${SCH_COMP_CD}
+                   AND  B.USER_ID = ${SCH_USER_ID}
+                   AND  A.MENU_CD = C.LANG_MENU_CD(+)
+                   AND  A.USE_YN  = 'Y'
+            )
+     WHERE  MENU_CD IS NOT NULL 
+     START  WITH MENU_REF  = 0
+   CONNECT  BY   MENU_REF  = PRIOR MENU_CD 
+     ORDER  SIBLINGS BY MENU_IDX , MENU_CD
+]]></query>
+
+<query name='STORE_MENU_Q'><![CDATA[
+    SELECT  MENU_CD
+         ,  MENU_NM
+         ,  PROG_NM
+         ,  MENU_REF
+         ,  MENU_IDX
+         ,  MENU_DIV
+         ,  PROG_TP
+         ,  COMP_CD
+         ,  STOR_TP
+         ,  USE_YN
+         ,  LEVEL       AS MENU_LVL
+      FROM  (
+                SELECT  1               AS MENU_CD
+                     ,  '[ ' || 
+                        (
+                            SELECT  DECODE(B.CODE_NM , '' , A.CODE_NM , B.CODE_NM) AS CODE_NM 
+                              FROM  COMMON      A
+                                 ,  LANG_COMMON B
+                             WHERE  A.COMP_CD = ${SCH_COMP_CD}
+                               AND  A.CODE_TP = '00565'
+                               AND  A.COMP_CD = B.COMP_CD(+)
+                               AND  A.CODE_TP = B.CODE_TP(+)
+                               AND  A.CODE_CD = B.CODE_CD(+)
+                               AND  A.CODE_CD = ${S_STOR_TP}
+                               AND  B.LANGUAGE_TP (+)= ${SCH_LANGUAGE_TP} 
+                        ) || 
+                        ' ] ' ||
+                        (
+                            SELECT  WORD_NM
+                              FROM  WORDPACK
+                             WHERE  KEY_WORD_CD  = 'STOR_MENU_MSG'
+                               AND  LANGUAGE_TP  = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN = 'Y'
+                        )               AS MENU_NM
+                     ,  ''              AS PROG_NM
+                     ,  0               AS MENU_REF
+                     ,  0               AS MENU_IDX
+                     ,  ''              AS MENU_DIV
+                     ,  ''              AS PROG_TP
+                     ,  ''              AS COMP_CD
+                     ,  ''              AS STOR_TP   
+                     ,  ''              AS USE_YN  
+                  FROM  DUAL 
+                UNION
+                SELECT  A.MENU_CD                               AS MENU_CD
+                     ,  NVL(C.LANG_MENU_NM, A.MENU_NM)          AS MENU_NM 
+                     ,  A.PROG_NM                               AS PROG_NM
+                     ,  DECODE(A.MENU_REF, 0, 1, A.MENU_REF)    AS MENU_REF
+                     ,  A.MENU_IDX                              AS MENU_IDX
+                     ,  A.MENU_DIV                              AS MENU_DIV
+                     ,  A.PROG_TP                               AS PROG_TP
+                     ,  A.COMP_CD
+                     ,  B.PGM_MENU_GRP                          AS STOR_TP 
+                     ,  A.USE_YN                                AS USE_YN  
+                  FROM  W_MENU          A
+                     ,  W_MENU_GROUP    B
+                     ,  (
+                            SELECT  PK_COL      AS LANG_MENU_CD
+                                 ,  LANG_NM     AS LANG_MENU_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'W_MENU'
+                               AND  COL_NM      = 'MENU_NM_KOR'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        ) C
+                 WHERE  A.COMP_CD   = B.COMP_CD
+                   AND  A.MENU_CD   = B.MENU_CD
+                   AND  A.COMP_CD   = ${SCH_COMP_CD}
+                   AND  A.MENU_CD   = C.LANG_MENU_CD(+)
+                   AND  B.PGM_MENU_GRP = ${S_STOR_TP}
+                   AND  A.USE_YN    = 'Y'
+            )
+     WHERE  MENU_CD IS NOT NULL 
+     START  WITH MENU_REF  = 0
+   CONNECT  BY   MENU_REF  = PRIOR MENU_CD 
+     ORDER  SIBLINGS BY MENU_IDX, MENU_CD
+]]></query>
+
+<query name='SEARCH_STORE_GROUP_Q'><![CDATA[
+    SELECT  MENU_CD
+         ,  MENU_NM
+         ,  PROG_NM
+         ,  MENU_REF
+         ,  MENU_IDX
+         ,  MENU_DIV
+         ,  PROG_TP
+         ,  COMP_CD
+         ,  MENU_GRP
+         ,  USE_YN
+         ,  LEVEL       AS MENU_LVL
+      FROM  (    
+                SELECT  1       AS MENU_CD
+                     ,  '[ ' || 
+                        (
+                            SELECT  DECODE(B.CODE_NM , '' , A.CODE_NM , B.CODE_NM) AS CODE_NM 
+                              FROM  COMMON      A
+                                 ,  LANG_COMMON B
+                             WHERE  A.COMP_CD = ${SCH_COMP_CD}
+                               AND  A.CODE_TP = '00765'
+                               AND  A.COMP_CD = B.COMP_CD(+)
+                               AND  A.CODE_TP = B.CODE_TP(+)
+                               AND  A.CODE_CD = B.CODE_CD(+)
+                               AND  A.CODE_CD = ${SCH_MENU_GRP}
+                               AND  B.LANGUAGE_TP (+)= ${SCH_LANGUAGE_TP} 
+                        ) || 
+                        ' ] ' ||
+                        (
+                            SELECT  WORD_NM
+                              FROM  WORDPACK
+                             WHERE  KEY_WORD_CD  = 'USER_MENU_MSG'
+                               AND  LANGUAGE_TP  = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN = 'Y'
+                        )       AS MENU_NM
+                     ,  ''             AS PROG_NM
+                     ,  0              AS MENU_REF
+                     ,  0              AS MENU_IDX
+                     ,  ''             AS MENU_DIV
+                     ,  ''             AS PROG_TP
+                     ,  ''             AS COMP_CD
+                     ,  ''             AS MENU_GRP   
+                     ,  ''             AS USE_YN  
+                  FROM  DUAL 
+                UNION
+                SELECT  A.MENU_CD                               AS MENU_CD
+                     ,  NVL(C.LANG_MENU_NM, A.MENU_NM)          AS MENU_NM 
+                     ,  A.PROG_NM                               AS PROG_NM
+                     ,  DECODE(A.MENU_REF, 0, 1, A.MENU_REF)    AS MENU_REF
+                     ,  A.MENU_IDX                              AS MENU_IDX
+                     ,  A.MENU_DIV                              AS MENU_DIV
+                     ,  A.PROG_TP                               AS PROG_TP
+                     ,  A.COMP_CD
+                     ,  B.MENU_GRP                              AS MENU_GRP 
+                     ,  A.USE_YN                                AS USE_YN  
+                  FROM  W_MENU              A
+                     ,  W_MENU_STORE_GROUP  B
+                     ,  (
+                            SELECT  PK_COL      AS LANG_MENU_CD
+                                 ,  LANG_NM     AS LANG_MENU_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'W_MENU'
+                               AND  COL_NM      = 'MENU_NM_KOR'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   C
+                 WHERE  A.COMP_CD   = B.COMP_CD
+                   AND  A.MENU_CD   = B.MENU_CD
+                   AND  A.COMP_CD   = ${SCH_COMP_CD}
+                   AND  A.MENU_CD   = C.LANG_MENU_CD(+)
+                   AND  B.MENU_GRP  = ${SCH_MENU_GRP}
+                   AND  A.USE_YN    = 'Y'
+            )
+     WHERE  MENU_CD IS NOT NULL 
+     START  WITH MENU_REF  = 0
+   CONNECT  BY   MENU_REF  = PRIOR MENU_CD 
+     ORDER  SIBLINGS BY MENU_IDX, MENU_CD
+]]></query>
+
+<query name='MENU_DELETE_Q'><![CDATA[
+    DELETE FROM W_MENU_USER WHERE COMP_CD = ${S_COMP_CD} AND USER_ID = ${S_USER_ID}
+]]></query>
+
+<query name='MENU_COPY_Q'><![CDATA[
+    INSERT INTO W_MENU_USER
+    (COMP_CD, USER_ID, MENU_CD, INST_DT, INST_USER, UPD_DT, UPD_USER)
+    SELECT  COMP_CD
+         ,  ${T_USER_ID}
+         ,  MENU_CD
+         ,  SYSDATE
+         ,  ${S_USER_ID}
+         ,  SYSDATE
+         ,  ${S_USER_ID}
+      FROM  W_MENU_USER
+     WHERE  COMP_CD = ${S_COMP_CD}
+       AND  USER_ID = ${F_USER_ID}
+]]></query>
+
+</SQLResource>

@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='W_BOARD_LIST_Q'><![CDATA[
+    SELECT  T.*
+      FROM  W_BOARD_TXT     T
+         ,  W_BOARD_RCV     R
+     WHERE  T.COMP_CD       = R.COMP_CD(+)
+       AND  T.BOARD_LST_SQ  = R.BOARD_LST_SQ(+)
+       AND  T.BOARD_TXT_SQ  = R.BOARD_TXT_SQ(+)
+       AND  T.BOARD_REP_SQ  = R.BOARD_REP_SQ(+)
+       AND  T.COMP_CD       = ${SCH_COMP_CD}
+       AND  T.USE_YN        = 'Y'
+       AND  T.POPUP_YN      = 'Y'
+       AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN T.POPUP_ST_DT AND T.POPUP_ED_DT
+       AND  (
+                (T.PUBLIC_YN = 'Y' AND (T.RCV_BRAND_CD = '9999' OR T.RCV_BRAND_CD = ${SCH_BRAND_CD})) OR
+                (T.PUBLIC_YN = 'N' AND ((T.BRAND_CD = ${SCH_BRAND_CD} AND T.STOR_CD = ${SCH_STOR_CD}) OR (R.BRAND_CD = ${SCH_BRAND_CD} AND R.STOR_CD = ${SCH_STOR_CD})))
+            )
+]]></query>
+
+<query name='W_BOARD_TXT_Q'><![CDATA[
+    SELECT  *
+      FROM  W_BOARD_TXT
+     WHERE  COMP_CD         = ${SCH_COMP_CD}
+       AND  BOARD_LST_SQ    = ${SCH_BOARD_LST_SQ}
+       AND  BOARD_TXT_SQ    = ${SCH_BOARD_TXT_SQ}
+       AND  BOARD_REP_SQ    = ${SCH_BOARD_REP_SQ}
+]]></query>
+
+</SQLResource>
+

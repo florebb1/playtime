@@ -1,0 +1,289 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='PARA_MST_Q'><![CDATA[  
+    SELECT  PARA_TABLE
+         ,  PARA_CD
+         ,  PARA_NM
+         ,  PARA_DESC
+         ,  PARA_DEFAULT
+         ,  COMMON_CD
+         ,  USE_YN
+      FROM  PARA_MST
+     WHERE  (${SCH_PARA_TBL} IS NULL OR PARA_TABLE = ${SCH_PARA_TBL})
+       AND  (${SCH_USE_YN}   IS NULL OR USE_YN = ${SCH_USE_YN})
+     ORDER  BY PARA_TABLE
+         ,  PARA_CD
+]]></query>
+
+<query name='PARA_COMPANY_Q'><![CDATA[  
+    SELECT  MA.COMP_CD
+          , MA.PARA_CD
+          , NVL(PC.PARA_VAL, MA.PARA_DEFAULT) AS PARA_VAL
+          , PC.PARA_DESC
+          , PC.USE_YN
+    FROM   (
+            SELECT  HQ.COMP_CD
+                  , PM.PARA_CD
+                  , PM.PARA_DEFAULT
+            FROM    COMPANY       HQ
+                  , PARA_MST      PM
+            WHERE   HQ.COMP_CD = ${SCH_COMP_CD}
+            AND     PM.PARA_CD = ${SCH_PARA_CD}
+           ) MA
+          , PARA_COMPANY  PC
+    WHERE   MA.COMP_CD = PC.COMP_CD(+)
+    AND     MA.PARA_CD = PC.PARA_CD(+)
+    AND     (${SCH_USE_YN} IS NULL OR PC.USE_YN = ${SCH_USE_YN})
+    ORDER BY
+            MA.COMP_CD
+          , MA.PARA_CD
+]]></query>
+
+<query name='PARA_BRAND_Q'><![CDATA[  
+    SELECT  MA.COMP_CD
+          , MA.BRAND_CD
+          , MA.BRAND_NM
+          , MA.PARA_CD
+          , NVL(PB.PARA_VAL, MA.PARA_DEFAULT) AS PARA_VAL
+          , PB.PARA_DESC
+          , PB.USE_YN
+    FROM   (
+            SELECT  BR.COMP_CD
+                  , BR.BRAND_CD
+                  , BR.BRAND_NM
+                  , PM.PARA_CD
+                  , PM.PARA_DEFAULT
+            FROM    BRAND         BR
+                  , PARA_MST      PM
+            WHERE   BR.COMP_CD = ${SCH_COMP_CD}
+            AND     PM.PARA_CD = ${SCH_PARA_CD}
+           ) MA
+          , PARA_BRAND  PB
+    WHERE   MA.COMP_CD  = PB.COMP_CD (+)
+    AND     MA.BRAND_CD = PB.BRAND_CD(+)
+    AND     MA.PARA_CD  = PB.PARA_CD (+)
+    AND     (${SCH_USE_YN} IS NULL OR PB.USE_YN = ${SCH_USE_YN})
+    ORDER BY
+            MA.COMP_CD
+          , MA.BRAND_CD
+          , MA.PARA_CD
+]]></query>
+
+<query name='PARA_STORE_Q'><![CDATA[  
+    SELECT  MA.COMP_CD
+          , MA.BRAND_CD
+          , MA.BRAND_NM
+          , MA.STOR_CD
+          , MA.STOR_NM
+          , MA.PARA_CD
+          , NVL(PS.PARA_VAL, MA.PARA_DEFAULT) AS PARA_VAL
+          , PS.PARA_DESC
+          , PS.USE_YN
+    FROM   (
+            SELECT  ST.COMP_CD
+                  , ST.BRAND_CD
+                  , BR.BRAND_NM
+                  , ST.STOR_CD
+                  , ST.STOR_NM
+                  , PM.PARA_CD
+                  , PM.PARA_DEFAULT
+            FROM    BRAND         BR
+                  , STORE         ST
+                  , PARA_MST      PM
+            WHERE   BR.COMP_CD  = ST.COMP_CD
+            AND     BR.BRAND_CD = ST.BRAND_CD
+            AND     BR.COMP_CD = ${SCH_COMP_CD}
+            AND     PM.PARA_CD = ${SCH_PARA_CD}
+           ) MA
+          , PARA_STORE  PS
+    WHERE   MA.COMP_CD  = PS.COMP_CD (+)
+    AND     MA.BRAND_CD = PS.BRAND_CD(+)
+    AND     MA.STOR_CD  = PS.STOR_CD(+)
+    AND     MA.PARA_CD  = PS.PARA_CD (+)
+    AND     (${SCH_USE_YN} IS NULL OR PS.USE_YN = ${SCH_USE_YN})
+    ORDER BY
+            MA.COMP_CD
+          , MA.BRAND_CD
+          , MA.PARA_CD
+          , MA.STOR_CD
+]]></query>
+    
+<query name='PARA_MST_U'><![CDATA[ 
+    MERGE INTO PARA_MST
+    USING DUAL
+    ON (
+            PARA_TABLE = ${PARA_TABLE}
+        AND PARA_CD    = ${PARA_CD}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+        SET  PARA_NM      = ${PARA_NM}
+          ,  PARA_DESC    = ${PARA_DESC}
+          ,  PARA_DEFAULT = ${PARA_DEFAULT}
+          ,  COMMON_CD    = ${COMMON_CD}
+          ,  USE_YN       = ${USE_YN}
+          ,  UPD_DT       = SYSDATE
+          ,  UPD_USER     = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+           (
+            PARA_TABLE
+          , PARA_CD
+          , PARA_NM
+          , PARA_DESC
+          , PARA_DEFAULT
+          , COMMON_CD
+          , USE_YN
+          , INST_DT
+          , INST_USER
+          , UPD_DT
+          , UPD_USER
+           ) 
+        VALUES 
+           (
+            ${PARA_TABLE}
+          , ${PARA_CD}
+          , ${PARA_NM}
+          , ${PARA_DESC}
+          , ${PARA_DEFAULT}
+          , ${COMMON_CD}
+          , ${USE_YN}
+          , SYSDATE
+          , ${UPD_USER}
+          , SYSDATE
+          , ${UPD_USER}
+           ) 
+]]></query>
+
+<query name='PARA_COMPANY_U'><![CDATA[ 
+    MERGE INTO PARA_COMPANY
+    USING DUAL
+    ON (
+            COMP_CD = ${COMP_CD}
+        AND PARA_CD = ${PARA_CD}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+        SET  PARA_VAL     = ${PARA_VAL}
+          ,  PARA_DESC    = ${PARA_DESC}
+          ,  USE_YN       = ${USE_YN}
+          ,  UPD_DT       = SYSDATE
+          ,  UPD_USER     = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+           (
+            COMP_CD
+          , PARA_CD
+          , PARA_VAL
+          , PARA_DESC
+          , USE_YN
+          , INST_DT
+          , INST_USER
+          , UPD_DT
+          , UPD_USER
+           ) 
+        VALUES 
+           (
+            ${COMP_CD}
+          , ${PARA_CD}
+          , ${PARA_VAL}
+          , ${PARA_DESC}
+          , ${USE_YN}
+          , SYSDATE
+          , ${UPD_USER}
+          , SYSDATE
+          , ${UPD_USER}
+           ) 
+]]></query>
+
+<query name='PARA_BRAND_U'><![CDATA[ 
+    MERGE INTO PARA_BRAND
+    USING DUAL
+    ON (
+            COMP_CD  = ${COMP_CD}
+        AND BRAND_CD = ${BRAND_CD}
+        AND PARA_CD  = ${PARA_CD}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+        SET  PARA_VAL     = ${PARA_VAL}
+          ,  PARA_DESC    = ${PARA_DESC}
+          ,  USE_YN       = ${USE_YN}
+          ,  UPD_DT       = SYSDATE
+          ,  UPD_USER     = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+           (
+            COMP_CD
+          , BRAND_CD
+          , PARA_CD
+          , PARA_VAL
+          , PARA_DESC
+          , USE_YN
+          , INST_DT
+          , INST_USER
+          , UPD_DT
+          , UPD_USER
+           ) 
+        VALUES 
+           (
+            ${COMP_CD}
+          , ${BRAND_CD}
+          , ${PARA_CD}
+          , ${PARA_VAL}
+          , ${PARA_DESC}
+          , ${USE_YN}
+          , SYSDATE
+          , ${UPD_USER}
+          , SYSDATE
+          , ${UPD_USER}
+           ) 
+]]></query>
+
+<query name='PARA_STORE_U'><![CDATA[ 
+    MERGE INTO PARA_STORE
+    USING DUAL
+    ON (
+            COMP_CD  = ${COMP_CD}
+        AND BRAND_CD = ${BRAND_CD}
+        AND STOR_CD  = ${STOR_CD}
+        AND PARA_CD  = ${PARA_CD}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+        SET  PARA_VAL     = ${PARA_VAL}
+          ,  PARA_DESC    = ${PARA_DESC}
+          ,  USE_YN       = ${USE_YN}
+          ,  UPD_DT       = SYSDATE
+          ,  UPD_USER     = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+           (
+            COMP_CD
+          , BRAND_CD
+          , STOR_CD
+          , PARA_CD
+          , PARA_VAL
+          , PARA_DESC
+          , USE_YN
+          , INST_DT
+          , INST_USER
+          , UPD_DT
+          , UPD_USER
+           ) 
+        VALUES 
+           (
+            ${COMP_CD}
+          , ${BRAND_CD}
+          , ${STOR_CD}
+          , ${PARA_CD}
+          , ${PARA_VAL}
+          , ${PARA_DESC}
+          , ${USE_YN}
+          , SYSDATE
+          , ${UPD_USER}
+          , SYSDATE
+          , ${UPD_USER}
+           ) 
+]]></query>
+</SQLResource>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" type="text/css" href="/css/style.css">
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+<style>
+  body {
+    line-height: 0;
+    margin: 0px;
+  }
+  .content  {
+    line-height: 30px;
+    padding-top: 35px;
+    text-align: center;
+  }
+  .content2  {
+    line-height: 25px;
+    padding-top: 20px;
+    text-align: center;
+    font-size: 16px;
+  }
+  .content3  {
+    line-height:160%;
+    padding-top: 5px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .button {
+    width: 100%;
+    height: 40px;
+    background-color: #808080;
+    border-color: #fff;
+    border-radius:10px;
+    color: #fff;
+  }
+  .footer {
+    position:relative;
+    bottom:0;
+    height:90px;
+    width: 100%;
+    text-align: center;
+    background-color: #FFCA02;
+    border: none;
+    color: #fff;
+    font-size: 15px;
+  }
+  .coupon {
+    color: #fff;
+    background-color: #FFCA02;
+    height: 215px;
+    border-radius: 10px;
+  }
+  .playtime_etc_coupon {
+    text-align:center;
+    line-height:160%;
+    padding-top:25px;
+  }
+  .playtime_etc_coupon h2, h3, h4 {
+    font-weight:600;
+  }
+  .playtime_etc_coupon > div {
+    padding-top:20px;
+  }
+  .playtime_etc_coupon > div > div {
+    line-height:180%;
+    font-size:18px;
+  }
+  #panel, #flip {
+    padding: 10px;
+    line-height:180%;
+    text-align: center;
+    font-size:18px;
+    margin-top:25px;
+  }
+  #flip > img {
+    width:12px;
+    height:auto;
+    opacity:0.8;
+    margin-left:7px;
+  }
+  #panel {
+    padding: 10px;
+    display: none;
+    font-size:14px;
+    background-color:#eeeeee;
+    margin:0 -10%;
+  }
+  .usage_history {
+    padding:5px 0;
+  }
+  .usage_history span {
+    width:32%;
+    text-align:center;
+    font-size:14px;
+    display: inline-block;
+    margin:0;
+    padding:0;
+  }
+  .no_usage_history {
+    padding:25px 0;
+    text-align:center;
+    line-height:160%;
+    font-size:14px;
+    color:#666;
+  }
+</style>
+</head>
+<body>
+  <form id="memETC" method="post">
+    <input type="hidden" name="USER_ID" value="MOBILE">
+    <input type="hidden" id="CUST_ID" name="CUST_ID">
+    <input type="hidden" id="PROGRAM_ID" name="PROGRAM_ID">
+    <input type="hidden" id="MUSE_NO" name="MUSE_NO">
+    <input type="hidden" id="MUSE_CERT_NO" name="MUSE_CERT_NO">
+  </form>
+<!--   <div id="detail_content" style="margin:0 8%;"> -->
+	<div style="margin:0 8%;">
+		
+<div style="position:absolute;top:60px;left:8%; width:15%; text-align:left; font-size:20px; color:#000;">
+    <i class="fas fa-chevron-left" id="next-btn"></i>
+</div>		
+		
+    <!-- top space -->
+    <div style="padding-top:65px"></div>
+    <!-- logo -->
+    <div style="text-align: center;">
+		<img id="sto_img" src="" style="width:160px; text-align:center;">
+    </div>
+    <!-- font1 -->
+    <div class="playtime_etc_coupon">
+      <h2 id="memCard"></h2>
+      <h4 id="memCard2"></h4>
+      <h4 id="memCard3"></h4>
+      <h4 id="memCard4"></h4>
+      <div>
+        <div id="memCard5"></div>
+        <div id="memCard6"></div>
+        <div id="memCard7"></div>
+      </div>
+    </div>
+
+    <!-- 다회권 사용 내역이 존재할때 -->
+    <div id="flip">사용내역조회<img src="/images/icon/down.png"></div>
+    <div id="panel"></div>
+
+    <!-- 다회권 사용내역이 존재하지 않을때 -->
+    <!-- <div class="no_usage_history">사용내역이 존재하지 않습니다.</div> -->
+
+    <!-- all agree button -->
+    <!-- <div id="coupon" class="coupon nsB" style="background-color:#FFCA02;">
+      <div class="nsR" style="height:72px; padding-top:20px; text-align:center; font-size: 22px;">Welcome Playmembers</div>
+      <div style="height:72px; text-align:center;">
+          <div class="nsrB" style="font-size:33px; padding-top:30px;">3,000원 할인쿠폰</div>
+          <div class="nsR" style="font-size:11px; padding-top:25px;">유효기간 : 2018.08.22 ~ 2018.12.31</div>
+      </div>
+      <div class="nsB" style="font-size:15px; height:71px; padding-top:50px; text-align:center;">쿠폰은 나의 쿠폰함에서도 확인 가능합니다.</div>
+    </div> -->
+
+    <div style="height:185px;">
+      <div class="nsL content2" style="padding-top:55px;">사용시에는 본인의 QR코드를 제시해 주세요.</div>
+      <div class="nsL content3">타 행사와 중복사용이 불가능합니다.<br>다회권 사용은 포인트 적립에서 제외됩니다.<br>유효기간이 지나면 사용 불가능합니다.</div>
+    </div>
+  </div>
+<!--   <button id="next-btn" type="button" class="footer nsrB" style="font-size:22px;">돌아가기</button> -->
+
+<script src="//code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+  function setCookie(name, value, days) {
+    var d = new Date;
+    d.setTime(d.getTime() + 24*60*60*1000*days);
+    document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+  }
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+  }
+  function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+      results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+  }
+$(document).ready(function(){
+/*
+	$(window).resize(function() {
+    	$('#detail_content').height($(window).height() - 90);
+	});
+			
+$(window).trigger('resize');
+*/
+
+  var user = getCookie('user');
+  var PROGRAM_ID = getParameterByName('PROGRAM_ID');
+  var MUSE_NO = getParameterByName('MUSE_NO');
+  var MUSE_CERT_NO = getParameterByName('MUSE_CERT_NO');
+  $('#CUST_ID').val(user);
+  $('#PROGRAM_ID').val(PROGRAM_ID);
+  $('#MUSE_NO').val(MUSE_NO);
+  $('#MUSE_CERT_NO').val(MUSE_CERT_NO);
+  var datas = $('#memETC').serialize();
+  $.ajax({
+    url : "/api/mbl_0570.jsp",
+    type : 'POST',
+    dataType : 'JSON',
+    data : datas,
+      success:function(response){
+	      console.log(response);
+        var MUSE_NM = response.RESULT[0].MUSE_NM;
+        var BRAND_NM = response.RESULT[0].BRAND_NM;
+        var STOR_NM = response.RESULT[0].STOR_NM;
+        var MUSE_OFR_CNT = response.RESULT[0].MUSE_OFR_CNT;
+        var MUSE_REM_CNT = response.RESULT[0].MUSE_REM_CNT;
+        var MUSE_CERT_NO = response.RESULT[0].MUSE_CERT_NO;
+        var CERT_FDT = response.RESULT[0].CERT_FDT;
+        var CERT_FDT_YEAR = CERT_FDT.substr(0,4);
+        var CERT_FDT_MONTH = CERT_FDT.substr(4,2);
+        var CERT_FDT_DAY = CERT_FDT.substr(6,2);
+        var CERT_FDT2 = CERT_FDT_YEAR.toString()+"."+CERT_FDT_MONTH.toString()+"."+CERT_FDT_DAY.toString();
+        var CERT_TDT = response.RESULT[0].CERT_TDT;
+        var CERT_TDT_YEAR = CERT_TDT.substr(0,4);
+        var CERT_TDT_MONTH = CERT_TDT.substr(4,2);
+        var CERT_TDT_DAY = CERT_TDT.substr(6,2);
+        var CERT_TDT2 = CERT_TDT_YEAR.toString()+"."+CERT_TDT_MONTH.toString()+"."+CERT_TDT_DAY.toString();
+        var result = "";
+        if(response.RET_CD == "0001" ) {
+	        var brand = response.RESULT[0].BRAND_CD;
+	        if(brand == "102") {
+				$("#sto_img").attr('src', '/images/store/sa_logo.png');
+/*
+			}else if(brand == "104") {
+				$("#sto_img").attr('src', '/images/store/ap2.png');
+			}else if(brand == "105") {
+				$("#sto_img").attr('src', '/images/store/apt2.png');
+*/
+/*
+			}else if(brand == "106") {
+// 					키즈카페애플트리
+			}else if(brand == "107") {
+// 					키즈카페
+			}else if(brand == "108") {
+// 					모다키즈랜드
+*/
+			}else if(brand == "109") {
+				$("#sto_img").attr('src', '/images/store/li_logo.png');
+			}else if(brand == "201") {
+				$("#sto_img").attr('src', '/images/store/ch_logo.png');
+/*
+			}else if(brand == "202") {
+				$("#sto_img").attr('src', '/images/store/kio2.png');
+*/
+			}else if(brand == "301") {
+				$("#sto_img").attr('src', '/images/store/ee_logo.png');
+			}else if(brand == "302") {
+				$("#sto_img").attr('src', '/images/store/sab_logo.jpg');
+// 				}else if(brand == "303") {
+// 					애플블록앤퍼즐
+			}else if(brand == "401") {
+				$("#sto_img").attr('src', '/images/store/ba_logo.jpg');
+			}else if(brand == "501") {
+				$("#sto_img").attr('src', '/images/store/sas_logo.png');
+			}else {
+				$("#sto_img").attr('src', '/images/25.png');
+			}
+			for(var i=0; i < response.RESULT.length; i++) {
+				if(response.RESULT[i].USE_DT != null){
+					var USE_DT = response.RESULT[i].USE_DT;
+					var USE_DT_YEAR = USE_DT.substr(0,2);
+					var USE_DT_MONTH= USE_DT.substr(2,2);
+					var USE_DT_DAY = USE_DT.substr(4,2);
+					var USE_DT_HOUR = USE_DT.substr(6,2);
+					var USE_DT_MIN = USE_DT.substr(8,2);
+					var USE_DT2 = USE_DT_YEAR.toString()+"."+USE_DT_MONTH.toString()+"."+USE_DT_DAY.toString()+" "+USE_DT_HOUR.toString()+":"+USE_DT_MIN.toString();
+					var USE_CNT = response.RESULT[i].USE_CNT;
+				}
+				var REM_CNT = response.RESULT[i].REM_CNT;
+				var USE_TM = response.RESULT[i].USE_TM;
+				var REM_TM = response.RESULT[i].REM_TM;
+				var MUSE_REM_TM = response.RESULT[i].MUSE_REM_TM;
+				if(response.RESULT[i].MUSE_DIV == 1) {
+					$('#memCard').html(MUSE_NM);
+					$('#memCard2').html(BRAND_NM);
+					$('#memCard3').html(STOR_NM);
+					$('#memCard4').html("잔여횟수: "+MUSE_REM_CNT+"회");
+					$('#memCard5').html("인증번호: "+MUSE_CERT_NO);
+					$('#memCard6').html("구매일: "+CERT_FDT2);
+					$('#memCard7').html("만료일: "+CERT_TDT2);
+					if(response.RESULT[i].USE_DT != null){
+						result += "<div class='usage_history'>"
+					        +"<span>"+USE_DT2+"</span>"
+					        +"<span>"+USE_CNT+"회 사용</span>"
+					        +"<span>잔여 "+REM_CNT+"회</span>"
+					        +"</div>"
+					}
+				    
+				}else if(response.RESULT[i].MUSE_DIV == 2) {
+					$('#memCard').html(MUSE_NM);
+					$('#memCard2').html(BRAND_NM);
+					$('#memCard3').html(STOR_NM);
+					$('#memCard4').html("잔여시간: "+MUSE_REM_TM+"분");
+					$('#memCard5').html("인증번호: "+MUSE_CERT_NO);
+					$('#memCard6').html("구매일: "+CERT_FDT2);
+					$('#memCard7').html("만료일: "+CERT_TDT2);
+					if(response.RESULT[i].USE_DT != null ){
+					    result += "<div class='usage_history'>"
+					        +"<span>"+USE_DT2+"</span>"
+					        +"<span>"+USE_TM+"분 사용</span>"
+					        +"<span>잔여 "+REM_TM+"분</span>"
+					        +"</div>"
+			        }
+				}
+			}
+		$("#panel").append(result);
+        }
+      }
+  });
+
+
+
+  $("#next-btn").click(function(){
+    $(location).attr('href', "/member.html");
+  });
+  $("#flip").click(function(){
+      $("#panel").slideToggle("slow");
+      
+  	$(window).resize(function() {
+    	$('#detail_content').height($(window).height() - 90);
+	});
+			
+	$(window).trigger('resize');
+      
+      
+  });
+});
+</script>
+</body>
+</html>

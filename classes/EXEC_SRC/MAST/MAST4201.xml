@@ -1,0 +1,666 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='BUTTON_MASTER_Q'><![CDATA[
+    SELECT  C1.CODE_CD                  AS BTN_GRP_CD
+         ,  NVL(L1.CODE_NM, C1.CODE_NM) AS BTN_GRP_NM
+         ,  C2.CODE_CD                  AS BTN_CD
+         ,  NVL(L2.CODE_NM, C2.CODE_NM) AS BTN_TEXT
+         ,  C2.VAL_C1                   AS BTN_PG_NM
+         ,  C2.VAL_C2                   AS BTN_EVENT
+         ,  C2.VAL_C3                   AS BTN_FCOLOR
+         ,  C2.VAL_C4                   AS BTN_ECOLOR
+         ,  C2.VAL_C5                   AS FONT_COLOR
+      FROM  COMMON      C1
+         ,  COMMON      C2
+         ,  (
+               SELECT   CODE_CD
+                    ,   CODE_NM
+                 FROM   LANG_COMMON
+                WHERE   CODE_TP     = '01555'
+                  AND   LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                  AND   COMP_CD     = ${SCH_COMP_CD}
+                  AND   USE_YN      = 'Y'
+            ) L1
+         ,  (
+               SELECT   CODE_CD
+                    ,   CODE_NM
+                 FROM   LANG_COMMON
+                WHERE   CODE_TP     = '01560'
+                  AND   LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                  AND   COMP_CD     = ${SCH_COMP_CD}
+                  AND   USE_YN      = 'Y'
+            ) L2
+     WHERE  C1.CODE_CD = L1.CODE_CD(+)
+       AND  C2.CODE_CD = L2.CODE_CD(+)
+       AND  C1.COMP_CD = C2.COMP_CD
+       AND  C1.CODE_CD = C2.VAL_N1
+       AND  C1.USE_YN  = C2.USE_YN
+       AND  C1.CODE_TP = '01555'
+       AND  C2.CODE_TP = '01560'
+       AND  C1.COMP_CD = ${SCH_COMP_CD}
+       AND  C2.VAL_N2  = ${SCH_STORE_GB}
+       AND  C2.USE_YN  = 'Y'
+    ORDER BY C2.VAL_N1, C2.SORT_SEQ, C2.CODE_CD
+]]></query>
+
+<query name='BUTTON_INFO_Q'><![CDATA[
+    SELECT  BI.COMP_CD
+         ,  BI.BRAND_CD
+         ,  BI.STOR_CD
+         ,  BI.POS_NO
+         ,  BI.STORE_GB
+         ,  BI.BTN_GRP_CD
+         ,  BI.BTN_SEQ
+         ,  A.BTN_GRP_NM
+         ,  BI.BTN_PG_NM
+         ,  BI.BTN_CD
+         ,  A.BTN_TEXT
+         ,  BI.BTN_EVENT
+         ,  BI.BTN_FCOLOR
+         ,  BI.BTN_ECOLOR
+         ,  BI.FONT_COLOR
+         ,  BI.BTN_USE
+      FROM  BUTTON_INFO BI
+         ,  (
+                SELECT  C1.COMP_CD                    AS COMP_CD
+                     ,  C1.CODE_CD                    AS CODE1
+                     ,  NVL(L1.CODE_NM, C1.CODE_NM)   AS BTN_GRP_NM
+                     ,  C2.CODE_CD                    AS CODE2
+                     ,  NVL(L2.CODE_NM, C2.CODE_NM)   AS BTN_TEXT
+                  FROM  COMMON C1
+                     ,  COMMON C2
+                     ,  (
+                            SELECT  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  CODE_TP     = '01555'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COMP_CD     = ${SCH_COMP_CD}
+                               AND  USE_YN      = 'Y'
+                        )   L1
+                     ,  (
+                            SELECT  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  CODE_TP     = '01560'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COMP_CD     = ${SCH_COMP_CD}
+                               AND  USE_YN      = 'Y'
+                        )   L2    
+                 WHERE  C1.CODE_CD = L1.CODE_CD(+)
+                   AND  C2.CODE_CD = L2.CODE_CD(+)
+                   AND  C1.COMP_CD = C2.COMP_CD
+                   AND  C1.CODE_CD = C2.VAL_N1
+                   AND  C1.USE_YN  = C2.USE_YN
+                   AND  C1.CODE_TP = '01555'
+                   AND  C2.CODE_TP = '01560'
+                   AND  C1.COMP_CD = ${SCH_COMP_CD}
+            ) A
+     WHERE  BI.COMP_CD  = A.COMP_CD
+       AND  BI.BTN_CD   = A.CODE2
+       AND  BI.COMP_CD  = ${SCH_COMP_CD}
+       AND  BI.BRAND_CD = ${SCH_BRAND_CD}
+       AND  BI.STOR_CD  = ${SCH_STOR_CD}
+       AND  BI.POS_NO   = ${SCH_POS_NO}
+       AND  BI.STORE_GB = ${SCH_STORE_GB}
+       AND  BI.BTN_USE  = 'Y'
+    ORDER BY BTN_GRP_CD, BTN_SEQ
+]]></query>
+
+<query name='BUTTON_INFO_TP_Q'><![CDATA[
+    SELECT  BI.COMP_CD
+         ,  BI.BRAND_CD
+         ,  BI.STOR_TP
+         ,  BI.POS_NO
+         ,  BI.STORE_GB
+         ,  BI.BTN_GRP_CD
+         ,  BI.BTN_SEQ
+         ,  A.BTN_GRP_NM
+         ,  BI.BTN_PG_NM
+         ,  BI.BTN_CD
+         ,  A.BTN_TEXT
+         ,  BI.BTN_EVENT
+         ,  BI.BTN_FCOLOR
+         ,  BI.BTN_ECOLOR
+         ,  BI.FONT_COLOR
+         ,  BI.BTN_USE
+      FROM  BUTTON_INFO_TP  BI
+         ,  (
+                SELECT  C1.COMP_CD                    AS COMP_CD
+                     ,  C1.CODE_CD                    AS CODE1
+                     ,  NVL(L1.CODE_NM, C1.CODE_NM)   AS BTN_GRP_NM
+                     ,  C2.CODE_CD                    AS CODE2
+                     ,  NVL(L2.CODE_NM, C2.CODE_NM)   AS BTN_TEXT
+                  FROM  COMMON C1
+                     ,  COMMON C2
+                     ,  (
+                            SELECT  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  CODE_TP     = '01555'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COMP_CD     = ${SCH_COMP_CD}
+                               AND  USE_YN      = 'Y'
+                        )   L1
+                     ,  (
+                            SELECT  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  CODE_TP     = '01560'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COMP_CD     = ${SCH_COMP_CD}
+                               AND  USE_YN      = 'Y'
+                        )   L2    
+                 WHERE  C1.CODE_CD = L1.CODE_CD(+)
+                   AND  C2.CODE_CD = L2.CODE_CD(+)
+                   AND  C1.COMP_CD = C2.COMP_CD
+                   AND  C1.CODE_CD = C2.VAL_N1
+                   AND  C1.USE_YN  = C2.USE_YN
+                   AND  C1.CODE_TP = '01555'
+                   AND  C2.CODE_TP = '01560'
+                   AND  C1.COMP_CD = ${SCH_COMP_CD}
+            ) A
+     WHERE  BI.COMP_CD  = A.COMP_CD
+       AND  BI.BTN_CD   = A.CODE2
+       AND  BI.COMP_CD  = ${SCH_COMP_CD}
+       AND  BI.BRAND_CD = ${SCH_BRAND_CD}
+       AND  BI.STOR_TP  = ${SCH_STOR_TP}
+       AND  BI.POS_NO   = ${SCH_POS_NO}
+       AND  BI.STORE_GB = ${SCH_STORE_GB}
+       AND  BI.BTN_USE  = 'Y'
+    ORDER BY BTN_GRP_CD, BTN_SEQ
+]]></query>
+
+<query name='BUTTON_INFO_D'><![CDATA[
+    UPDATE  BUTTON_INFO 
+    SET     BTN_USE     = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_CD     = ${STOR_CD}
+       AND  POS_NO      = ${POS_NO}
+       AND  STORE_GB    = ${STORE_GB}
+       AND  BTN_CD      = ${BTN_CD}
+]]></query>
+
+<query name='BUTTON_INFO_TP_D'><![CDATA[
+    UPDATE  BUTTON_INFO_TP
+    SET     BTN_USE     = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_TP     = ${STOR_TP}
+       AND  POS_NO      = ${POS_NO}
+       AND  STORE_GB    = ${STORE_GB}
+       AND  BTN_CD      = ${BTN_CD}
+]]></query>
+
+<query name='BUTTON_INFO_U'><![CDATA[
+    MERGE INTO BUTTON_INFO
+    USING DUAL
+    ON (
+                COMP_CD     =  ${SCH_COMP_CD}
+           AND  BRAND_CD    =  ${BRAND_CD}
+           AND  STOR_CD     =  ${STOR_CD}
+           AND  POS_NO      =  ${POS_NO}
+           AND  STORE_GB    =  ${STORE_GB}
+           AND  BTN_GRP_CD  =  ${BTN_GRP_CD}
+           AND  BTN_SEQ     =  ${BTN_SEQ}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  BTN_PG_NM   =  ${BTN_PG_NM}
+             ,  BTN_CD      =  ${BTN_CD}
+             ,  BTN_TEXT    =  ${BTN_TEXT}
+             ,  BTN_EVENT   =  ${BTN_EVENT}
+             ,  BTN_FCOLOR  =  ${BTN_FCOLOR}
+             ,  BTN_ECOLOR  =  ${BTN_ECOLOR}
+             ,  FONT_COLOR  =  ${FONT_COLOR}
+             ,  BTN_USE     =  ${BTN_USE}
+             ,  UPD_DT      =  SYSDATE
+             ,  UPD_USER    =  ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  POS_NO 
+             ,  STORE_GB
+             ,  BTN_GRP_CD
+             ,  BTN_SEQ
+             ,  BTN_GRP_NM
+             ,  BTN_PG_NM
+             ,  BTN_CD
+             ,  BTN_TEXT
+             ,  BTN_EVENT
+             ,  BTN_FCOLOR
+             ,  BTN_ECOLOR
+             ,  FONT_COLOR
+             ,  BTN_USE
+             ,  INST_DT
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${SCH_COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${POS_NO}
+             ,  ${STORE_GB}
+             ,  ${BTN_GRP_CD}
+             ,  ${BTN_SEQ}
+             ,  ${BTN_GRP_NM}
+             ,  ${BTN_PG_NM}
+             ,  ${BTN_CD}
+             ,  ${BTN_TEXT}
+             ,  ${BTN_EVENT}
+             ,  ${BTN_FCOLOR}
+             ,  ${BTN_ECOLOR}
+             ,  ${FONT_COLOR}
+             ,  ${BTN_USE}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )
+]]></query>
+
+<query name='BUTTON_INFO_TP_U'><![CDATA[
+    MERGE INTO BUTTON_INFO_TP
+    USING DUAL
+    ON (
+                COMP_CD     =  ${SCH_COMP_CD}
+           AND  BRAND_CD    =  ${BRAND_CD}
+           AND  STOR_TP     =  ${STOR_TP}
+           AND  POS_NO      =  ${POS_NO}
+           AND  STORE_GB    =  ${STORE_GB}
+           AND  BTN_GRP_CD  =  ${BTN_GRP_CD}
+           AND  BTN_SEQ     =  ${BTN_SEQ}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  BTN_PG_NM   =  ${BTN_PG_NM}
+             ,  BTN_CD      =  ${BTN_CD}
+             ,  BTN_TEXT    =  ${BTN_TEXT}
+             ,  BTN_EVENT   =  ${BTN_EVENT}
+             ,  BTN_FCOLOR  =  ${BTN_FCOLOR}
+             ,  BTN_ECOLOR  =  ${BTN_ECOLOR}
+             ,  FONT_COLOR  =  ${FONT_COLOR}
+             ,  BTN_USE     =  ${BTN_USE}
+             ,  UPD_DT      =  SYSDATE
+             ,  UPD_USER    =  ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_TP
+             ,  POS_NO 
+             ,  STORE_GB
+             ,  BTN_GRP_CD
+             ,  BTN_SEQ
+             ,  BTN_GRP_NM
+             ,  BTN_PG_NM
+             ,  BTN_CD
+             ,  BTN_TEXT
+             ,  BTN_EVENT
+             ,  BTN_FCOLOR
+             ,  BTN_ECOLOR
+             ,  FONT_COLOR
+             ,  BTN_USE
+             ,  INST_DT
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${SCH_COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_TP}
+             ,  ${POS_NO}
+             ,  ${STORE_GB}
+             ,  ${BTN_GRP_CD}
+             ,  ${BTN_SEQ}
+             ,  ${BTN_GRP_NM}
+             ,  ${BTN_PG_NM}
+             ,  ${BTN_CD}
+             ,  ${BTN_TEXT}
+             ,  ${BTN_EVENT}
+             ,  ${BTN_FCOLOR}
+             ,  ${BTN_ECOLOR}
+             ,  ${FONT_COLOR}
+             ,  ${BTN_USE}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )
+]]></query>
+
+<query name='STORE_Q'><![CDATA[
+    WITH CM AS
+    (
+        SELECT  C.CODE_TP                   AS CODE_TP
+             ,  C.CODE_CD                   AS CODE_CD
+             ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+             ,  VAL_C1
+          FROM  COMMON C
+             ,  (
+                    SELECT  CODE_TP, CODE_CD, CODE_NM
+                      FROM  LANG_COMMON
+                     WHERE  CODE_TP      IN ( '00565', '00650')
+                       AND  LANGUAGE_TP  = DECODE(${SCH_LANGUAGE}, NULL, ' ', ${SCH_LANGUAGE} )
+                       AND  COMP_CD      = ${SCH_COMP_CD}
+                       AND  USE_YN       = 'Y'
+                )   L
+         WHERE  C.CODE_TP  = L.CODE_TP(+)
+           AND  C.CODE_CD  = L.CODE_CD(+)
+           AND  C.CODE_TP  IN ( '00565', '00650' )
+           AND  C.COMP_CD  = ${SCH_COMP_CD}
+           AND  C.USE_YN   = 'Y'
+    )
+    SELECT  STOR_CD
+         ,  STOR_NM
+         ,  STOR_TP
+         ,  STOR_TP_NM
+         ,  SV_USER_ID
+         ,  SV_USER_NM
+         ,  APP_DIV
+         ,  APP_DIV_NM
+         ,  TEL_NO
+      FROM  (
+                SELECT  A.STOR_CD        AS STOR_CD
+                     ,  NVL(LT.STOR_NM,B.STOR_NM)   AS STOR_NM
+                     ,  B.STOR_TP        AS STOR_TP
+                     ,  C.CODE_NM        AS STOR_TP_NM
+                     ,  B.SV_USER_ID     AS SV_USER_ID
+                     ,  D.USER_NM        AS SV_USER_NM
+                     ,  B.APP_DIV        AS APP_DIV
+                     ,  E.CODE_NM        AS APP_DIV_NM
+                     ,  B.TEL_NO         AS TEL_NO
+                  FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+                     ,  STORE           B
+                     ,  STORE_POS_MST   SP
+                     ,  ( 
+                            SELECT  CODE_CD, CODE_NM, VAL_C1 
+                              FROM  CM 
+                             WHERE  CODE_TP = '00565' 
+                        )   C
+                     ,  ( 
+                            SELECT  CODE_CD, CODE_NM 
+                              FROM  CM 
+                             WHERE  CODE_TP = '00650' 
+                        )   E
+                     ,  HQ_USER     D
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               AND  USE_YN  = 'Y'
+                        )   LT
+                 WHERE  A.COMP_CD    = B.COMP_CD
+                   AND  A.BRAND_CD   = B.BRAND_CD
+                   AND  A.STOR_CD    = B.STOR_CD
+                   AND  B.COMP_CD    = SP.COMP_CD
+                   AND  B.BRAND_CD   = SP.BRAND_CD
+                   AND  A.STOR_CD    = SP.STOR_CD
+                   AND  B.STOR_TP    = C.CODE_CD(+)
+                   AND  B.COMP_CD    = D.COMP_CD(+)
+                   AND  B.SV_USER_ID = D.USER_ID(+)
+                   AND  B.APP_DIV    = E.CODE_CD(+)
+                   AND  B.COMP_CD    = LT.COMP_CD(+)
+                   AND  B.BRAND_CD   = LT.BRAND_CD(+)
+                   AND  B.STOR_CD    = LT.STOR_CD(+)
+                   AND  B.COMP_CD    = ${SCH_COMP_CD}
+                   AND  B.BRAND_CD   = ${SCH_BRAND_CD}
+                   AND  B.USE_YN     = 'Y'
+                   AND  (${SCH_STOR_TP} IS NULL OR B.STOR_TP = ${SCH_STOR_TP})
+                   AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+                   AND  SP.POS_NO    = ${SCH_POS_NO}
+            )
+     WHERE (${SCH_STOR_TXT} IS NULL OR (STOR_NM LIKE '%'|| ${SCH_STOR_TXT} || '%' OR STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+    ORDER BY STOR_CD
+]]></query>
+
+<query name='BUTTON_INFO_ALL_D'><![CDATA[
+    UPDATE  BUTTON_INFO
+       SET  BTN_USE     = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_CD     = ${STOR_CD}
+       AND  POS_NO      = ${POS_NO}
+       AND  STORE_GB    = ${STORE_GB}
+]]></query>
+
+<query name='BUTTON_INFO_I'><![CDATA[
+    MERGE INTO BUTTON_INFO  TT
+    USING 
+    (
+        SELECT  COMP_CD
+             ,  BRAND_CD
+             ,  ${TGT_STOR_CD}  AS STOR_CD
+             ,  ${TGT_POS_NO}   AS POS_NO
+             ,  ${STORE_GB}     AS STORE_GB
+             ,  BTN_GRP_CD
+             ,  BTN_SEQ
+             ,  BTN_GRP_NM
+             ,  BTN_PG_NM
+             ,  BTN_CD
+             ,  BTN_TEXT
+             ,  BTN_EVENT
+             ,  BTN_FCOLOR
+             ,  BTN_ECOLOR
+             ,  FONT_COLOR
+             ,  SIZE_H
+             ,  SIZE_W
+             ,  BTN_USE
+             ,  SYSDATE         AS INST_DT
+             ,  ${UPD_USER}     AS INST_USER
+             ,  SYSDATE         AS UPD_DT
+             ,  ${UPD_USER}     AS UPD_USER
+          FROM  BUTTON_INFO
+         WHERE  COMP_CD  = ${SCH_COMP_CD}
+           AND  BRAND_CD = ${BRAND_CD}
+           AND  STOR_CD  = ${STOR_CD}
+           AND  POS_NO   = ${POS_NO}
+           AND  STORE_GB = ${STORE_GB}
+           AND  BTN_USE  = 'Y'
+       )    ST
+    ON (
+                TT.COMP_CD      = ST.COMP_CD
+           AND  TT.BRAND_CD     = ST.BRAND_CD
+           AND  TT.STOR_CD      = ST.STOR_CD
+           AND  TT.POS_NO       = ST.POS_NO
+           AND  TT.STORE_GB     = ST.STORE_GB
+           AND  TT.BTN_GRP_CD   = ST.BTN_GRP_CD
+           AND  TT.BTN_SEQ      = ST.BTN_SEQ
+          )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  BTN_GRP_NM      =  ST.BTN_GRP_NM
+             ,  BTN_PG_NM       =  ST.BTN_PG_NM
+             ,  BTN_CD          =  ST.BTN_CD
+             ,  BTN_TEXT        =  ST.BTN_TEXT
+             ,  BTN_EVENT       =  ST.BTN_EVENT
+             ,  BTN_FCOLOR      =  ST.BTN_FCOLOR
+             ,  BTN_ECOLOR      =  ST.BTN_ECOLOR
+             ,  FONT_COLOR      =  ST.FONT_COLOR
+             ,  BTN_USE         =  ST.BTN_USE
+             ,  UPD_DT          =  ST.UPD_DT
+             ,  UPD_USER        =  ST.UPD_USER
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (   
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  POS_NO
+             ,  STORE_GB
+             ,  BTN_GRP_CD
+             ,  BTN_SEQ
+             ,  BTN_GRP_NM
+             ,  BTN_PG_NM
+             ,  BTN_CD
+             ,  BTN_TEXT
+             ,  BTN_EVENT
+             ,  BTN_FCOLOR
+             ,  BTN_ECOLOR
+             ,  FONT_COLOR
+             ,  BTN_USE
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ST.COMP_CD
+             ,  ST.BRAND_CD
+             ,  ST.STOR_CD
+             ,  ST.POS_NO
+             ,  ST.STORE_GB
+             ,  ST.BTN_GRP_CD
+             ,  ST.BTN_SEQ
+             ,  ST.BTN_GRP_NM
+             ,  ST.BTN_PG_NM
+             ,  ST.BTN_CD
+             ,  ST.BTN_TEXT
+             ,  ST.BTN_EVENT
+             ,  ST.BTN_FCOLOR
+             ,  ST.BTN_ECOLOR
+             ,  ST.FONT_COLOR
+             ,  ST.BTN_USE
+             ,  ST.INST_DT
+             ,  ST.INST_USER
+             ,  ST.UPD_DT
+             ,  ST.UPD_USER
+        )
+]]></query>
+
+<query name='BUTTON_INFO_TP_I'><![CDATA[
+    MERGE INTO BUTTON_INFO  TT
+    USING 
+    (
+        SELECT  COMP_CD
+             ,  BRAND_CD
+             ,  ${TGT_STOR_CD}  AS STOR_CD
+             ,  ${TGT_POS_NO}   AS POS_NO
+             ,  ${STORE_GB}     AS STORE_GB
+             ,  BTN_GRP_CD
+             ,  BTN_SEQ
+             ,  BTN_GRP_NM
+             ,  BTN_PG_NM
+             ,  BTN_CD
+             ,  BTN_TEXT
+             ,  BTN_EVENT
+             ,  BTN_FCOLOR
+             ,  BTN_ECOLOR
+             ,  FONT_COLOR
+             ,  SIZE_H
+             ,  SIZE_W
+             ,  BTN_USE
+             ,  SYSDATE         AS INST_DT
+             ,  ${UPD_USER}     AS INST_USER
+             ,  SYSDATE         AS UPD_DT
+             ,  ${UPD_USER}     AS UPD_USER
+          FROM  BUTTON_INFO_TP
+         WHERE  COMP_CD  = ${SCH_COMP_CD}
+           AND  BRAND_CD = ${BRAND_CD}
+           AND  STOR_TP  = ${STOR_TP}
+           AND  POS_NO   = ${POS_NO}
+           AND  STORE_GB = ${STORE_GB}
+           AND  BTN_USE  = 'Y'
+       )    ST
+    ON (
+                TT.COMP_CD      = ST.COMP_CD
+           AND  TT.BRAND_CD     = ST.BRAND_CD
+           AND  TT.STOR_CD      = ST.STOR_CD
+           AND  TT.POS_NO       = ST.POS_NO
+           AND  TT.STORE_GB     = ST.STORE_GB
+           AND  TT.BTN_GRP_CD   = ST.BTN_GRP_CD
+           AND  TT.BTN_SEQ      = ST.BTN_SEQ
+          )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  BTN_GRP_NM      =  ST.BTN_GRP_NM
+             ,  BTN_PG_NM       =  ST.BTN_PG_NM
+             ,  BTN_CD          =  ST.BTN_CD
+             ,  BTN_TEXT        =  ST.BTN_TEXT
+             ,  BTN_EVENT       =  ST.BTN_EVENT
+             ,  BTN_FCOLOR      =  ST.BTN_FCOLOR
+             ,  BTN_ECOLOR      =  ST.BTN_ECOLOR
+             ,  FONT_COLOR      =  ST.FONT_COLOR
+             ,  BTN_USE         =  ST.BTN_USE
+             ,  UPD_DT          =  ST.UPD_DT
+             ,  UPD_USER        =  ST.UPD_USER
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (   
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  POS_NO
+             ,  STORE_GB
+             ,  BTN_GRP_CD
+             ,  BTN_SEQ
+             ,  BTN_GRP_NM
+             ,  BTN_PG_NM
+             ,  BTN_CD
+             ,  BTN_TEXT
+             ,  BTN_EVENT
+             ,  BTN_FCOLOR
+             ,  BTN_ECOLOR
+             ,  FONT_COLOR
+             ,  BTN_USE
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ST.COMP_CD
+             ,  ST.BRAND_CD
+             ,  ST.STOR_CD
+             ,  ST.POS_NO
+             ,  ST.STORE_GB
+             ,  ST.BTN_GRP_CD
+             ,  ST.BTN_SEQ
+             ,  ST.BTN_GRP_NM
+             ,  ST.BTN_PG_NM
+             ,  ST.BTN_CD
+             ,  ST.BTN_TEXT
+             ,  ST.BTN_EVENT
+             ,  ST.BTN_FCOLOR
+             ,  ST.BTN_ECOLOR
+             ,  ST.FONT_COLOR
+             ,  ST.BTN_USE
+             ,  ST.INST_DT
+             ,  ST.INST_USER
+             ,  ST.UPD_DT
+             ,  ST.UPD_USER
+        )
+]]></query>
+
+<query name='STOR_TP_POS_NO_Q'><![CDATA[
+    SELECT  LPAD(LEVEL, 2, '0')     AS CODE_CD
+         ,  LPAD(LEVEL, 2, '0')     AS CODE_NM
+      FROM  DUAL
+   CONNECT  BY LEVEL <= 20
+]]></query>
+
+<query name='STORE_POS_NO_Q'><![CDATA[
+    SELECT  POS_NO          AS CODE_CD
+         ,  POS_NM          AS CODE_NM
+      FROM  STORE_POS_MST
+     WHERE  COMP_CD  = ${SCH_COMP_CD}
+       AND  BRAND_CD = ${SCH_BRAND_CD}
+       AND  STOR_CD  = ${SCH_STOR_CD}
+]]></query>
+
+</SQLResource>

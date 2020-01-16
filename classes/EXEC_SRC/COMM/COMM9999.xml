@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SQLResource version='1'>
+   <query name='SearchCondition'><![CDATA[  
+        SELECT A.USER_ID
+             , B.USER_NM
+             , COUNT(A.STOR_CD) AS STOR_CNT
+          FROM STORE_EMP A
+             , HQ_USER   B
+         WHERE A.USER_ID = B.USER_ID
+           AND A.EMP_DIV = '01'
+           AND (NVL(LENGTH(${SCH_CONDITION}),0)=0 OR (NVL(LENGTH(${SCH_CONDITION}),0)>0
+                AND (B.USER_NM LIKE ('%'|| ${SCH_CONDITION} || '%') OR A.USER_ID LIKE ( ${SCH_CONDITION} || '%')) )) 
+         GROUP BY A.USER_ID, B.USER_NM 
+   ]]></query>
+</SQLResource>

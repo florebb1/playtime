@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='PRMT_SINGLE_Q'><![CDATA[
+    SELECT  P.PRMT_ID
+         ,  P.PRMT_NM
+      FROM  PROMOTION   P
+     WHERE  P.COMP_CD   = ${SCH_COMP_CD}
+       AND  (${SCH_PRMT_TXT} IS NULL OR (P.PRMT_ID LIKE '%'||${SCH_PRMT_TXT}||'%' OR P.PRMT_NM LIKE '%'||${SCH_PRMT_TXT}||'%'))
+       AND  P.USE_YN        = 'Y'
+]]></query>
+
+<query name='PRMT_LIST_Q'><![CDATA[
+    SELECT  P.COMP_CD
+         ,  P.PRMT_ID
+         ,  P.PRMT_NM
+         ,  P.SUB_PRMT_YN
+         ,  P.BRAND_CLASS
+         ,  P.BRAND_CD
+         ,  P.PRMT_CLASS
+         ,  P.PRMT_TYPE
+         ,  P.PRMT_TYPE_DET
+         ,  P.PRMT_COUPON_YN
+      FROM  PROMOTION   P
+     WHERE  P.COMP_CD       = ${SCH_COMP_CD}
+       AND  (${SCH_PRMT_CLASS}      IS NULL OR P.PRMT_CLASS     = ${SCH_PRMT_CLASS})
+       AND  (${SCH_PRMT_TYPE}       IS NULL OR P.PRMT_TYPE      = ${SCH_PRMT_TYPE})
+       AND  (${SCH_PRMT_TYPE_DET}   IS NULL OR P.PRMT_TYPE_DET  = ${SCH_PRMT_TYPE_DET})
+       AND  (${SCH_PRMT_COUPON_YN}  IS NULL OR P.PRMT_COUPON_YN = ${SCH_PRMT_COUPON_YN})
+       AND  (${SCH_BRAND_CLASS}     IS NULL OR P.BRAND_CLASS    = ${SCH_BRAND_CLASS})
+       AND  (${SCH_BRAND_CD}        IS NULL OR P.BRAND_CD       = ${SCH_BRAND_CD})
+       AND  (${SCH_SUB_PRMT_YN}     IS NULL OR P.SUB_PRMT_YN    = ${SCH_SUB_PRMT_YN})
+       AND  (${SCH_PRMT_TXT} IS NULL OR (P.PRMT_ID LIKE '%'||${SCH_PRMT_TXT}||'%' OR P.PRMT_NM LIKE '%'||${SCH_PRMT_TXT}||'%'))
+       AND  P.USE_YN        = 'Y'
+     ORDER  BY P.PRMT_ID DESC
+]]></query>
+
+</SQLResource>
+

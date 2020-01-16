@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='CS_CONTENT_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  CONTENT_SEQ
+         ,  SUBJECT
+         ,  CONTENT
+         ,  CONTENT_DIV
+         ,  CONTENT_FG
+         ,  BRAND_CD
+         ,  STOR_CD
+         ,  USE_YN
+      FROM  CS_CONTENT
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  ((${SCH_USER_DIV} = 'H' AND BRAND_CD IS NULL) OR (${SCH_USER_DIV} = 'S' AND BRAND_CD = ${SCH_BRAND_CD}))
+       AND  ((${SCH_USER_DIV} = 'H' AND STOR_CD  IS NULL) OR (${SCH_USER_DIV} = 'S' AND STOR_CD  = ${SCH_STOR_CD}))
+       AND  (${SCH_CONTENT_DIV} IS NULL OR CONTENT_DIV  = ${SCH_CONTENT_DIV})
+       AND  (${SCH_CONTENT_FG}  IS NULL OR CONTENT_FG   = ${SCH_CONTENT_FG})
+       AND  (${SCH_USE_YN}      IS NULL OR USE_YN       = ${SCH_USE_YN})
+     ORDER  BY CONTENT_SEQ
+]]></query>
+
+<query name='CONTENT_SEQ_Q'><![CDATA[
+    SELECT  NVL(MAX(TO_NUMBER(CONTENT_SEQ)),0) + 1   AS CONTENT_SEQ
+      FROM  CS_CONTENT
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='CS_CONTENT_U'><![CDATA[
+    MERGE   INTO CS_CONTENT
+    USING   DUAL
+    ON  (
+                COMP_CD             = ${COMP_CD}
+            AND CONTENT_SEQ         = ${CONTENT_SEQ}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  SUBJECT             = ${SUBJECT}
+             ,  CONTENT             = ${CONTENT}
+             ,  CONTENT_DIV         = ${CONTENT_DIV}
+             ,  CONTENT_FG          = ${CONTENT_FG}
+             ,  BRAND_CD            = ${BRAND_CD} 
+             ,  STOR_CD             = ${STOR_CD}
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  CONTENT_SEQ
+             ,  SUBJECT
+             ,  CONTENT
+             ,  CONTENT_DIV
+             ,  CONTENT_FG
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${CONTENT_SEQ}
+             ,  ${SUBJECT}
+             ,  ${CONTENT}
+             ,  ${CONTENT_DIV}
+             ,  ${CONTENT_FG}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )  
+]]></query>
+
+<query name='CS_CONTENT_IMAGE_D'><![CDATA[
+    UPDATE  CS_CONTENT_IMAGE
+       SET  USE_YN      = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CONTENT_SEQ = ${CONTENT_SEQ}
+]]></query>
+
+<query name='CS_CONTENT_IMAGE_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  CONTENT_SEQ
+         ,  IMAGE_SEQ
+         ,  LC_FILE_NM
+         ,  SV_FILE_PATH
+         ,  SV_FILE_NM
+         ,  SORT_ORDER
+         ,  USE_YN
+      FROM  CS_CONTENT_IMAGE
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  CONTENT_SEQ = ${SCH_CONTENT_SEQ}
+       AND  (${SCH_USE_YN} IS NULL OR USE_YN = ${SCH_USE_YN})
+     ORDER  BY SORT_ORDER, IMAGE_SEQ
+]]></query>
+
+<query name='IMAGE_SEQ_Q'><![CDATA[
+    SELECT  NVL(MAX(TO_NUMBER(IMAGE_SEQ)),0) + 1   AS IMAGE_SEQ
+      FROM  CS_CONTENT_IMAGE
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  CONTENT_SEQ = ${SCH_CONTENT_SEQ}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='CS_CONTENT_IMAGE_U'><![CDATA[
+    MERGE   INTO CS_CONTENT_IMAGE
+    USING   DUAL
+    ON  (
+                COMP_CD             = ${COMP_CD}
+            AND CONTENT_SEQ         = ${CONTENT_SEQ}
+            AND IMAGE_SEQ           = ${IMAGE_SEQ}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  LC_FILE_NM          = ${LC_FILE_NM}
+             ,  SV_FILE_PATH        = ${SV_FILE_PATH}
+             ,  SV_FILE_NM          = ${SV_FILE_NM}
+             ,  SORT_ORDER          = ${SORT_ORDER}
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  CONTENT_SEQ
+             ,  IMAGE_SEQ
+             ,  LC_FILE_NM
+             ,  SV_FILE_PATH
+             ,  SV_FILE_NM
+             ,  SORT_ORDER
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${CONTENT_SEQ}
+             ,  ${IMAGE_SEQ}
+             ,  ${LC_FILE_NM}
+             ,  ${SV_FILE_PATH}
+             ,  ${SV_FILE_NM}
+             ,  ${SORT_ORDER}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )  
+]]></query>
+
+</SQLResource>

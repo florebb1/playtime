@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PlayTime</title>
+        <meta charset="UTF-8">
+        <meta content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+        <link crossorigin="anonymous" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" rel="stylesheet">
+        <link href="https://cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css" rel="stylesheet" type="text/css">
+        <link href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css" rel="stylesheet">
+        <link href="/css/style.css?date=<?=time()?>" rel="stylesheet" type="text/css">
+        <style>
+            body {
+                background-color: #FFCA02;
+            }
+            img {
+                width: 70%;
+                height: 100%;
+                margin-left: auto;
+                margin-right: auto;
+                display: block;
+            }
+            .membership {
+                height: 500px;
+                color: #fff;
+                background-color: #fff;
+                border-radius: 10px;
+                margin: 60px 0;
+            }
+            .membership2 {
+                margin: 15px;
+                height: 200px;
+                border-radius: 10px;
+            }
+            .discount_coupon {
+                margin-bottom: 30px;
+            }
+            .bg-color-blue {
+                background-color: #0088cf;
+            }
+            .bg-color-dark-orange {
+                background-color: #f05a21;
+            }
+            .bg-color-gray {
+                background-color: #797979;
+            }
+            .bg-color-white {
+                background-color: #fff;
+            }
+            .text-color-blue {
+                color: #0088cf;
+            }
+            .text-color-dark-orange {
+                color: #f05a21;
+            }
+            .text-color-gray {
+                color: #797979;
+            }
+            .text-color-white {
+                color: #fff;
+            }
+            .font-size-h1 {
+                font-size: 52px;
+                font-weight: bold;
+            }
+            .font-size-h2 {
+                font-size: 32px;
+                font-weight: bold;
+                letter-spacing: -2px;
+            }
+            .discount_coupon_header img {
+	            width:100%;
+				border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+                margin-top: 30px;
+            }
+			a:focus, a:hover, a:visited, a:link {
+				text-decoration:none;
+				color: #000;
+			}
+            .discount_coupon_body {
+                border-bottom-left-radius: 10px;
+                border-bottom-right-radius: 10px;
+                padding: 20px;
+                position: relative;
+            }
+            .discount_coupon_body h4, h5 {
+                margin: 0;
+                padding: 0;
+                text-align: center;
+            }
+            .discount_coupon_body .barcodeArr {
+                margin: 25px auto;
+                padding: 0;
+                min-height: 80px;
+                zoom: 0.6;
+				-moz-transform: scale(0.6);
+                
+            }
+            .filter-group-btn-info {
+                margin-top: 15px;
+                font-size: 12px;
+                color: #fff;
+            }
+            .filter-group-btn {
+                display: -webkit-box;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-orient: horizontal;
+                -ms-flex-direction: row;
+                flex-direction: row;
+                -webkit-box-pack: justify;
+                -ms-flex-pack: justify;
+                justify-content: space-between;
+                margin-top: 5px;
+            }
+            .filter-group-btn button {
+                display: -webkit-box;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-flex: 1;
+                -ms-flex: 1;
+                flex-grow: 1;
+                -webkit-box-pack: center;
+                -ms-flex-pack: center;
+                justify-content: center;
+                -webkit-box-align: center;
+                -ms-flex-align: center;
+                align-items: center;
+                width: 25%;
+                height: 38px;
+                color: #000;
+                background-color: #fff;
+                border-width: 0 1px 0 0;
+                border-color: rgba(0, 0, 0, 0.2);
+                border-style: solid;
+                font-size: 14px;
+            }
+            .filter-group-btn button:first-child {
+                border-top-left-radius: 10px;
+                border-bottom-left-radius: 10px;
+            }
+            .filter-group-btn button:last-child {
+                border-top-right-radius: 10px;
+                border-bottom-right-radius: 10px;
+                border-width: 0 1px 0 0;
+                border-color: rgba(0, 0, 0, 0);
+                border-style: solid;
+            }
+            .filter-btn-active {
+                background-color: #6e4600 !important;
+                color: #fff !important;
+                font-weight: 600;
+            }
+            .able_active {
+	            background-color: #745113 !important;
+            }
+            .qazxswedc {
+	            margin:40px 0; color:#fff; font-weight:900; font-size:20px;
+            }
+            .qazxswedc:after {
+	            content:'';
+	            display: block;
+	            clear: both;
+            }
+        	@media screen and (device-aspect-ratio: 40/71) {
+				.asdasdjj {
+					zoom:0.8;
+					-moz-transform: scale(0.8);
+				}
+			}
+        </style>
+    </head>
+    <body>
+
+        <form id="coupon_frm">
+            <input name="USER_ID" type="hidden" value="MOBILE">
+            <input id="CUST_ID" name="CUST_ID" type="hidden">
+            <input id="INQ_DIV" name="INQ_DIV" type="hidden" value="1">
+            <input id="FR_YMD" name="FR_YMD" type="hidden">
+            <input id="TO_YMD" name="TO_YMD" type="hidden">
+        </form>
+
+        <div style="margin:0 8%;">
+            <div class="qazxswedc">
+                <div style="float: left;">
+                    <i class="fas fa-chevron-left" id="back"></i>
+                </div>
+                <div class="filter-group-btn" style="float: right; text-align:right;">
+                    <button id="able" class="m_coupon able_active" style="height:100%; color:#fff;">사용불가쿠폰 보기</button>
+                </div>
+            </div>
+            <div class="nsB" style="color:#fff;font-size:14px;">
+	            <div id="title" style="font-size:25px; padding-bottom:15px;">사용가능쿠폰</div>
+	            <div>일부 매장에서 사용이 제한 될 수 있으며,<br>할인쿠폰 중복 사용은 불가능 합니다.</div>
+            </div>
+            <div class="filter-group-btn-info">* 기간별로 사용이 가능한 쿠폰을 구분해서 사용하세요.</div>
+            <div class="filter-group-btn asdasdjj">
+                <button class="m_coupon filter-btn-active" id="1m_btn" type="button">1개월</button>
+                <button class="m_coupon" id="3m_btn" type="button">3개월</button>
+                <button class="m_coupon" id="6m_btn" type="button">6개월</button>
+                <button class="m_coupon" id="12m_btn" type="button">12개월</button>
+            </div>
+            <div id="coupon_list"></div>
+        </div>
+        <script src="//code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+        <script src="/js/jquery-barcode.js" type="text/javascript"></script>
+        <script src="/js/sweetalert.min.js"></script>
+        <script src="/js/userCheck.js"></script>
+        <script type="text/javascript">
+            function setCookie(cName, cValue, cDay) {
+                var expire = new Date();
+                expire.setDate(expire.getDate() + cDay);
+                cookies = cName + '=' + escape(cValue) + '; path=/ '; // 한글 깨짐을 막기위해 escape(cValue)를 합니다.
+                if (typeof cDay != 'undefined') 
+                    cookies += ';expires=' + expire.toGMTString() + ';';
+                
+                document.cookie = cookies;
+            }
+            function getCookie(cName) {
+                cName = cName + '=';
+                var cookieData = document.cookie;
+                var start = cookieData.indexOf(cName);
+                var cValue = '';
+                if (start != -1) {
+                    start += cName.length;
+                    var end = cookieData.indexOf(';', start);
+                    if (end == -1) 
+                        end = cookieData.length;
+                    
+                    cValue = cookieData.substring(start, end);
+                }
+                return unescape(cValue);
+            }
+            function formatDate(date) {
+                var mymonth = date.getMonth() + 1;
+                var myweekday = date.getDate();
+                return(date.getFullYear() + "-" + (
+                    (mymonth < 10)
+                    ? "0"
+                    : "") + mymonth + "-" + (
+                    (myweekday < 10)
+                    ? "0"
+                    : "") + myweekday);
+            }
+            $(document).on('ready', function () {
+                userCheck(getCookie('user'));
+                $("#coupon_list").empty();
+                var result = "";
+                var user = getCookie('user');
+                $("#CUST_ID").val(user);
+                var today = new Date();
+                var end = formatDate(today);
+                var end2 = end.split('-');
+                var endDate = end2[0] + end2[1] + end2[2];
+                today.setDate(today.getDate() - 30);
+                var start = formatDate(today);
+                var start2 = start.split('-');
+                var strDate = start2[0] + start2[1] + start2[2];
+                $('#FR_YMD').val(strDate);
+                $('#TO_YMD').val(endDate);
+                
+                // 로딩시 기본 1개월 사용가능 쿠폰 리스트
+                var datas = $('#coupon_frm').serialize();
+                $.ajax({
+                    url: "/api/mbl_0550.jsp",
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+	                    console.log(response);
+                        if(response.RET_CD == "0001") {
+	                        var result = "";
+	                        var length = response.RESULT.length;
+                            if (response.RESULT.length != 0) {
+                                for (var i = 0; i < response.RESULT.length; i++) { 
+									var strDt = response.RESULT[i].START_DT;
+									var endDt = response.RESULT[i].CLOSE_DT;
+									var strY = strDt.slice(0, 4);
+									var strM = strDt.slice(4, 6);
+									var strD = strDt.slice(6, 8);						
+									var endY = endDt.slice(0, 4);
+									var endM = endDt.slice(4, 6);
+									var endD = endDt.slice(6, 8);
+                                        result += "<div class='discount_coupon'>" 
+											+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+											+ "<div class='discount_coupon_header'>"
+											+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+											+ "</div>"
+								            + "<div class='discount_coupon_body bg-color-white'>"
+								            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+								            + "<div class='barcode"+i+" barcodeArr'></div>"
+								            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+								            +"</h5>"
+								            + "</div>"
+								            + "</div>"
+                                }
+                                $("#coupon_list").html(result);
+                                for(var i=0; i < length; i++) {
+	                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+                                        barWidth: 2,
+                                        barHeight: 100,
+                                        output: "css"
+                                    });
+									if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+										$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+									}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+										$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+									}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+										$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+									}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+										$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+									}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+										$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+									}else {
+										$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+									}                           
+                                }
+                            } else {
+                                swal({button: "확인", title: "안내", closeOnClickOutside: false, text: '쿠폰 내역이 없습니다.'});
+                            }
+                        } else {
+                            swal({
+                                button: "확인",
+                                title: "안내",
+                                closeOnClickOutside: false,
+                                // text: '오류코드: ' + response.RET_CD + '\n' + response.RET_MSG
+                                text: response.RET_MSG
+                            });
+                        }
+                    }
+                });
+
+			    //  사용/만료 쿠폰 버튼
+				$(document).on("click", ".able_active", function () {
+					$("#coupon_list").empty();
+					if($("#INQ_DIV").val() == 1) {
+						$("#INQ_DIV").val(2);
+						var datas = $('#coupon_frm').serialize();
+						$.ajax({
+							url: "/api/mbl_0550.jsp",
+							type: 'POST',
+							dataType: 'JSON',
+							data: datas,
+							success: function (response) {
+								if(response.RET_CD == "0001"){
+			                        var result = "";
+									var length = response.RESULT.length;
+									if(response.RESULT.length != 0) {
+										for(var i=0; i < response.RESULT.length; i++) {
+											var strDt = response.RESULT[i].START_DT;
+											var endDt = response.RESULT[i].CLOSE_DT;
+											var strY = strDt.slice(0, 4);
+											var strM = strDt.slice(4, 6);
+											var strD = strDt.slice(6, 8);						
+											var endY = endDt.slice(0, 4);
+											var endM = endDt.slice(4, 6);
+											var endD = endDt.slice(6, 8);
+											result += "<div class='discount_coupon'>" 
+												+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+												+ "<div class='discount_coupon_header' style='-webkit-filter: grayscale(100%);'>"
+												+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+												+ "</div>"
+									            + "<div class='discount_coupon_body bg-color-white'>"
+									            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+									            + "<div class='barcode"+i+" barcodeArr'></div>"
+									            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+									            + "</h5>"
+									            + "</div>"
+									            + "</div>"
+										}
+				           				$("#able").html("사용가능쿠폰 보기");
+										$("#title").html("사용불가쿠폰");	                
+				           				$("#coupon_list").html(result);
+				           				for(var i=0; i < length; i++) {
+			                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+		                                        barWidth: 2,
+		                                        barHeight: 100,
+		                                        output: "css"
+		                                    });
+											if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+												$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+											}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+												$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+											}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+												$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+											}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+												$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+											}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+												$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+											}else {
+												$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+											}                                                   
+		                                }
+									}else {
+				           				$("#able").html("사용가능쿠폰 보기");
+										$("#title").html("사용불가쿠폰");
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											text: '쿠폰 내역이 없습니다.'	
+										});
+									}
+								}else {
+									swal({
+										button: "확인",
+										title: "안내",
+										closeOnClickOutside: false,
+										// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                        text: response.RET_MSG
+									});
+								}
+							}
+						});
+					}else {
+						$("#INQ_DIV").val(1);
+						var datas = $('#coupon_frm').serialize();
+						$.ajax({
+							url: "/api/mbl_0550.jsp",
+							type: 'POST',
+							dataType: 'JSON',
+							data: datas,
+							success: function (response) {
+								if(response.RET_CD == "0001"){
+			                        var result = "";
+			                        var length = response.RESULT.length;
+									if(response.RESULT.length != 0) {
+										for(var i=0; i < response.RESULT.length; i++) {
+											var strDt = response.RESULT[i].START_DT;
+											var endDt = response.RESULT[i].CLOSE_DT;
+											var strY = strDt.slice(0, 4);
+											var strM = strDt.slice(4, 6);
+											var strD = strDt.slice(6, 8);						
+											var endY = endDt.slice(0, 4);
+											var endM = endDt.slice(4, 6);
+											var endD = endDt.slice(6, 8);
+											result += "<div class='discount_coupon'>"
+													+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+													+ "<div class='discount_coupon_header'>"
+													+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+													+ "</div>"
+										            + "<div class='discount_coupon_body bg-color-white'>"
+										            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+										            + "<div class='barcode"+i+" barcodeArr'></div>"
+										            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+										            + "</h5>"
+										            + "</div>"
+										            + "</div>"
+										}
+				           				$("#able").html("사용불가쿠폰 보기");
+										$("#title").html("사용가능쿠폰");                
+				           				$("#coupon_list").html(result);
+				           				for(var i=0; i < length; i++) {
+			                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+		                                        barWidth: 2,
+		                                        barHeight: 100,
+		                                        output: "css"
+		                                    });
+											if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+												$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+											}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+												$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+											}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+												$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+											}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+												$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+											}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+												$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+											}else {
+												$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+											}                                        
+		                                }
+									}else {
+										$("#able").html("사용불가쿠폰 보기");
+										$("#title").html("사용가능쿠폰"); 
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											text: '쿠폰 내역이 없습니다.'	
+										});
+									}
+								}else {
+									swal({
+										button: "확인",
+										title: "안내",
+										closeOnClickOutside: false,
+										// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                        text: response.RET_MSG
+									});
+								}
+							}
+						});
+					}
+
+				});
+
+                // 1달전 버튼
+				$("#1m_btn").click(function() {
+					if($(this).hasClass('filter-btn-active')) {
+					}else {
+						$("#coupon_list").empty();
+						$('.m_coupon').removeClass('filter-btn-active');
+						$(this).addClass('filter-btn-active');
+						var today = new Date();
+                        today.setDate(today.getDate() - 30);
+						var end = formatDate(today);
+						end2 = end.split('-');
+						endDate = end2[0] + end2[1] + end2[2]
+                        console.log(endDate);
+						$('#FR_YMD').val(endDate);
+						if($("#INQ_DIV").val() == 1) {
+							var datas = $('#coupon_frm').serialize();
+							$.ajax({
+								url: "/api/mbl_0550.jsp",
+								type: 'POST',
+								dataType: 'JSON',
+								data: datas,
+								success: function (response) {
+									if(response.RET_CD == "0001"){
+										var result = "";
+										var length = response.RESULT.length;
+										if(response.RESULT.length != 0) {
+											for(var i=0; i < response.RESULT.length; i++) {
+												var strDt = response.RESULT[i].START_DT;
+												var endDt = response.RESULT[i].CLOSE_DT;
+												var strY = strDt.slice(0, 4);
+												var strM = strDt.slice(4, 6);
+												var strD = strDt.slice(6, 8);						
+												var endY = endDt.slice(0, 4);
+												var endM = endDt.slice(4, 6);
+												var endD = endDt.slice(6, 8);
+												result += "<div class='discount_coupon'>"
+														+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+														+ "<div class='discount_coupon_header'>"
+														+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+														+ "</div>"
+											            + "<div class='discount_coupon_body bg-color-white'>"
+											            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+											            + "<div class='barcode"+i+" barcodeArr'></div>"
+											            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+											            + "</h5>"
+											            + "</div>"
+											            + "</div>"
+												}             
+												$("#coupon_list").html(result);
+						           				for(var i=0; i < length; i++) {
+					                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+				                                        barWidth: 2,
+				                                        barHeight: 100,
+				                                        output: "css"
+				                                    });
+													if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+														$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+														$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+														$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+														$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+														$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+													}else {
+														$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+													}                                                        
+				                                }
+										}else {
+											swal({
+												button: "확인",
+												title: "안내",
+												closeOnClickOutside: false,
+												text: '쿠폰 내역이 없습니다.'	
+											});
+										}
+									}else {
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                            text: response.RET_MSG
+										});
+									}
+								}
+							});
+						}else {
+							$('#INQ_DIV').val(2);
+							var datas = $('#coupon_frm').serialize();
+							$.ajax({
+								url: "/api/mbl_0550.jsp",
+								type: 'POST',
+								dataType: 'JSON',
+								data: datas,
+								success: function (response) {
+									if(response.RET_CD == "0001"){
+										var result = "";
+										var length = response.RESULT.length;
+										if(response.RESULT.length != 0) {
+											for(var i=0; i < response.RESULT.length; i++) {
+												var strDt = response.RESULT[i].START_DT;
+												var endDt = response.RESULT[i].CLOSE_DT;
+												var strY = strDt.slice(0, 4);
+												var strM = strDt.slice(4, 6);
+												var strD = strDt.slice(6, 8);						
+												var endY = endDt.slice(0, 4);
+												var endM = endDt.slice(4, 6);
+												var endD = endDt.slice(6, 8);
+												result += "<div class='discount_coupon'>"
+														+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+														+ "<div class='discount_coupon_header' style='-webkit-filter: grayscale(100%);'>"
+														+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+														+ "</div>"
+											            + "<div class='discount_coupon_body bg-color-white'>"
+											            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+											            + "<div class='barcode"+i+" barcodeArr'></div>"
+											            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+											            + "</h5>"
+											            + "</div>"
+											            + "</div>"
+												}	              
+												$("#coupon_list").html(result);
+						           				for(var i=0; i < length; i++) {
+					                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+				                                        barWidth: 2,
+				                                        barHeight: 100,
+				                                        output: "css"
+				                                    });
+													if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+														$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+														$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+														$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+														$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+														$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+													}else {
+														$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+													}                                   
+				                                }
+										}else {
+											swal({
+												button: "확인",
+												title: "안내",
+												closeOnClickOutside: false,
+												text: '쿠폰 내역이 없습니다.'	
+											});
+										}
+									}else {
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                            text: response.RET_MSG
+										});
+									}
+								}
+							});
+						}							
+					}
+				});
+
+                // 3달전 버튼
+				$("#3m_btn").click(function() {
+					if($(this).hasClass('filter-btn-active')) {
+					}else {
+						$("#coupon_list").empty();
+						$('.m_coupon').removeClass('filter-btn-active');
+						$(this).addClass('filter-btn-active');
+                        var today = new Date();
+						today.setDate(today.getDate() - 90);
+						var end = formatDate(today);
+						end2 = end.split('-');
+						endDate = end2[0] + end2[1] + end2[2]
+                        // console.log(endDate);
+						$('#FR_YMD').val(endDate);
+						if($("#INQ_DIV").val() == 1) {
+							var datas = $('#coupon_frm').serialize();
+							$.ajax({
+								url: "/api/mbl_0550.jsp",
+								type: 'POST',
+								dataType: 'JSON',
+								data: datas,
+								success: function (response) {
+									if(response.RET_CD == "0001"){
+										var result = "";
+										var length = response.RESULT.length;
+										if(response.RESULT.length != 0) {
+											for(var i=0; i < response.RESULT.length; i++) {
+												var strDt = response.RESULT[i].START_DT;
+												var endDt = response.RESULT[i].CLOSE_DT;
+												var strY = strDt.slice(0, 4);
+												var strM = strDt.slice(4, 6);
+												var strD = strDt.slice(6, 8);						
+												var endY = endDt.slice(0, 4);
+												var endM = endDt.slice(4, 6);
+												var endD = endDt.slice(6, 8);
+												result += "<div class='discount_coupon'>"
+														+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+														+ "<div class='discount_coupon_header'>"
+														+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+														+ "</div>"
+											            + "<div class='discount_coupon_body bg-color-white'>"
+											            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+											            + "<div class='barcode"+i+" barcodeArr'></div>"
+											            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+											            + "</h5>"
+											            + "</div>"
+											            + "</div>"
+												}             
+												$("#coupon_list").html(result);
+						           				for(var i=0; i < length; i++) {
+					                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+				                                        barWidth: 2,
+				                                        barHeight: 100,
+				                                        output: "css"
+				                                    });
+													if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+														$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+														$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+														$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+														$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+														$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+													}else {
+														$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+													}                                                           
+				                                }
+										}else {
+											swal({
+												button: "확인",
+												title: "안내",
+												closeOnClickOutside: false,
+												text: '쿠폰 내역이 없습니다.'	
+											});
+										}
+									}else {
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                            text: response.RET_MSG
+										});
+									}
+								}
+							});
+						}else {
+							$('#INQ_DIV').val(2);
+							var datas = $('#coupon_frm').serialize();
+							$.ajax({
+								url: "/api/mbl_0550.jsp",
+								type: 'POST',
+								dataType: 'JSON',
+								data: datas,
+								success: function (response) {
+									if(response.RET_CD == "0001"){
+										var result = "";
+										var length = response.RESULT.length;
+										if(response.RESULT.length != 0) {
+											for(var i=0; i < response.RESULT.length; i++) {
+												var strDt = response.RESULT[i].START_DT;
+												var endDt = response.RESULT[i].CLOSE_DT;
+												var strY = strDt.slice(0, 4);
+												var strM = strDt.slice(4, 6);
+												var strD = strDt.slice(6, 8);						
+												var endY = endDt.slice(0, 4);
+												var endM = endDt.slice(4, 6);
+												var endD = endDt.slice(6, 8);
+												result += "<div class='discount_coupon'>"
+														+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+														+ "<div class='discount_coupon_header' style='-webkit-filter: grayscale(100%);'>"
+														+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+														+ "</div>"
+											            + "<div class='discount_coupon_body bg-color-white'>"
+											            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+											            + "<div class='barcode"+i+" barcodeArr'></div>"
+											            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+											            + "</h5>"
+											            + "</div>"
+											            + "</div>"
+												}	              
+												$("#coupon_list").html(result);
+						           				for(var i=0; i < length; i++) {
+					                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+				                                        barWidth: 2,
+				                                        barHeight: 100,
+				                                        output: "css"
+				                                    });
+													if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+														$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+														$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+														$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+														$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+														$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+													}else {
+														$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+													}                                          
+				                                }
+										}else {
+											swal({
+												button: "확인",
+												title: "안내",
+												closeOnClickOutside: false,
+												text: '쿠폰 내역이 없습니다.'	
+											});
+										}
+									}else {
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                            text: response.RET_MSG
+										});
+									}
+								}
+							});
+						}							
+					}
+				});
+
+                // 6달전 버튼
+				$("#6m_btn").click(function() {
+					if($(this).hasClass('filter-btn-active')) {
+					}else {
+						$("#coupon_list").empty();
+						$('.m_coupon').removeClass('filter-btn-active');
+						$(this).addClass('filter-btn-active');
+                        var today = new Date();
+						today.setDate(today.getDate() - 180);
+						var end = formatDate(today);
+						end2 = end.split('-');
+						endDate = end2[0] + end2[1] + end2[2]
+						$('#FR_YMD').val(endDate);
+						if($("#INQ_DIV").val() == 1) {
+							var datas = $('#coupon_frm').serialize();
+							$.ajax({
+								url: "/api/mbl_0550.jsp",
+								type: 'POST',
+								dataType: 'JSON',
+								data: datas,
+								success: function (response) {
+									if(response.RET_CD == "0001"){
+										var result = "";
+										var length = response.RESULT.length;
+										if(response.RESULT.length != 0) {
+											for(var i=0; i < response.RESULT.length; i++) {
+												var strDt = response.RESULT[i].START_DT;
+												var endDt = response.RESULT[i].CLOSE_DT;
+												var strY = strDt.slice(0, 4);
+												var strM = strDt.slice(4, 6);
+												var strD = strDt.slice(6, 8);						
+												var endY = endDt.slice(0, 4);
+												var endM = endDt.slice(4, 6);
+												var endD = endDt.slice(6, 8);
+												result += "<div class='discount_coupon'>"
+														+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+														+ "<div class='discount_coupon_header'>"
+														+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+														+ "</div>"
+											            + "<div class='discount_coupon_body bg-color-white'>"
+											            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+											            + "<div class='barcode"+i+" barcodeArr'></div>"
+											            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+											            + "</h5>"
+											            + "</div>"
+											            + "</div>"
+												}             
+												$("#coupon_list").html(result);
+						           				for(var i=0; i < length; i++) {
+					                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+				                                        barWidth: 2,
+				                                        barHeight: 100,
+				                                        output: "css"
+				                                    });
+													if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+														$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+														$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+														$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+														$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+														$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+													}else {
+														$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+													}                                 
+				                                }
+										}else {
+											swal({
+												button: "확인",
+												title: "안내",
+												closeOnClickOutside: false,
+												text: '쿠폰 내역이 없습니다.'	
+											});
+										}
+									}else {
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                            text: response.RET_MSG
+										});
+									}
+								}
+							});
+						}else {
+							$('#INQ_DIV').val(2);
+							var datas = $('#coupon_frm').serialize();
+							$.ajax({
+								url: "/api/mbl_0550.jsp",
+								type: 'POST',
+								dataType: 'JSON',
+								data: datas,
+								success: function (response) {
+									if(response.RET_CD == "0001"){
+										var result = "";
+										var length = response.RESULT.length;
+										if(response.RESULT.length != 0) {
+											for(var i=0; i < response.RESULT.length; i++) {
+												var strDt = response.RESULT[i].START_DT;
+												var endDt = response.RESULT[i].CLOSE_DT;
+												var strY = strDt.slice(0, 4);
+												var strM = strDt.slice(4, 6);
+												var strD = strDt.slice(6, 8);						
+												var endY = endDt.slice(0, 4);
+												var endM = endDt.slice(4, 6);
+												var endD = endDt.slice(6, 8);
+												result += "<div class='discount_coupon'>"
+														+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+														+ "<div class='discount_coupon_header' style='-webkit-filter: grayscale(100%);'>"
+														+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+														+ "</div>"
+											            + "<div class='discount_coupon_body bg-color-white'>"
+											            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+											            + "<div class='barcode"+i+" barcodeArr'></div>"
+											            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+											            + "</h5>"
+											            + "</div>"
+											            + "</div>"
+												}	              
+												$("#coupon_list").html(result);
+						           				for(var i=0; i < length; i++) {
+					                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+				                                        barWidth: 2,
+				                                        barHeight: 100,
+				                                        output: "css"
+				                                    });
+													if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+														$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+														$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+														$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+														$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+														$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+													}else {
+														$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+													}                                                  
+				                                }
+										}else {
+											swal({
+												button: "확인",
+												title: "안내",
+												closeOnClickOutside: false,
+												text: '쿠폰 내역이 없습니다.'	
+											});
+										}
+									}else {
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                            text: response.RET_MSG
+										});
+									}
+								}
+							});
+						}							
+					}
+				});
+
+                // 12달전 버튼
+				$("#12m_btn").click(function() {
+					if($(this).hasClass('filter-btn-active')) {
+					}else {
+						$("#coupon_list").empty();
+						$('.m_coupon').removeClass('filter-btn-active');
+						$(this).addClass('filter-btn-active');
+                        var today = new Date();
+						today.setDate(today.getDate() - 365);
+						var end = formatDate(today);
+						end2 = end.split('-');
+						endDate = end2[0] + end2[1] + end2[2]
+						$('#FR_YMD').val(endDate);
+						if($("#INQ_DIV").val() == 1) {
+							var datas = $('#coupon_frm').serialize();
+							$.ajax({
+								url: "/api/mbl_0550.jsp",
+								type: 'POST',
+								dataType: 'JSON',
+								data: datas,
+								success: function (response) {
+									if(response.RET_CD == "0001"){
+										var result = "";
+										var length = response.RESULT.length;
+										if(response.RESULT.length != 0) {
+											for(var i=0; i < response.RESULT.length; i++) {
+												var strDt = response.RESULT[i].START_DT;
+												var endDt = response.RESULT[i].CLOSE_DT;
+												var strY = strDt.slice(0, 4);
+												var strM = strDt.slice(4, 6);
+												var strD = strDt.slice(6, 8);						
+												var endY = endDt.slice(0, 4);
+												var endM = endDt.slice(4, 6);
+												var endD = endDt.slice(6, 8);
+												result += "<div class='discount_coupon'>"
+														+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+														+ "<div class='discount_coupon_header'>"
+														+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+														+ "</div>"
+											            + "<div class='discount_coupon_body bg-color-white'>"
+											            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+											            + "<div class='barcode"+i+" barcodeArr'></div>"
+											            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+											            + "</h5>"
+											            + "</div>"
+											            + "</div>"
+												}             
+												$("#coupon_list").html(result);
+						           				for(var i=0; i < length; i++) {
+					                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+				                                        barWidth: 2,
+				                                        barHeight: 100,
+				                                        output: "css"
+				                                    });	
+												if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+														$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+														$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+														$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+														$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+														$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+													}else {
+														$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+													}                                         
+				                                }
+										}else {
+											swal({
+												button: "확인",
+												title: "안내",
+												closeOnClickOutside: false,
+												text: '쿠폰 내역이 없습니다.'	
+											});
+										}
+									}else {
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                            text: response.RET_MSG
+										});
+									}
+								}
+							});
+						}else {
+							$('#INQ_DIV').val(2);
+							var datas = $('#coupon_frm').serialize();
+							$.ajax({
+								url: "/api/mbl_0550.jsp",
+								type: 'POST',
+								dataType: 'JSON',
+								data: datas,
+								success: function (response) {
+									if(response.RET_CD == "0001"){
+										var result = "";
+										var length = response.RESULT.length;
+										if(response.RESULT.length != 0) {
+											for(var i=0; i < response.RESULT.length; i++) {
+												var strDt = response.RESULT[i].START_DT;
+												var endDt = response.RESULT[i].CLOSE_DT;
+												var strY = strDt.slice(0, 4);
+												var strM = strDt.slice(4, 6);
+												var strD = strDt.slice(6, 8);						
+												var endY = endDt.slice(0, 4);
+												var endM = endDt.slice(4, 6);
+												var endD = endDt.slice(6, 8);
+												result += "<div class='discount_coupon'>"
+														+ "<a href='/membership_coupon_detail.html?COUPON_NO="+response.RESULT[i].COUPON_NO+"'>"
+														+ "<div class='discount_coupon_header' style='-webkit-filter: grayscale(100%);'>"
+														+ "<img class='co_img"+i+"' src='/images/coupon/1-1.jpg'/>"
+														+ "</div>"
+											            + "<div class='discount_coupon_body bg-color-white'>"
+											            + "<h4>"+response.RESULT[i].COUPON_NM+"</h4>"
+											            + "<div class='barcode"+i+" barcodeArr'></div>"
+											            + "<h5>유효기간 : "+strY+"."+strM+"."+strD+" ~ "+endY+"."+endM+"."+endD
+											            + "</h5>"
+											            + "</div>"
+											            + "</div>"
+												}	              
+												$("#coupon_list").html(result);
+						           				for(var i=0; i < length; i++) {
+					                                $(".barcode"+i).barcode(response.RESULT[i].COUPON_NO, "code128", {
+				                                        barWidth: 2,
+				                                        barHeight: 100,
+				                                        output: "css"
+				                                    });
+													if(response.RESULT[i].COUPON_IMG_TYPE == "P0402") {
+														$('.co_img'+i).attr("src",'/images/coupon/8-1.png'); 
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0403") {
+														$('.co_img'+i).attr("src",'/images/coupon/4-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0404") {
+														$('.co_img'+i).attr("src",'/images/coupon/2-1.jpg');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0405") {
+														$('.co_img'+i).attr("src",'/images/coupon/5-1.png');
+													}else if(response.RESULT[i].COUPON_IMG_TYPE == "P0406") {
+														$('.co_img'+i).attr("src",'/images/coupon/3-1.jpg');
+													}else {
+														$('.co_img'+i).attr("src",'/images/coupon/6-1.png');
+													}                                             
+				                                }
+										}else {
+											swal({
+												button: "확인",
+												title: "안내",
+												closeOnClickOutside: false,
+												text: '쿠폰 내역이 없습니다.'	
+											});
+										}
+									}else {
+										swal({
+											button: "확인",
+											title: "안내",
+											closeOnClickOutside: false,
+											// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG
+                                            text: response.RET_MSG
+										});
+									}
+								}
+							});
+						}							
+					}
+				});
+
+
+                $("#back").click(function () {
+                    document.location.href = "/member.html";
+                });
+            });
+        </script>
+    </body>
+</html>

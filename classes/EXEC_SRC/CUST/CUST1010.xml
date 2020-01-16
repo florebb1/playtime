@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='MAIN_Q'><![CDATA[ 
+    SELECT  C.COMP_CD
+         ,  C.COUPON_STATE
+         ,  C.COUPON_STATE                                  AS ORG_COUPON_STATE
+         ,  C.COUPON_CD
+         ,  P.PRMT_NM                                       AS COUPON_NM
+         ,  TO_CHAR(C.INST_DT, 'YYYYMMDD')                  AS INST_DT
+         ,  C.START_DT
+         ,  C.CLOSE_DT
+         ,  C.CLOSE_DT                                      AS ORG_CLOSE_DT
+         ,  CASE WHEN C.COUPON_STATE = 'P0301' THEN 'Y'
+                 ELSE 'N'
+            END                                             AS COUPON_USE_YN
+         ,  C.SALE_DT
+         ,  C.SALE_DT                                       AS ORG_SALE_DT
+         ,  C.STOR_CD
+         ,  S.STOR_NM
+         ,  C.POS_NO
+         ,  C.POS_NO                                        AS ORG_POS_NO
+         ,  C.BILL_NO
+         ,  C.BILL_NO                                       AS ORG_BILL_NO
+         ,  C.ITEM_CD
+         ,  C.ITEM_CD                                       AS ORG_ITEM_CD
+         ,  I.ITEM_NM
+         ,  I.ITEM_NM                                       AS ORG_ITEM_NM
+         ,  C.REMARKS
+         ,  NVL(U.USER_NM, C.UPD_USER)                      AS UPD_USER
+         ,  TO_CHAR(C.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+      FROM  PROMOTION_COUPON            C
+         ,  PROMOTION_COUPON_PUBLISH    CP
+         ,  PROMOTION                   P
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_TP
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )       S
+         ,  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_NM, I.ITEM_NM)   AS ITEM_NM
+                  FROM  ITEM        I
+                     ,  LANG_ITEM   L
+                 WHERE  I.COMP_CD       = L.COMP_CD(+)
+                   AND  I.ITEM_CD       = L.ITEM_CD(+)
+                   AND  I.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )       I
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  C.COMP_CD       = CP.COMP_CD
+       AND  C.PUBLISH_ID    = CP.PUBLISH_ID
+       AND  CP.COMP_CD      = P.COMP_CD
+       AND  CP.PRMT_ID      = P.PRMT_ID
+       AND  C.COMP_CD       = S.COMP_CD(+)
+       AND  C.BRAND_CD      = S.BRAND_CD(+)
+       AND  C.STOR_CD       = S.STOR_CD(+)
+       AND  C.COMP_CD       = I.COMP_CD(+)
+       AND  C.ITEM_CD       = I.ITEM_CD(+)
+       AND  C.COMP_CD       = U.COMP_CD(+)
+       AND  C.UPD_USER      = U.USER_ID(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CUST_ID       = ${SCH_MEMBER_NO}
+       AND  C.TG_BRAND_CD   = ${SCH_BRAND_CD}
+       AND  C.TG_STOR_CD    = ${SCH_STOR_CD}
+       AND  (C.BRAND_CD IS NULL OR C.BRAND_CD = ${SCH_BRAND_CD})
+       AND  (C.STOR_CD  IS NULL OR C.STOR_CD  = ${SCH_STOR_CD})
+       AND  TO_CHAR(C.INST_DT, 'YYYYMMDD') BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+     ORDER  BY C.COUPON_CD
+]]></query>
+
+<query name='PROMOTION_COUPON_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON
+       SET  CLOSE_DT        = ${CLOSE_DT}
+         ,  COUPON_STATE    = ${COUPON_STATE}
+         ,  REMARKS         = ${REMARKS}
+         ,  BRAND_CD        = ${BRAND_CD}
+         ,  STOR_CD         = ${STOR_CD}
+         ,  SALE_DT         = ${SALE_DT}
+         ,  POS_NO          = ${POS_NO}
+         ,  BILL_NO         = ${BILL_NO}
+         ,  ITEM_CD         = ${ITEM_CD}
+         ,  DESTROY_DT      = CASE WHEN ${COUPON_STATE} = 'P0309' THEN TO_CHAR(SYSDATE, 'YYYYMMDD') ELSE '' END
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  COUPON_CD       = ${COUPON_CD}
+]]></query>
+
+<query name='PROMOTION_COUPON_HIS_I'><![CDATA[
+    INSERT  INTO PROMOTION_COUPON_HIS
+    SELECT  COMP_CD
+         ,  COUPON_CD
+         ,  (
+                SELECT  NVL(MAX(TO_NUMBER(SEQ)),0) + 1  AS SEQ
+                  FROM  PROMOTION_COUPON_HIS
+                 WHERE  COMP_CD         = ${COMP_CD}
+                   AND  COUPON_CD       = ${COUPON_CD}
+            )
+         ,  PUBLISH_ID
+         ,  CUST_ID
+         ,  CUST_LVL_CD
+         ,  CUST_MOBILE
+         ,  CARD_ID
+         ,  TG_BRAND_CD
+         ,  TG_STOR_CD
+         ,  TG_SALE_DT
+         ,  TG_POS_NO
+         ,  TG_BILL_NO
+         ,  START_DT
+         ,  CLOSE_DT
+         ,  COUPON_STATE
+         ,  REMARKS
+         ,  BRAND_CD
+         ,  STOR_CD
+         ,  SALE_DT
+         ,  POS_NO
+         ,  BILL_NO
+         ,  POS_SEQ
+         ,  ITEM_CD
+         ,  DESTROY_DT
+         ,  SYSDATE
+         ,  ${UPD_USER}
+      FROM  PROMOTION_COUPON
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  COUPON_CD       = ${COUPON_CD}
+]]></query>
+
+</SQLResource>

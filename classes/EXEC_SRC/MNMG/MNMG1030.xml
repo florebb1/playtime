@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='POS_PATCH_MST_Q'><![CDATA[
+    SELECT  PP.*
+         ,  CASE WHEN PP.STOR_CD = '0000000' THEN '공통' ELSE S.STOR_NM END   AS STOR_NM
+      FROM  POS_PATCH_MST   PP
+         ,  STORE           S
+     WHERE  PP.COMP_CD      = S.COMP_CD(+)
+       AND  PP.BRAND_CD     = S.BRAND_CD(+)
+       AND  PP.STOR_CD      = S.STOR_CD(+)
+       AND  PP.COMP_CD      = ${SCH_COMP_CD}
+       AND  (${SCH_PATCH_TYPE} IS NULL OR PP.PATCH_TYPE = ${SCH_PATCH_TYPE})
+       AND  (${SCH_PATCH_FILE} IS NULL OR PP.PATCH_FILE LIKE '%'||${SCH_PATCH_FILE}||'%')
+       AND  (${SCH_USE_YN}     IS NULL OR PP.USE_YN     = ${SCH_USE_YN})
+     ORDER  BY PP.BRAND_CD, PP.STOR_CD, PP.PATCH_FILE, PP.PATCH_VER
+]]></query>
+
+<query name='POS_PATCH_MST_U'><![CDATA[
+    MERGE   INTO POS_PATCH_MST
+    USING   DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  PATCH_FILE  = ${PATCH_FILE}
+           AND  PATCH_VER   = ${PATCH_VER}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  PATCH_TYPE  = ${PATCH_TYPE}
+             ,  ZIP_FILE    = ${ZIP_FILE}
+             ,  PATCH_DT    = ${PATCH_DT}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  PATCH_FILE
+             ,  PATCH_VER
+             ,  PATCH_TYPE
+             ,  ZIP_FILE
+             ,  PATCH_DT
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${PATCH_FILE}
+             ,  ${PATCH_VER}
+             ,  ${PATCH_TYPE}
+             ,  ${ZIP_FILE}
+             ,  ${PATCH_DT}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>

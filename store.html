@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PlayTime</title>
+        <meta charset="UTF-8">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+        <link href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css" rel="stylesheet" type="text/css">
+        <link href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css" rel="stylesheet">
+        <link href='//cdn.jsdelivr.net/jquery.slick/1.4.1/slick.css' rel='stylesheet'>
+        <link href="/css/style.css" rel="stylesheet" type="text/css">
+        <link href="/css/slick.css" rel="stylesheet" type="text/css"/>
+        <link href="/css/bootstrap.css" rel="stylesheet" type="text/css">
+        <link href="/css/icon.css" rel="stylesheet" type="text/css">
+        <style>
+            body {
+                margin: 0;
+            }
+            *, *:before, *:after { box-sizing: inherit; }
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+			a:focus, a:hover, a:visited, a:link {
+				text-decoration:none;
+				color: #000;
+				font-weight: 800;
+			}
+            .menu {
+                height: 30px;
+                background-color: #fff;
+                text-align: center;
+                color: #808080;
+            }
+            .slick-active {
+                color: #000 !important;
+            }
+            .button {
+                height: 40px;
+                width: 100%;
+                background-color: #FFCA02;
+                border-radius: 10px;
+                color: #fff;
+                border: none;
+            }
+            .my_store {
+                margin: 10px 8%;
+                background-image: url("/images/1.png");
+                height: 350px;
+                border-radius: 10px;
+                color: #fff !important;
+                background-size: cover;
+                background-position: 50% 50%;
+            }
+
+            .flex-wrap {
+
+            }
+            .flex-wrap:after {
+				content: '';
+				display: block;
+				clear: both;
+            }
+            .left-box {
+				float: left;
+				width:30%;
+                height:100%;
+                overflow-y: auto;
+                background-color: #f8f8f8;
+                text-align: center;
+            }
+            .right-box {
+				float: right;
+				width:70%;
+				height:100%;
+                overflow-y: auto;
+            }
+            div.select_box {
+                position: relative;
+                height: 50px;
+                border: none;
+                background-color: #f8f8f8;
+            }
+            div.select_box label {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+            div.select_box select.color {
+                width: 100%;
+                height: 40px;
+                min-height: 40px;
+                line-height: 40px;
+                padding: 0 10px;
+                opacity: 0;
+            }
+			.fav-star-y {
+	            position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 28px;
+                font-weight: 900;
+                color: #FFCA02;
+                text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            }
+            .fav-star-n {
+	            position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 28px;
+                font-weight: 300;
+                color: #eeeeee;
+                text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+                
+            }
+            .tel-btn {
+                height: 40px;
+                width: 100%;
+                background-color: #FFCA02;
+                border-radius: 10px;
+                color: #fff;
+                border: none;
+                display: block;
+                line-height: 40px;
+                text-align: center;
+                font-size: 18px;
+                font-weight: 800;
+            }
+            .tel-btn:link,
+            .tel-btn:visited {
+                color: #fff;
+                text-decoration: none;
+                cursor: auto;
+            }
+            .tel-btn:link:active,
+            .tel-btn:visited:active {
+                color: #fff;
+            }
+            .box-sh-gnt {
+                -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+                -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+                box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+            }
+			.container {
+				display: flex;
+				padding: 10px 0;
+				background-color: #f8f8f8;
+			}
+			.box-flex {
+				flex: 1;
+				text-align: center;
+				color: #000;
+				position: relative;
+			}
+			div#select_km {
+			    position: relative;
+			    width: 75px;
+			    background: url("/images/select_arrow.png") 100% center no-repeat; /* 화살표 이미지 */
+			    border: none;
+			    display: block;
+			    margin: 0 auto;
+			}
+			div#select_km label {
+			    position: absolute;
+			    font-size: 14px;
+			    color: #000;
+			    left: 12px;
+			    letter-spacing: 1px;
+			}
+			div#select_km select#km {
+			    width: 100%;
+			    padding: 0 10px;
+			    opacity: 0;
+			    filter: alpha(opacity=0); /* IE 8 */
+			}
+			div#select_brand {
+			    position: relative;
+			    width: 100px;
+			    background: url("/images/select_arrow.png") 100% center no-repeat; /* 화살표 이미지 */
+			    border: none;
+			    display: block;
+			    margin: 0 auto;
+			}
+			div#select_brand label {
+			    position: absolute;
+			    font-size: 14px;
+			    color: #000;
+			    left: 12px;
+			    letter-spacing: 1px;
+			}
+			div#select_brand select#brand {
+			    width: 100%;
+			    padding: 0 10px;
+			    opacity: 0;
+			    filter: alpha(opacity=0); /* IE 8 */
+			}
+			.find-store-list {
+				flex-basis: 80%;
+				font-size: 14px;
+			}
+			.find-store-name {
+				font-size: 18px;
+			}			
+			.find-store-distance {
+				flex-basis: 20%;
+				align-self: center;
+				color: red;
+				text-align: end;
+			}
+			#find_list {
+				overflow-y: auto;
+				margin-top: 86px;
+			}
+			#refresh {
+				color: #000;
+				font-size: 18px;
+				font-weight: 800;
+			}
+			.find-store-header {
+				position: fixed;
+				width: calc(100vw);
+			}
+			.q_mark_spin {
+				display: inline-block;
+				width: 20px;
+				height: 20px;
+			}
+			@keyframes spinaaa {
+				from {
+					transform: rotate(0deg);
+				}
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			.spin_icon{
+				animation: spinaaa 0.5s linear;
+			}
+			/* Center the loader */
+			#loader {
+			  position: absolute;
+			  left: 85%;
+			  top: 60%;
+			  z-index: 1;
+			  width: 150px;
+			  height: 150px;
+			  margin: -75px 0 0 -75px;
+			  border: 16px solid #f3f3f3;
+			  border-radius: 50%;
+			  border-top: 16px solid #3498db;
+			  width: 120px;
+			  height: 120px;
+			  -webkit-animation: spin 2s linear infinite;
+			  animation: spin 2s linear infinite;
+			}
+			
+			@-webkit-keyframes spin {
+			  0% { -webkit-transform: rotate(0deg); }
+			  100% { -webkit-transform: rotate(360deg); }
+			}
+			
+			@keyframes spin {
+			  0% { transform: rotate(0deg); }
+			  100% { transform: rotate(360deg); }
+			}
+			
+			/* Add animation to "page content" */
+			.animate-bottom {
+			  position: relative;
+			  -webkit-animation-name: animatebottom;
+			  -webkit-animation-duration: 1s;
+			  animation-name: animatebottom;
+			  animation-duration: 1s
+			}
+			
+			@-webkit-keyframes animatebottom {
+			  from { bottom:-100px; opacity:0 } 
+			  to { bottom:0px; opacity:1 }
+			}
+			
+			@keyframes animatebottom { 
+			  from{ bottom:-100px; opacity:0 } 
+			  to{ bottom:0; opacity:1 }
+			}
+			
+			#myDiv {
+			  display: none;
+			  text-align: center;
+			}
+
+        </style>
+    </head>
+	<body>
+        <input id="before_bar" type="hidden" value="0">
+        <form action="/api/mbl_0510.jsp" id="store_frm" method="POST">
+			<input name="COMP_CD" type="hidden" value="010">
+            <input id="USER_ID" name="USER_ID" type="hidden" value="MOBILE">
+            <input id="CUST_ID" name="CUST_ID" type="hidden">
+            <input id="SIDO_NM" name="SIDO_NM" type="hidden" value="서울">
+            <input id="BRAND_CD" name="BRAND_CD" type="hidden">
+            <input id="STOR_CD" name="STOR_CD" type="hidden">
+            <input id="LOC_LAT" name="LOC_LAT" type="hidden">
+            <input id="LOC_LNG" name="LOC_LNG" type="hidden">
+            <input id="RADIUS" name="RADIUS" type="hidden">            
+        </form>
+        <!-- header -->
+        <div class="box-sh-gnt" id="header" style="position:fixed; top:0px; left:0px; height:100px; right:0px;overflow:hidden;z-index:100;">
+            <div style="margin:20px 5.5% 20px 5.5%; height:30px; text-align:center;">
+                <!-- mypage -->
+                <div style="float:left; width:25%; text-align:left;">
+                    <img id="user" src="/images/navi/mypage.png" style="height:30px; width:30px;" onclick="document.location.href='/mypage.html'"></i>
+                </div>
+                <!-- logo -->
+                <div style="float:left; width:50%; text-align:center;"><img src="/images/logo.png" style="width:160px; height:30px; text-align:center;"></div>
+                <!-- push messenge -->
+                <div style="float:left; width:25%; text-align:right; font-size:23px; color:#808080;"><!-- <i class="far fa-bell"></i> --></div>
+            </div>
+            <!-- THUMBNAILS -->
+            <div style="position:relative">
+                <div class="slider-nav-thumbnails tabmenuac">
+                    <div>
+                        <div class="menu slick-active" id="menu1" slide="slide_1">신규매장</div>
+                    </div>
+                    <div>
+                        <div class="menu" id="menu2" slide="slide_2">지역별매장</div>
+                    </div>
+                    <div>
+                        <div class="menu" id="menu3" slide="slide_3">매장찾기</div>
+                    </div>
+                </div>
+                <div id="nav_bar" style="position:absolute; top:27px; left:0%; width:33.3%;">
+                    <div style="height:3px; background-color:#FFCA02; width:100%;"></div>
+                </div>
+            </div>
+        </div>
+        <!-- content -->
+        <div id="content" style="position:fixed; top:100px; bottom:60px; left:0px; right:0px; overflow:auto;">
+            <!-- MAIN SLIDES -->
+            <div class="slider">
+                <!-- evant -->
+                <div data-index="1">
+	                <div id="incontentin" style="overflow-y:scroll;">
+		                <div style="text-align:center;">
+			                <img id="new_st" src="/images/store/sas2.png" style="width:100%;margin:0 auto;">
+						</div>
+	                    <div style="margin:30px 8%;">
+	                        <div style="width:100%; display:flex;">
+	                            <div class="nsB" style="width:30%;height:22px;padding-top:2px;display:inline-block;font-size:20px;color:#fff;text-align:center;background-color:#FFCA02;border-radius:10px;font-size:13px;">
+	                                <span id="new_store_type">직영매장</span>
+	                            </div>
+	                            <div style="width:40%; display:inline-block;"></div>
+	                            <div style="width:30%; display:inline-block; font-size:25px; text-align:right; color:#808080;"></div>
+	                        </div>
+	                        <div class="nsB" style="font-size:18px; margin:10px 0;">
+	                            <span id="new_store_name"></span>
+	                        </div>
+	                        <div class="nsR" style="font-size:13px; margin:10px 0; color:#333;">
+	                            <span id="new_store_addr"></span>
+	                        </div>
+	                        <a class="tel-btn" id="call-btn" type="button">전화 문의</a>	                        
+	                    </div>
+	                </div>
+                </div>
+                <div data-index="2">
+                    <div class="select_box" style="text-align:center; color:#000;">
+                        <label for="color">전체브랜드</label>
+                        <select class="color" id="color" title="select color"></select>
+                    </div>
+                    <div class="flex-wrap" id="incontent">
+	                    <div class="left-box">
+	                        <ul class="nav nav-pills nav-stacked">
+	                            <li id="Seoul" role="presentation">
+	                                <a class="active" href="#">서울</a>
+	                            </li>
+	                            <li id="gyeonggi" role="presentation">
+	                                <a href="#">경기</a>
+	                            </li>
+	                            <li id="Incheon" role="presentation">
+	                                <a href="#">인천</a>
+	                            </li>
+	                            <li id="Daejeon" role="presentation">
+	                                <a href="#">대전</a>
+	                            </li>
+	                            <li id="Daegu" role="presentation">
+	                                <a href="#">대구</a>
+	                            </li>
+	                            <li id="Gwangju" role="presentation">
+	                                <a href="#">광주</a>
+	                            </li>
+	                            <li id="Ulsan" role="presentation">
+	                                <a href="#">울산</a>
+	                            </li>
+	                            <li id="Busan" role="presentation">
+	                                <a href="#">부산</a>
+	                            </li>
+	                            <li id="Jeju" role="presentation">
+	                                <a href="#">제주</a>
+	                            </li>
+	                            <li id="Cheongcheon" role="presentation">
+	                                <a href="#">충청</a>
+	                            </li>
+	                            <li id="Jeolla" role="presentation">
+	                                <a href="#">전라</a>
+	                            </li>
+	                            <li id="gyeongsang" role="presentation">
+	                                <a href="#">경상</a>
+	                            </li>
+	                        </ul>
+	                    </div>
+	                    <div class="right-box">
+	                        <ul class="nav nav-pills nav-stacked" id="storeList"></ul>
+	                    </div>
+                    </div>
+                </div>
+                <div data-index="3">
+	                
+	                <div class="find-store-header">
+		                <div class="container" style="background-color: #fff; padding: 10px;">
+			                <div class="nsB" style="flex: 1; align-self: center;">
+								내주변 매장( <span id="find-lengh">0</span> 개 )
+			                </div>
+	 		                <div style="flex: 1; text-align: end;">
+		 		                <div id="refresh" class="q_mark">
+			 		                <span class="q_mark_spin"><i class="icon-refresh-button" style="font-size: 20px;"></i></span>
+		 		                </div>
+	 		                </div> 
+		                </div>
+		                <div class="container">
+			                <div class="box-flex">
+				                <a id="map-btn" href="javascript:deny();">				               
+									<i class="icon-address" style="font-size: 20px;"></i> <span class="nsB">지도보기</span>
+				                </a>
+			                </div>
+			                <div class="box-flex">
+								<div id="select_km">
+								    <label for="km">5km</label>
+								    <select id="km" class="color">
+								        <option value="5" selected="selected">5km</option>
+								        <option value="10">10km</option>
+								        <option value="15">15km</option>
+								        <option value="20">20km</option>
+								    </select>
+								</div>
+			                </div>
+			                <div class="box-flex">
+								<div id="select_brand">
+								    <label for="brand"></label>
+								    <select id="brand" class="color"></select>
+								</div>
+			                </div>
+		                </div>
+	                </div>
+
+					<div id="find_list">
+						<div id="loader"></div>
+						
+						<div style="display:none;" id="myDiv" class="animate-bottom">
+							<P class='nsB' style='padding:20px; font-size:18px; text-align:center;'>사용중인 앱의 업데이트 상태와<br>디바이스의 위치정보가<br>허용상태인지 확인해주세요.</p>
+						</div>
+					</div>
+					
+				</div>
+
+			</div>
+    	</div>
+    <div class="box-sh-gnt" id="footer" style="position:fixed; bottom:0px; height:60px; left:0px; right:0px; overflow:hidden;z-index:100;">
+        <div id="code" style="float:left; height:100%; width:25%; text-align:center;" onclick="document.location.href='/member.html'"><img src="/images/navi/code.png" style="width:60%;"></div>
+        <div id="home" style="float:left; height:100%; width:25%; text-align:center;" onclick="document.location.href='/main.html'"><img src="/images/navi/home.png" style="width:60%;"></div>
+        <div style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/yellowstore.png" style="width:60%;"></div>
+        <div id="play" style="float:left; height:100%; width:25%; text-align:center;" onclick="document.location.href='/infomation.html'"><img src="/images/navi/play.png" style="width:60%;"></div>
+    </div>
+    <script src='js/jquery.js'></script>
+    <script src='//cdn.jsdelivr.net/jquery.slick/1.4.1/slick.min.js'></script>
+	<script src="/js/sweetalert.min.js"></script>
+    <script type="text/javascript">
+	    // native에서 위,경도 리턴받을 함수
+		function latitudeAndLongitude(a,b) {
+			$("#LOC_LAT").val(a);
+			$("#LOC_LNG").val(b);
+			$("#BRAND_CD").val($("#brand").val());
+			$("#RADIUS").val($("#km").val());
+			var lat = $("#LOC_LAT").val();
+			var lng = $("#LOC_LNG").val(); 
+			var brand = $("#BRAND_CD").val();
+			var radius = $("#RADIUS").val();
+            var datas = $("#store_frm").serialize();
+            var result = "";
+            if(lat != "" && lng != "") {
+	            $.ajax({
+					url: '/api/mbl_0730.jsp',
+					type: 'POST',
+					dataType: 'JSON',
+					data: datas,
+					success: function(response) {
+						if(response.RET_CD == "0001") {
+							if(response.RESULT.length != 0) {
+								$("#find-lengh").text(response.RESULT.length);
+								for (var i = 0; i < response.RESULT.length; i++) {
+									if(brand == "" || brand != null) {
+										result += "<a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"'>"
+											+ "<div class='box-sh-gnt' style='display: flex; padding: 15px 8%;'>"
+											+ "<div class='nsB find-store-list'>"+response.RESULT[i].BRAND_NM+"<br><span class='find-store-name'>"+response.RESULT[i].STOR_NM+"</span></div>"
+											+ "<div class='find-store-distance'>"+response.RESULT[i].DISTANCE+" km</div>"
+											+ "</div>"
+											+ "</a>"	
+									}else {
+										if(brand == response.RESULT[i].BRAND_CD) {
+											result += "<a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"'>"
+												+ "<div class='box-sh-gnt' style='display: flex; padding: 15px 8%;'>"
+												+ "<div class='nsB find-store-list'>"+response.RESULT[i].BRAND_NM+"<br><span class='find-store-name'>"+response.RESULT[i].STOR_NM+"</span></div>"
+												+ "<div class='find-store-distance'>"+response.RESULT[i].DISTANCE+" km</div>"
+												+ "</div>"
+												+ "</a>"			
+										}
+									}
+								}
+								$("#find_list").empty();
+								$("#find_list").append(result);
+								$('#map-btn').attr('href', '/store_find_map.html?LOC_LAT='+lat+'&LOC_LNG='+lng+'&BRAND_CD='+brand+'&RADIUS='+radius);
+							}else {
+								$("#find-lengh").text("0");
+								$("#find_list").empty();							
+								$("#find_list").html("<P class='nsB' style='padding:20px; font-size:18px; text-align:center;'>현재 고객님의 위치와<br>근접한 매장이 존재하지 않습니다.</p>");
+							}	
+						}
+					}
+	            });
+            }else {
+	            deny();
+            }
+		}
+		// native 사용자 위치서비스 동의하지 않을경우 함수 실행
+		function deny() {
+			$("#find_list").empty();
+			$("#find_list").html("<P class='nsB' style='padding:20px; font-size:18px; text-align:center;'>사용중인 앱의 업데이트 상태와<br>디바이스의 위치정보가<br>허용상태인지 확인해주세요.</p>");
+		}
+
+	    $(window).resize(function() {
+		    $('#incontent').height($(window).height() - 210);
+		    $('#incontentin').height($(window).height() - 160);
+		    $('#find_list').height($(window).height() - 246);
+		});
+		
+		$(window).trigger('resize');
+        function setCookie(name, value, days) {
+            var d = new Date;
+            d.setTime(d.getTime() + 24 * 60 * 60 * 1000 * days);
+            document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+        }
+        function getCookie(name) {
+            var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+            return v
+                ? v[2]
+                : null;
+        }
+        function numberWithCommas(x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        var myVar;
+		
+		function myFunction() {
+		  myVar = setTimeout(showPage, 5000);
+		}
+		
+		function showPage() {
+		  document.getElementById("loader").style.display = "none";
+		  document.getElementById("myDiv").style.display = "block";
+		}
+        
+        $(document).on('ready', function () { 
+	        // tab3 km selectbox label reset
+            var select_km = $("#km").children("option:selected").text();
+            $("#km").siblings("label").text(select_km);
+	         
+	        
+			// 위, 경도
+			var latitude = "";
+			var longitude = "";
+		
+            setCookie('tab_main', null, -1);
+            var user = getCookie('user');
+            if(user == null || user == "") {
+            	document.location.href="/login.html";
+            }else {
+                $("#CUST_ID").val(user);
+            }
+            
+            // 신규매장 정보
+            var datas = $("#store_frm").serialize();
+            $.ajax({
+                url: '/api/mbl_ADM_0006.jsp',
+                type: 'POST',
+                dataType: 'JSON',
+                data: datas,
+                success: function (response) {
+                    if (response.RET_CD == '0001') {
+                        if (response.RESULT[0].STORE_TYPE == "01") {
+                            $('#new_store_type').html('직영매장');
+                        } else {
+                            $('#new_store_type').html('비직영매장');
+                        }
+                        $('#new_store_name').html(response.RESULT[0].STORE_NAME);
+                        $('#new_store_addr').html(response.RESULT[0].STORE_ADDR);
+                        $('#call-btn').attr('href', 'tel:' + response.RESULT[0].STORE_TEL);
+                        var brand = response.RESULT[0].STORE_INPUT_BRAND;
+                        // alert(brand);
+                        if(brand == "102") {
+                            $("#new_st").attr('src', '/images/store/sa2.png');
+                        }else if(brand == "104") {
+                            $("#new_st").attr('src', '/images/store/ap2.png');
+                        }else if(brand == "105") {
+                            $("#new_st").attr('src', '/images/store/apt2.png');
+        /*
+                        }else if(brand == "106") {
+        //                  키즈카페애플트리
+                        }else if(brand == "107") {
+        //                  키즈카페
+                        }else if(brand == "108") {
+        //                  모다키즈랜드
+        */
+                        }else if(brand == "109") {
+                            $("#new_st").attr('src', '/images/store/li2.png');
+                        }else if(brand == "201") {
+                            $("#new_st").attr('src', '/images/store/ch2.png');
+                        }else if(brand == "202") {
+                            $("#new_st").attr('src', '/images/store/kio2.png');
+                        }else if(brand == "301") {
+                            $("#new_st").attr('src', '/images/store/ee2.png');
+                        }else if(brand == "302") {
+                            $("#new_st").attr('src', '/images/store/sab2.png');
+        //              }else if(brand == "303") {
+        //                  애플블록앤퍼즐
+                        }else if(brand == "401") {
+                            $("#new_st").attr('src', '/images/store/ba2.png');
+                        }else if(brand == "501") {
+                            $("#new_st").attr('src', '/images/store/sas2.png');
+                        }else if(brand == "999") {
+                            $("#new_st").attr('src', '/images/store/pt2.png');
+                        }else {
+                            $("#new_st").attr('src', '/images/store/pt.png');
+                        }
+                    }
+                }
+            });
+
+            var select = $("select.color");
+            select.change(function () {
+                var select_name = $(this).children("option:selected").text();
+                $(this).siblings("label").text(select_name);
+            });            
+            
+            if(getCookie("area") === null){
+                // 기본 페이지 매장 전체 리스트
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) { 
+    // 	                console.log(response);
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>" + ""
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            }
+     
+            // 지역 리스트 셀렉트박스
+            $.ajax({
+                url: '/api/mbl_0720.jsp',
+                type: 'POST',
+                dataType: 'JSON',
+                data: datas,
+                success: function (response) {
+                    var result = "";
+                    result += "<option value=''>전체브랜드</option>";
+//                     console.log(response.RESULT);
+                    if (response.RESULT.length != 0) {
+                        for (var i = 0; i < response.RESULT.length; i++) {
+                            if(getCookie("brand") == response.RESULT[i].BRAND_CD){
+                                var selected = "selected";
+                            }else{
+                                var selected = "";
+                            }
+                            if(response.RESULT[i].BRAND_CD != "999")
+                            result += "<option value=" + response.RESULT[i].BRAND_CD + " "+selected+">" + response.RESULT[i].BRAND_NM + "</option>"
+                        }
+                    }
+                    $("#color").append(result);
+                    $(".select_box").children("label").text($("#color option:selected").text());
+					$("#brand").append(result);
+					$("#select_brand").children("label").text($("#color option:selected").text());
+                }
+            });
+            $(document).on("click", ".sto_pre", function () {
+            var st_ID = $(this).find($("input[name=NOTI_ID]"));
+            });
+
+            // li tag evant
+            $('#Seoul').click(function () {
+                setCookie('area', "Seoul", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("서울");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#gyeonggi').click(function () {
+                setCookie('area', "gyeonggi", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("경기");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Incheon').click(function () {
+                setCookie('area', "Incheon", 999);
+                // console.log(1);
+                $("#storeList").html("");
+                $("#SIDO_NM").val("인천");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        // console.log(response);
+                        var result = "";
+                        if (response.RESULT.length > 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        // console.log(result);
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Daejeon').click(function () {
+                setCookie('area', "Daejeon", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("대전");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) { 
+	                    // console.log(response)
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Daegu').click(function () {
+                setCookie('area', "Daegu", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("대구");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Gwangju').click(function () {
+                setCookie('area', "Gwangju", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("광주");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Ulsan').click(function () {
+                setCookie('area', "Ulsan", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("울산");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Busan').click(function () {
+                setCookie('area', "Busan", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("부산");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Jeju').click(function () {
+                setCookie('area', "Jeju", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("제주특별자치도");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+	                    console.log(response);
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+	                            if(response.RESULT[i].ADDR2 == null || response.RESULT[i].ADDR2 == '') {
+									result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + "</span></a></li>"
+									
+	                            }else {
+		                            result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+	                            }
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Cheongcheon').click(function () {
+                setCookie('area', "Cheongcheon", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("충북");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+	                    console.log(response);
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+                $("#SIDO_NM").val("충남");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+	                    console.log(response);
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#Jeolla').click(function () {
+                setCookie('area', "Jeolla", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("전북");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+                $("#SIDO_NM").val("전남");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#gyeongsang').click(function () {
+                setCookie('area', "gyeongsang", 999);
+                $("#storeList").empty();
+                $("#SIDO_NM").val("경북");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+                $("#SIDO_NM").val("경남");
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            $('#color').change(function () {
+                $("#storeList").empty();;
+                var brand = $(this).val();
+                $("#BRAND_CD").val(brand);
+                setCookie('brand', brand, 999);
+                var datas = $("#store_frm").serialize();
+                $.ajax({
+                    url: '/api/mbl_0700.jsp',
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) {
+                        var result = "";
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                result += "<li class='sto_pre' role='presentation'><a href='/store_detail.html?SIDO_NM="+response.RESULT[i].SIDO_NM+"&BRAND_CD="+response.RESULT[i].BRAND_CD+"&STOR_CD="+response.RESULT[i].STOR_CD+"' class='active store'><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].STOR_TP_NM + "</span><br><span class='nsB' style='font-size:15px; color:#000;'>" + response.RESULT[i].BRAND_NM + " - " + response.RESULT[i].STOR_NM + "</span><br><span class='nsR' style='font-size:10px;'>" + response.RESULT[i].ADDR1 + response.RESULT[i].ADDR2 + "</span></a></li>"
+                            }
+                        }
+                        $("#storeList").append(result);
+                    }
+                });
+            });
+            
+            // tab3 매장찾기 새로고침
+            $(".icon-refresh-button").unbind("click");
+			$(".icon-refresh-button").bind("click", function(){
+				var btn = $(".q_mark").find(".q_mark_spin");
+				btn.addClass("spin_icon");
+				setTimeout(function(){btn.removeClass('spin_icon');}, 1000);
+				var varUA = navigator.userAgent.toLowerCase();
+				try {
+					// 안드로이드
+					if (varUA.match('android') != null) { 
+						window.HybridApp.getLocation();
+					// IOS
+					}else if (varUA.indexOf("iphone")>-1||varUA.indexOf("ipad")>-1||varUA.indexOf("ipod")>-1) {
+						window.webkit.messageHandlers.scriptHandler.postMessage("location");
+					}
+				}catch(e) {
+					console.log(e);
+				}
+
+			});
+			                      
+            // tab3 km 변경 이벤트
+            $(document).on('change', '#km', function(){
+	            var a =	$("#LOC_LAT").val();
+				var b = $("#LOC_LNG").val();
+				var km = $(this).val();
+				$("#RADIUS").val(km);
+				latitudeAndLongitude(a,b);				
+            });
+            
+            // tab3 barnd 변경 이벤트
+            $(document).on('change', '#brand', function(){
+	            var a =	$("#LOC_LAT").val();
+				var b = $("#LOC_LNG").val();
+				var brand = $(this).val();
+				$("#BRAND_CD").val(brand);
+				latitudeAndLongitude(a,b);				
+            });
+			            
+            $('.slider').slick({
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                arrows: false,
+                fade: false,
+                asNavFor: '.slider-nav-thumbnails',
+                infinite: false,
+                adaptiveHeight: true,
+                swipe: false
+            });
+            $('.slider-nav-thumbnails').slick({
+                slidesToShow: 3,
+                slidesToScroll: 1,
+                asNavFor: '.slider',
+                dots: true,
+                focusOnSelect: true,
+                infinite: false
+            });
+            // remove active class from all thumbnail slides
+            $('.slider-nav-thumbnails').removeClass('slick-active');
+            // set active class to first thumbnail slides
+            $('.slider-nav-thumbnails').eq(0).addClass('slick-active');
+            // On before slide change match active thumbnail to current slide
+            $('.slider .slider-nav-thumbnails').on('beforeChange', function (event, slick, currentSlide, nextSlide) {
+                var mySlideNumber = nextSlide;
+                $('.slider-nav-thumbnails').removeClass('slick-active');
+                $('.slider-nav-thumbnails').eq(mySlideNumber).addClass('slick-active');
+            });
+            // UPDATED
+            $('.slider').on('afterChange', function (event, slick, currentSlide) {
+                setCookie('tab', currentSlide, 999);
+                $('.content').hide();
+                $('.content[data-id=' + (
+                currentSlide + 1) + ']').show();
+                if (!$(event.target).hasClass('membership_card')) {
+                    $('.menu').removeClass('slick-active');
+                    var before = $('#before_bar').val();
+                    var move = before - currentSlide;
+                    if (currentSlide == 0) {
+                        $('#menu1').addClass('slick-active');
+                        if (move == 1) {
+                            $('#nav_bar').animate({left: '0'});
+                        } else if (move == 2) {
+                            $('#nav_bar').animate({left: '0'});
+                        }
+                        $('#before_bar').val(currentSlide);
+                    } else if (currentSlide == 1) {
+                        $("#menu2").addClass("slick-active");
+                        if (move == -1) {
+                            $('#nav_bar').animate({left: '33.3%'});
+                        } else if (move == 1) {
+                            $('#nav_bar').animate({left: '33.3%'});
+                        }
+                        $('#before_bar').val(currentSlide);
+                    } else if (currentSlide == 2) {
+                        $("#menu3").addClass("slick-active");
+                        if (move == -1) {
+                            $('#nav_bar').animate({left: '66.6%'});
+                        } else if (move == -2) {
+                            $('#nav_bar').animate({left: '66.6%'});
+                        }
+                        $('#before_bar').val(currentSlide);
+                        // 내 위치 정보 호출
+						myFunction();
+						var varUA = navigator.userAgent.toLowerCase();
+						try {
+							// 안드로이드
+							if (varUA.match('android') != null) { 
+								window.HybridApp.getLocation();
+							// IOS
+							}else if (varUA.indexOf("iphone")>-1||varUA.indexOf("ipad")>-1||varUA.indexOf("ipod")>-1) {
+								window.webkit.messageHandlers.scriptHandler.postMessage("location");
+							}	
+						}catch(e) {
+							console.log(e);
+						}
+                    }
+                }
+            });
+            // console.log(getCookie("tab"));
+            if(getCookie("tab") !== null){
+                $('.slider').slick("slickGoTo",getCookie("tab"));
+            }
+            if(getCookie("tab") == "1" && getCookie("brand") !== null){
+                // $("#color").trigger("change");
+                if(getCookie("area") !== null){
+                    $("#BRAND_CD").val(getCookie("brand"));
+                }else{
+                    $("#color").val(getCookie("brand")).trigger("change");
+                }
+            }
+            // console.log(getCookie("area"));
+            if(getCookie("tab") == "1" && getCookie("area") !== null){
+                $('#'+getCookie("area")).trigger("click");
+            }
+        });
+    </script>
+</body>
+</html>

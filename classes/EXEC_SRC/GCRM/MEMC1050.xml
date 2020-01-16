@@ -1,0 +1,230 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='COUPON_MST_Q'><![CDATA[
+    SELECT  CC.COMP_CD
+         ,  CC.COUPON_CD
+         ,  CC.COUPON_NM
+         ,  CC.DC_DIV
+         ,  DC.DC_NM
+         ,  CC.CERT_YN
+         ,  CC.START_DT
+         ,  CC.CLOSE_DT
+      FROM  C_COUPON_MST CC
+         ,  DC           DC
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON C
+                     ,  ( 
+                            SELECT  COMP_CD
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '01775'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '01775'
+                   AND  C.USE_YN    = 'Y'
+            )   CM
+     WHERE  CC.COMP_CD      = DC.COMP_CD
+       AND  CC.BRAND_CD     = DC.BRAND_CD
+       AND  CC.DC_DIV       = DC.DC_DIV
+       AND  CC.COMP_CD      = CM.COMP_CD
+       AND  CC.CERT_YN      = CM.CODE_CD
+       AND  CC.COMP_CD      = ${SCH_COMP_CD}
+       AND  CC.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  DC.DC_GRPCD     IN ('MEM', 'MBR', 'MTC', 'MTS')
+       AND  CC.CLOSE_DT     >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+       AND  CC.USE_YN       = 'Y'
+       AND  CC.COUPON_DIV   = '1' -- 정기쿠폰
+       AND  (${SCH_COUPON_CD} IS NULL OR CC.COUPON_CD = ${SCH_COUPON_CD})
+     ORDER  BY CC.COMP_CD
+         ,  CC.COUPON_CD
+]]></query>
+
+<query name='GRADE_MST_Q'><![CDATA[
+    SELECT  LVL.LVL_CD
+         ,  LVL.LVL_NM
+         ,  LVL.LVL_RANK
+      FROM  C_CUST_LVL  LVL
+     WHERE  LVL.COMP_CD = ${SCH_COMP_CD}
+       AND  LVL.USE_YN  = 'Y'
+     ORDER  BY LVL.LVL_CD
+         ,  LVL.LVL_RANK
+]]></query>
+
+<query name='ITEM_GRP_Q'><![CDATA[
+    SELECT  GRP.GRP_SEQ
+         ,  GRP.GRP_NM
+      FROM  DC_ITEM_GRP GRP
+     WHERE  GRP.COMP_CD     = ${SCH_COMP_CD}
+       AND  GRP.BRAND_CD    IN ('0000', ${SCH_BRAND_CD})
+       AND  GRP.DC_DIV      = ${SCH_DC_DIV}
+       AND  GRP.USE_YN      = 'Y'
+     ORDER  BY GRP.GRP_SEQ  
+]]></query>
+
+<query name='COUPON_GRP_Q'><![CDATA[
+    SELECT  CG.COMP_CD
+         ,  CG.LVL_CD
+         ,  CL.LVL_NM
+         ,  CG.COUPON_CD
+         ,  CC.COUPON_NM
+         ,  CG.DC_DIV
+         ,  DC.DC_NM
+         ,  CG.GRP_SEQ
+         ,  DG.GRP_NM
+         ,  CG.BRAND_CD
+         ,  CG.PRT_DIV
+         ,  CM.CODE_NM AS PRT_NM
+         ,  CG.USE_YN
+      FROM  C_COUPON_ITEM_GRP CG
+         ,  C_COUPON_MST      CC
+         ,  C_CUST_LVL        CL
+         ,  DC                DC
+         ,  DC_ITEM_GRP       DG
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+                  FROM  COMMON C
+                     ,  ( 
+                            SELECT  COMP_CD
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '12210'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '12210'
+                   AND  C.USE_YN    = 'Y'
+            )  CM
+     WHERE  CG.COMP_CD      = CC.COMP_CD
+       AND  CG.COUPON_CD    = CC.COUPON_CD
+       AND  CG.COMP_CD      = CL.COMP_CD
+       AND  CG.LVL_CD       = CL.LVL_CD
+       AND  CG.COMP_CD      = DC.COMP_CD
+       AND  CG.BRAND_CD     = DC.BRAND_CD
+       AND  CG.DC_DIV       = DC.DC_DIV
+       AND  CG.COMP_CD      = DG.COMP_CD
+       AND  CG.BRAND_CD     = DG.BRAND_CD
+       AND  CG.DC_DIV       = DG.DC_DIV
+       AND  CG.GRP_SEQ      = DG.GRP_SEQ
+       AND  CG.COMP_CD      = CM.COMP_CD
+       AND  CG.PRT_DIV      = CM.CODE_CD
+       AND  CG.COMP_CD      = ${SCH_COMP_CD}
+       AND  CG.COUPON_CD    = ${SCH_COUPON_CD}
+       AND  CG.USE_YN       = 'Y'
+     ORDER  BY CG.LVL_CD
+         ,  CG.GRP_SEQ
+]]></query>
+
+<!-- 타계정 등록 삽입, 수정 -->
+<query name='C_COUPON_ITEM_GRP_U'><![CDATA[
+    MERGE INTO C_COUPON_ITEM_GRP
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  LVL_CD      = ${LVL_CD}
+           AND  COUPON_CD   = ${COUPON_CD}
+           AND  GRP_SEQ     = ${GRP_SEQ}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  BRAND_CD     = ${BRAND_CD}
+             ,  DC_DIV       = ${DC_DIV}
+             ,  PRT_DIV      = ${PRT_DIV}
+             ,  USE_YN       = ${USE_YN}
+             ,  UPD_DT       = SYSDATE
+             ,  UPD_USER     = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  LVL_CD
+             ,  COUPON_CD
+             ,  GRP_SEQ
+             ,  BRAND_CD
+             ,  DC_DIV
+             ,  PRT_DIV
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${LVL_CD}
+             ,  ${COUPON_CD}
+             ,  ${GRP_SEQ}
+             ,  ${BRAND_CD}
+             ,  ${DC_DIV}
+             ,  ${PRT_DIV}
+             ,  ${USE_YN}
+             ,  SYSDATE 
+             ,  ${UPD_USER} 
+             ,  SYSDATE 
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<!-- 쿠폰검색 -->
+<query name='COUPON_LIST_Q'><![CDATA[
+    SELECT  CC.COUPON_CD
+         ,  CC.COUPON_NM
+         ,  CC.DC_DIV
+         ,  DC.DC_NM
+         ,  CC.CERT_YN
+         ,  CC.START_DT
+         ,  CC.CLOSE_DT
+      FROM  C_COUPON_MST CC
+         ,  DC           DC
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+                  FROM  COMMON C
+                     ,  ( 
+                            SELECT  COMP_CD
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '01775'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '01775'
+                   AND  C.USE_YN    = 'Y'
+            )   CM
+     WHERE  CC.COMP_CD      = DC.COMP_CD
+       AND  CC.BRAND_CD     = DC.BRAND_CD
+       AND  CC.DC_DIV       = DC.DC_DIV
+       AND  CC.COMP_CD      = CM.COMP_CD
+       AND  CC.CERT_YN      = CM.CODE_CD
+       AND  CC.COMP_CD      = ${SCH_COMP_CD}
+       AND  CC.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  DC.DC_GRPCD     IN ('MEM', 'MBR', 'MTC', 'MTS')
+       AND  (${SCH_COUPON_TXT} IS NULL OR (CC.COUPON_CD LIKE '%'||${SCH_COUPON_TXT}||'%' OR CC.COUPON_NM LIKE '%'||${SCH_COUPON_TXT}||'%'))
+       AND  CC.START_DT     <= TO_CHAR(SYSDATE, 'YYYYMMDD')
+       AND  CC.CLOSE_DT     >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+       AND  CC.USE_YN       = 'Y'
+     ORDER  BY CC.COMP_CD
+]]></query>
+
+</SQLResource>

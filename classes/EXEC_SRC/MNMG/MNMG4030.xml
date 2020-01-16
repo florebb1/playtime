@@ -1,0 +1,135 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='STOR_TP_MENU_Q'><![CDATA[
+    SELECT  NVL(A3.LANG_MENU_NM, A1.MENU_NM)    AS MENU_NM
+         ,  A1.MENU_CD
+         ,  LEVEL                               AS MENU_LVL
+         ,  A1.MENU_REF
+         ,  A1.PROG_TP
+      FROM  W_MENU      A1
+         ,  (
+                SELECT  COMP_CD
+                     ,  MENU_CD 
+                  FROM  W_MENU_GROUP 
+                 WHERE  PGM_MENU_GRP = (SELECT STOR_TP FROM STORE WHERE COMP_CD = ${SCH_COMP_CD} AND BRAND_CD = ${SCH_BRAND_CD} AND STOR_CD = ${SCH_STOR_CD})
+                   AND  COMP_CD      = ${SCH_COMP_CD}
+                   AND  USE_YN       = 'Y'
+            )   A2
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL      AS LANG_MENU_CD
+                     ,  LANG_NM     AS LANG_MENU_NM
+                  FROM  LANG_TABLE 
+                 WHERE  COMP_CD     = ${SCH_COMP_CD} 
+                   AND  TABLE_NM    = 'W_MENU'
+                   AND  COL_NM      = 'MENU_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   A3
+     WHERE  A1.COMP_CD  = A2.COMP_CD
+       AND  A1.MENU_CD  = A2.MENU_CD
+       AND  A1.COMP_CD  = A3.COMP_CD(+)
+       AND  A1.MENU_CD  = A3.LANG_MENU_CD(+)
+       AND  A1.COMP_CD  = ${SCH_COMP_CD}
+       AND  A1.USE_YN   ='Y'
+   CONNECT  BY    A1.MENU_REF = PRIOR A1.MENU_CD
+     START  WITH  A1.MENU_REF = '0'
+     ORDER  SIBLINGS BY A1.MENU_IDX, A1.MENU_CD
+]]></query>
+
+<query name='STOR_USER_Q'><![CDATA[
+    SELECT  A1.USER_ID
+         ,  A1.USER_NM
+         ,  A2.CODE_NM      AS EMP_DIV_NM
+         ,  A1.EMP_DIV      AS EMP_DIV
+         ,  A1.USE_YN
+      FROM  STORE_USER      A1
+         ,  (
+                SELECT  A1.COMP_CD
+                     ,  A1.CODE_CD                      AS CODE_CD
+                     ,  NVL(A2.CODE_NM , A1.CODE_NM)    AS CODE_NM
+                  FROM  COMMON          A1
+                     ,  LANG_COMMON     A2
+                 WHERE  A1.COMP_CD          = A2.COMP_CD(+)
+                   AND  A1.CODE_TP          = A2.CODE_TP(+)
+                   AND  A1.CODE_CD          = A2.CODE_CD(+)
+                   AND  A1.COMP_CD          = ${SCH_COMP_CD}
+                   AND  A1.CODE_TP          = '00765'
+                   AND  A2.LANGUAGE_TP(+)   = ${SCH_LANGUAGE_TP}
+                   AND  A2.USE_YN(+)        = 'Y'
+            )   A2
+     WHERE  A1.COMP_CD  = A2.COMP_CD
+       AND  A1.EMP_DIV  = A2.CODE_CD
+       AND  A1.COMP_CD  = ${SCH_COMP_CD}
+       AND  A1.BRAND_CD = ${SCH_BRAND_CD}
+       AND  A1.STOR_CD  = ${SCH_STOR_CD}
+       AND  A1.USE_YN   = 'Y'
+       AND  (${SCH_USER_TXT} IS NULL OR (A1.USER_ID LIKE '%'||${SCH_USER_TXT}||'%' OR A1.USER_NM LIKE '%'||${SCH_USER_TXT}||'%'))
+     ORDER  BY EMP_DIV
+]]></query>
+
+<query name='STORE_USER_MENU_Q'><![CDATA[
+    SELECT  NVL(B3.LANG_MENU_NM, B1.MENU_NM)    AS MENU_NM
+         ,  B1.MENU_CD
+         ,  LEVEL                               AS MENU_LVL
+         ,  B1.MENU_REF
+         ,  B1.PROG_TP
+      FROM  W_MENU      B1
+         ,  (
+                SELECT  A1.COMP_CD
+                     ,  A1.MENU_CD
+                  FROM  (
+                            SELECT  COMP_CD 
+                                 ,  'W_MENU_STORE_TP'       AS USE_TABLE_NM
+                                 ,  MENU_CD
+                              FROM  W_MENU_GROUP
+                             WHERE  COMP_CD         = ${SCH_COMP_CD}
+                               AND  PGM_MENU_GRP    = (SELECT STOR_TP FROM STORE WHERE COMP_CD = ${SCH_COMP_CD} AND BRAND_CD = ${SCH_BRAND_CD} AND STOR_CD = ${SCH_STOR_CD})
+                               AND  USE_YN       = 'Y'
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  'W_MENU_STORE_USER'     AS USE_TABLE_NM
+                                 ,  MENU_CD
+                              FROM  W_MENU_STORE_USER
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  STOR_CD = ${SCH_STOR_CD}
+                               AND  USER_ID = ${SCH_USER_ID}
+                               AND  USE_YN       = 'Y'
+                        )   A1
+                     ,  (
+                            SELECT  ${SCH_COMP_CD}  AS COMP_CD
+                                 ,  CASE WHEN ( SELECT EMP_DIV  FROM STORE_USER        WHERE USER_ID = ${SCH_USER_ID} AND BRAND_CD = ${SCH_BRAND_CD} AND COMP_CD = ${SCH_COMP_CD} AND STOR_CD = ${SCH_STOR_CD}  AND USE_YN = 'Y')   IN ( '1' , '2' )  AND 
+                                              ( SELECT COUNT(*) FROM W_MENU_STORE_USER WHERE USER_ID = ${SCH_USER_ID} AND COMP_CD  = ${SCH_COMP_CD}  AND STOR_CD = ${SCH_STOR_CD}) = 0                                                                      THEN  'W_MENU_STORE_TP' 
+                                         WHEN ( SELECT EMP_DIV  FROM STORE_USER        WHERE USER_ID = ${SCH_USER_ID} AND BRAND_CD = ${SCH_BRAND_CD} AND COMP_CD = ${SCH_COMP_CD} AND STOR_CD = ${SCH_STOR_CD} AND USE_YN = 'Y')    NOT IN ( '1' , '2' )    THEN  'W_MENU_STORE_USER' 
+                                         WHEN ( SELECT EMP_DIV  FROM STORE_USER        WHERE USER_ID = ${SCH_USER_ID} AND BRAND_CD = ${SCH_BRAND_CD} AND COMP_CD = ${SCH_COMP_CD} AND STOR_CD = ${SCH_STOR_CD} AND USE_YN = 'Y')    IN ( '1' , '2' ) AND 
+                                              ( SELECT COUNT(*) FROM W_MENU_STORE_USER WHERE USER_ID = ${SCH_USER_ID} AND COMP_CD  = ${SCH_COMP_CD}  AND STOR_CD = ${SCH_STOR_CD}) <> 0                                                                     THEN  'W_MENU_STORE_USER' 
+                                    END             AS USE_TABLE_NM
+                              FROM  DUAL
+                        )   A2
+                 WHERE  A1.COMP_CD      = A2.COMP_CD
+                   AND  A1.USE_TABLE_NM = A2.USE_TABLE_NM
+            )   B2
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL      AS LANG_MENU_CD
+                     ,  LANG_NM     AS LANG_MENU_NM
+                  FROM  LANG_TABLE 
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'W_MENU'
+                   AND  COL_NM      = 'MENU_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   B3
+     WHERE  B1.COMP_CD  = B2.COMP_CD
+       AND  B1.MENU_CD  = B2.MENU_CD
+       AND  B1.COMP_CD  = B3.COMP_CD(+)
+       AND  B1.MENU_CD  = B3.LANG_MENU_CD(+)
+       AND  B1.COMP_CD  = ${SCH_COMP_CD}
+       AND  B1.USE_YN   = 'Y'
+   CONNECT  BY    B1.MENU_REF = PRIOR B1.MENU_CD  
+     START  WITH  B1.MENU_REF = '0'
+     ORDER  SIBLINGS BY B1.MENU_IDX, B1.MENU_CD
+]]></query>
+
+</SQLResource>

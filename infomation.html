@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PlayTime</title>
+        <meta charset="UTF-8">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+        <link crossorigin="anonymous" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" rel="stylesheet">
+        <link href="https://cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css" rel="stylesheet" type="text/css">
+        <link href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css" rel="stylesheet">
+        <link href='//cdn.jsdelivr.net/jquery.slick/1.4.1/slick.css' rel='stylesheet'>
+        <link href="/css/slick.css" rel="stylesheet" type="text/css">
+        <link href="/css/style.css" rel="stylesheet" type="text/css">
+        <link href="/css/bootstrap.css" rel="stylesheet" type="text/css">
+        <style>
+            body {
+                margin: 0;
+            }
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .menu {
+                height: 30px;
+                background-color: #fff;
+                text-align: center;
+                color: #808080;
+            }
+            .slick-active {
+                color: #000 !important;
+            }
+            .carousel-indicators {
+                z-index: 99999 !important;
+            }
+            .carousel-indicators li {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                margin: 1px;
+                cursor: pointer;
+                background-color: #000 \9;
+                background-color: rgba(0, 0, 0, 0);
+                border: 1px solid rgba(0, 0, 0, 0.5);
+                border-radius: 10px;
+            }
+            .carousel-indicators .active {
+                width: 12px;
+                height: 12px;
+                margin: 0;
+                background-color: rgba(0, 0, 0, 0.9);
+            }
+            .carousel-control.left {
+                background-image: -webkit-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                background-image: -o-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, 0)), to(rgba(0, 0, 0, 0.0001)));
+                background-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1)) background-repeat: repeat-x;
+            }
+            .carousel-control.right {
+                background-image: -webkit-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                background-image: -o-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, 0)), to(rgba(0, 0, 0, 0.0001)));
+                background-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1)) background-repeat: repeat-x;
+            }
+            .angle-icon {
+                font-size: 36px;
+                color: rgba(255, 255, 255, 1);
+            }
+            a.carousel-control > span {
+                display: block;
+                height: 100%;
+                position: relative;
+            }
+            a.carousel-control > span > i.chevron-left {
+                position: absolute;
+                top: 43%;
+                left: 15px;
+            }
+            a.carousel-control > span > i.chevron-right {
+                position: absolute;
+                top: 43%;
+                right: 15px;
+            }
+			.box-sh-gnt {
+                -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+                -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+                box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+            }
+            .qawsed {
+	            overflow-y:auto;
+            }
+        </style>
+    </head>
+    <body>
+        <input id="before_bar" type="hidden" value="0">
+        <!-- header -->
+        <div class="box-sh-gnt" id="header" style="position:fixed; top:0px; left:0px; height:100px; right:0px;overflow:hidden;">
+            <div style="margin:20px 5.5% 20px 5.5%; height:30px; text-align:center;">
+                <!-- mypage -->
+                <div style="float:left; width:25%; text-align:left;">
+                    <img id="user" src="/images/navi/mypage.png" style="height:30px; width:30px;"></i>
+                </div>
+                <!-- logo -->
+                <div style="float:left; width:50%; text-align:center;"><img src="/images/logo.png" style="width:160px; height:30px; text-align:center;"></div>
+                <!-- push messenge -->
+                <div style="float:left; width:25%; text-align:right; font-size:23px; color:#808080;"><!-- <i class="far fa-bell"></i> --></div>
+            </div>
+            <!-- THUMBNAILS -->
+            <div style="position:relative">
+                <div class="slider-nav-thumbnails tabasdasd" style="position: relative;">
+                    <div>
+                        <div class="menu slick-active" id="menu1" slide="slide_1">플레이타임 그룹</div>
+                    </div>
+                    <div>
+                        <div class="menu" id="menu2" slide="slide_2">히스토리</div>
+                    </div>
+                    <div>
+                        <div class="menu" id="menu3" slide="slide_3">브랜드 소개</div>
+                    </div>
+                </div>
+                <div id="nav_bar" style="position:absolute; top:27px; left:0%; width:33.3%;">
+                    <div style="height:3px; background-color:#FFCA02; width:100%;"></div>
+                </div>
+            </div>
+        </div>
+        <!-- content -->
+        <div id="content" style="position:fixed; top:100px; bottom:60px; left:0px; right:0px; overflow:auto;">
+            <!-- MAIN SLIDES -->
+            <div class="slider">
+                <div data-index="1" style="text-align:center;">
+                    <div class="nsL" style="padding-top:30px; font-size:16px;">플레이타임 그룹</div>
+                    <div class="nsR" style="margin:30px 0; font-size:20px; line-height:160%;">글로벌 기업으로 성장하고 있는<br>25년된 키즈그룹 플레이타임</div>
+                    <div style="height:250px;"><img src="/images/14.png"></div>
+                    <div class="nsR" style="font-size:15px; margin-top:50px;">회사소개</div>
+                    <div class="nsR" style="font-size:13px; color:#808080; line-height:18px; margin:15px 0 90px 0;">플레이타임그룹은 1993년 설립,<br>1994년 로컬키즈카페로 출범한 뒤<br>25년간 어린이들의 놀이에 집중해 왔으며,<br>국내 350여개 및 해외 30여개 매장을 보유하고 있습니다.</div>
+                    <div class="nsR" style="font-size:13px; background-color:#f8f8f8; line-height:18px; color:#808080;">
+                        <div style="margin:0 8%; padding:30px 0 20px 0;">
+                            <span style="font-size:15px; color:#000;">CEO 경영철학</span><br><br>
+                            플레이타임은 대한민국 No.1<br>대표 어린이놀이 체험 그룹입니다.<br><br><br>
+                            <span style="color:#000;">아이들에게는 놀이가 밥입니다.</span><br><br>
+                            미국 일리노이주의 한 학교는 전교생에게 1교시 수업 전에 달리기를 하도록 했습니다. 이렇게 한 학기 동안 달리기를 한 학생들의 학업 성과는 어땠을까요? 학기 초에 비해 학기 말의 읽기와 문장 이해력은 17% 증가했고, 달리기 수업에 참가하지 않은 학생들보다 성적이 2배가량 높았습니다. 놀랍게도 수학, 과학 성적이 전국 하위권이었던 이 학교는 전 세계 과학평가에서 1위, 수학에서 6위를 차지했습니다.<br><br>
+                            운동을 하면 뇌의 생물학적 변화가 촉발되어 뇌세포들이 서로 연결된다고 합니다. 그 결과 학업성적과 연관이 깊은 뇌의 회백질의 양이 증가된다는 것이지요. 특히 운동이 언어 처리와 독서 능력에 필요한 두 영역인 하전두회와 상측두회의 회백질 양을 늘리는 데 도움이 된다고 합니다. 그런데 중요한 점은 이런 운동도 자발적으로 해야 효과가 있다고 합니다. 강제성을 띄면 벌을 받는 것 같은 스트레스를 받기 때문에 운동의 효과가 사라지는 것이지요. 그래서 자발적으로 몸을 많이 움직이며 노는 놀이터가 우리 아이들에게 필요합니다.<br><br>
+                            <span style="color:#000;">아이들은 놀이를 먹고 자랍니다.</span><br><br>
+                            플레이타임그룹은 창업이래 우리 아이들이 즐거워하며 자신이 가진 에너지를 모두 쏟아 맘껏 뛰어 노는 놀이터를 개발하는 일에 집중해왔습니다. 그렇게 즐겁게 뛰어 노는 아이들이 총명하고 건강하게 성장해서 행복한 가정, 건강한 사회를 만들 것이라 믿기 때문입니다.<br><br>
+                            그런 믿음으로 새로운 개념의 놀이터 연구개발과 확산에 과감하게 투자하고 있습니다. 그 결과 기존의 실내놀이터를 역동적이고 짜릿한 놀이체험을 즐길 수 있는 곳으로 새롭게 창조하고 있습니다. 또 충분한 공간이 확보되는 곳에는 스포츠테마파크 수준의 대형 실내놀이터 브랜드인 “챔피언1250”을 론칭 확산시키고 있습니다.<br><br>
+                            플레이타임그룹 임직원들은 우리 아이들이 더 즐겁게 뛰어놀며 더 행복하고 똑똑하게 성장하는데 보탬이 되는 좋은 놀이공간을 창조하는 일을 즐거움이자 특권으로 여기며 힘쓰겠습니다.
+          감사합니다.<br><br><br>
+                            대표이사&emsp;<span class="nsB" style="color:#000; font-size:15px;">김 종 수</span>&emsp;드림
+                        </div>
+                    </div>
+                    <div style="height:250px;"><img src="/images/15.png"></div>
+                </div>
+                <div data-index="2" style="text-align:center;">
+	                <div class="qawsed" id="sscontent">
+	                    <div class="nsL" style="padding-top:30px; font-size:16px;">플레이타임 역사</div>
+	                    <div class="nsR" style="margin:30px 0;font-size:20px; line-height:160%;">플레이타임그룹이 걸어온<br>여정을 소개합니다.</div>
+	                    
+	                    <div style="margin:20px 8%;">
+	                        <div id="history1" style="border-bottom:1px solid #909090; background-color:#fff; width:100%; font-size:30px;">
+	                            <div class="nsL" style="display:inline-block; text-align:left; width:75%;">2016 ~ 2018</div>
+	                            <div style="display:inline-block; text-align:right; width:15%; color: #808080;">
+	                                <i class="fas fa-angle-down" id="updown1"></i>
+	                            </div>
+	                        </div>
+	                    </div>
+	                    
+	                    <div class="nsR" id="history1_info" style="text-align:center; font-size:13px; line-height:20px;">
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2018</span><br><br>
+	                        <span class="nsB" style="font-size:15px;">8월</span><br>
+	                        엘포트아이파크 광교 '챔피언' 오픈<br>
+	                        카림애비뉴 김포 '플레이타임' 오픈<br>
+	                        <span class="nsB" style="font-size:15px;">7월</span><br>
+	                        스타필드 고양 '챔피언1250' 오픈<br>
+	                        쥬네브썬월드 용인 '챔피언' 오픈<br>
+	                        롯데피트인 산본 '플레이타임' 오픈<br>
+	                        아이스퀘어몰 김해 '챔피언' 오픈<br>
+	                        시티세븐몰 창원 '챔피언' 오픈<br>
+	                        <span class="nsB" style="font-size:15px;">6월</span><br>
+	                        뉴코아아울렛 인천 '상상스케치' 오픈<br>
+	                        <span class="nsB" style="font-size:15px;">5월</span><br>
+	                        아브뉴프랑 판교 '챔피언' 오픈<br>
+	                        <span class="nsB" style="font-size:15px;">4월</span><br>
+	                        롯데몰 군산 '챔피언1250' 오픈<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2017</span><br><br>
+	                        <span class="nsB" style="font-size:15px;">12월</span><br>
+	                        국내 최초 익스트림 어린이 스포츠클럽<br>
+	                        '챔피언1250' 신규 브랜드 런칭<br>
+	                        아이파크몰 용산 오픈<br>
+	                        플레이타임그룹 첫 번째 제주점<br>
+	                        신화월드 제주 플레이타임 오픈<br>
+	                        <span class="nsB" style="font-size:15px;">8월</span><br>
+	                        스타필드 고양 신규 브랜드 런칭<br>
+	                        '위너플레이', '베이비엔젤스플레이'<br>
+	                        <span class="nsB" style="font-size:15px;">6월</span><br>
+	                        놀이마스터가 놀아주는 '정글벤처' 콘셉트 매장<br>
+	                        2017년 6월, 의정부 홈플러스 상상노리 첫 도입<br>
+	                        2017 베트남 낫짱 빈컴프라자, 타임시티 빈컴 메가몰 오픈<br>
+	                        신규 매장 9개 오픈<br>
+	                        리뉴얼 매장 37개 오픈<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2016</span><br><br>
+	                        항주 어린이 직업체험관 OPEN 예정<br>
+	                        쇼핑테마파크 스타필드 하남점 OPEN<br>
+	                        챔피언 5개점 OPEN<br>
+	                        블록 5개점 OPEN<br>
+	                        신세계백화점 강남점 ‘리틀란드’ 1호점 및 동대구점 OPEN<br>
+	                    </div>
+	                    
+	                    <div style="margin:20px 8%;">
+	                        <div id="history2" style="border-bottom:1px solid #909090; background-color:#fff; width:100%; font-size:30px;">
+	                            <div class="nsL" style="display:inline-block; text-align:left; width:75%;">2009 ~ 2015</div>
+	                            <div style="display:inline-block; text-align:right; width:15%; color: #808080;">
+	                                <i class="fas fa-angle-down" id="updown2"></i>
+	                            </div>
+	                        </div>
+	                    </div>
+	                    
+	                    <div id="history2_info" style="text-align:center;">
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2015</span><br><br>
+	                        베트남 12호점 고밥 OPEN<br>
+	                        초대형 상상빌리지 OPEN<br>
+	                        키즈올림픽 1호점 OPEN<br>
+	                        베트남 11호점 비보시티 OPEN<br>
+	                        중국 중남그룹 4호점 OPEN<br>
+	                        중국 중남그룹 3호점, 2호점 OPEN<br>
+	                        인도네시아 4호점,3호점,2호점 OPEN <br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2014</span><br><br>
+	                        베트남 10호점, 9호점, 8호점, 7호점, 6호점 OPEN<br>
+	                        국내 최초 키즈스포츠 체험시설/ 대형블럭 체험시설/창의적인 어린이 아트 체험시설 컨텐츠 개발<br>
+	                        애플 1호점 OPEN<br>
+	                        키즈스포츠클럽 OPEN<br>
+	                        챔피언 1호점, 2호점 OPEN<br>
+	                        상상스케치 1호점 OPEN<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2013</span><br><br>
+	                        블록체험시설 / 영유아 전용체험시설/ 도예체험시설 컨텐츠 개발<br>
+	                        상상블럭 1호점 OPEN<br>
+	                        베이비엔젤스 1호점 OPEN<br>
+	                        상상을 빚는 어린이 도예 1호점 OPEN<br>
+	                        인도네시아 1호점 OPEN<br>
+	                        베트남 5호점,4호점 OPEN<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2012</span><br><br>
+	                        구름빵 라이선스 계약 체결 – 구름빵 3개점 OPEN<br>
+	                        상상노리 25개점 OPEN<br>
+	                        플레이타임 아트몰 OPEN<br>
+	                        베트남 3호점, 2호점 OPEN<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2011</span><br><br>
+	                        ISO 9001 인증기업<br>
+	                        상상노리 1호점 OPEN<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2009</span><br><br>
+	                        한국건설생활환경 시험연구소 안전검사 합격<br><br>
+	                    </div>
+	                    
+	                    <div style="margin:20px 8%;">
+	                        <div id="history3" style="border-bottom:1px solid #909090; background-color:#fff; width:100%; font-size:30px;">
+	                            <div class="nsL" style="display:inline-block; text-align:left; width:75%;">1994 ~ 2008</div>
+	                            <div style="display:inline-block; text-align:right; width:15%; color: #808080;">
+	                                <i class="fas fa-angle-down" id="updown3"></i>
+	                            </div>
+	                        </div>
+	                    </div>
+	                    
+	                    <div id="history3_info" style="text-align:center;">
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2008</span><br><br>
+	                        베트남 1호점 OPEN<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2006</span><br><br>
+	                        과학놀이시설 컨텐츠 개발<br>
+	                        키즈 사이언스 1호점 OPEN<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2005</span><br><br>
+	                        중국 1호점 OPEN<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2003</span><br><br>
+	                        골든 브랜드 선정- 한국 서비스 경영 진흥원<br>
+	                        대만 1호점 OPEN<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">2001</span><br><br>
+	                        사회복지단체 무료 입장 시작/ 미아방지 캠페인 시작<br>
+	                        10만 어린이 마아방지용 버튼 달아주기<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">1996</span><br><br>
+	                        제 78회 IAAPA SHOW 참가<br>
+	                        U.S.A 국제놀이시설 박람회<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">1995</span><br><br>
+	                        제 2회 국제 유아 교육전 참가<br><br>
+	                        <span class="nsB" style="font-size:18px; color:#FFCA02;">1994</span><br><br>
+	                        플레이타임 1호 OPEN<br><br>
+	                    </div>
+	                    <br>
+	                </div>
+                </div>
+                <div data-index="3">
+                    <div class="nsL" style="padding-top:30px; font-size:16px; text-align:center;">브랜드 그룹</div>
+                    <div class="nsR" style="margin:30px 0;font-size:20px; line-height:160%;text-align:center;">아이들이 먼저 알아보는<br>신나는 놀이 세상 !</div>
+                    <div class="carousel slide" data-ride="carousel" id="carousel-example-generic">
+                        <!-- Indicators -->
+                        <div class="carousel-inner" role="listbox">
+                            <div class="item active"><img id="brandplay" src="/images/brand/play.jpg"></div>
+                            <div class="item"><img id="brandblock" src="/images/brand/block.jpg"></div>
+                            <div class="item"><img id="brandart" src="/images/brand/art.jpg"></div>
+                            <div class="item"><img id="brandbaby" src="/images/brand/baby.jpg"></div>
+                        </div>
+                        <a class="left carousel-control" data-slide="prev" href="#carousel-example-generic" role="button">
+                            <span>
+                                <i class="fas fa-chevron-left angle-icon chevron-left"></i>
+                            </span>
+                        </a>
+                        <a class="right carousel-control" data-slide="next" href="#carousel-example-generic" role="button">
+                            <span>
+                                <i class="fas fa-chevron-right angle-icon chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="nsR" style="padding:30px 0 20px 0; font-size:18px; text-align:center;">
+                        ABOUT PLAYTIME
+                    </div>
+                    <div class="nsR" style="font-size:13px; text-align:center; color:#808080;">
+                        나이 따라! 컨셉 따라! 골라 노는 재미!<br>
+                        아이들이 먼저 알아보는 신나는 놀이 세상<br>플레이타임그룹<br>
+                        <br><br>
+                        영아들의 스파 및 놀이공간<br>‘베이비엔젤스’, 미술놀이체험공간 ‘상상스케치’<br>
+                        <br><br>
+                        블록&퍼즐놀이체험공간<br>‘상상블럭’, ‘똑똑블럭’, ‘블럭앤퍼즐애플’<br>
+                        <br><br>
+                        복합놀이체험공간<br>
+                        ‘상상노리’, ‘애플트리’, ‘애플키즈클럽’<br>‘위너플레이’, ‘플레이타임’, ‘리틀란드’<br>
+                        <br><br>
+                        스포츠 놀이체험공간<br>‘챔피언1250’, ‘챔피언’, ‘키즈올림픽’<br>
+                        <br><br>
+                        위와 같은 15여개 다양한 브랜드를 보유하고 있으며<br>
+                        복합쇼핑몰, 백화점, 대형마트, 아울렛 등에
+                        <br>
+                        입점되어 있습니다.</div>
+                    <div class="nsR" style="padding:65px 0 30px 0; font-size:18px; text-align:center;">
+                        CONTENTS CONCEPT</div>
+                    <div>
+	                    <img src="/images/13.png" style="width:100%;height:auto;margin-bottom:20px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="footer"class="box-sh-gnt" style="position:fixed; bottom:0px; height:60px; left:0px; right:0px; overflow:hidden;">
+            <div id="code" style="float:left; height:100%; width:25%; text-align:center;">
+                <img src="/images/navi/code.png" style="width:60%;">
+            </div>
+            <div id="home" style="float:left; height:100%; width:25%; text-align:center;">
+                <img src="/images/navi/home.png" style="width:60%;">
+            </div>
+            <div id="store" style="float:left; height:100%; width:25%; text-align:center;">
+                <img src="/images/navi/store.png" style="width:60%;">
+            </div>
+            <div style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/yellowplay.png" style="width:60%;">
+            </div>
+        </div>
+        <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+        <script src='//cdn.jsdelivr.net/jquery.slick/1.4.1/slick.min.js'></script>
+        <script src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+        <script type="text/javascript">
+		    $(window).resize(function() {
+			    $('#sscontent').height($(window).height() - 160);
+			});
+			
+			$(window).trigger('resize');
+            function setCookie(name, value, days) {
+                var d = new Date;
+                d.setTime(d.getTime() + 24 * 60 * 60 * 1000 * days);
+                document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+            }
+            $(document).on('ready', function () {
+                setCookie('tab_main', null, -1);
+                setCookie('tab', null, -1);
+                setCookie('brand', null, -1);
+                setCookie('area', null, -1);
+
+                $("#history1_info").hide();
+                $("#history2_info").hide();
+                $("#history3_info").hide();
+                $("#history1").click(function () {
+                    $("#history1_info").slideToggle('fast', function () {
+                        $('.slider').slick('reinit');
+                    });
+                });
+                $('#history2').click(function () {
+                    $("#history2_info").slideToggle('fast', function () {
+                        $('.slider').slick('reinit');
+                    });
+                });
+                $('#history3').click(function () {
+                    $("#history3_info").slideToggle('fast', function () {
+                        $('.slider').slick('reinit');
+                    });
+                });
+                $('#brandplay').click(function () {
+                    document.location.href = "/brand_play.html";
+                });
+                $('#brandblock').click(function () {
+                    document.location.href = "/brand_block.html";
+                });
+                $('#brandart').click(function () {
+                    document.location.href = "/brand_art.html";
+                });
+                $('#brandbaby').click(function () {
+                    document.location.href = "/brand_baby.html";
+                });
+                $("#user").click(function () {
+                    document.location.href = "/mypage.html";
+                });
+                $('#code').click(function () {
+                    document.location.href = "/member.html";
+                });
+                $('#store').click(function () {
+                    document.location.href = "/store.html";
+                });
+                $('#home').click(function () {
+                    document.location.href = "/main.html";
+                });
+                $(".brand").slick({
+                    arrows: false,
+                    dots: true,
+                    infinite: true,
+                    autoplay: true,
+                    autoplaySpeed: 2000,
+                    slidesToShow: 1
+                });
+                $('.slider').slick({
+                    slidesToShow: 1,
+                    slidesToScroll: 1,
+                    arrows: false,
+                    fade: false,
+                    asNavFor: '.slider-nav-thumbnails',
+                    infinite: false,
+                    adaptiveHeight: true,
+                    swipe: false
+                });
+                $('.slider-nav-thumbnails').slick({
+                    slidesToShow: 3,
+                    slidesToScroll: 1,
+                    asNavFor: '.slider',
+                    dots: true,
+                    focusOnSelect: true,
+                    infinite: false
+                });
+                // remove active class from all thumbnail slides
+                $('.slider-nav-thumbnails').removeClass('slick-active');
+                // set active class to first thumbnail slides
+                $('.slider-nav-thumbnails').eq(0).addClass('slick-active');
+                // On before slide change match active thumbnail to current slide
+                $('.slider .slider-nav-thumbnails').on('beforeChange', function (event, slick, currentSlide, nextSlide) {
+                    var mySlideNumber = nextSlide;
+                    $('.slider-nav-thumbnails').removeClass('slick-active');
+                    $('.slider-nav-thumbnails').eq(mySlideNumber).addClass('slick-active');
+                });
+                // UPDATED
+                $('.slider').on('afterChange', function (event, slick, currentSlide) {
+                    $('.content').hide();
+                    $('.content[data-id=' + (
+                    currentSlide + 1) + ']').show();
+                    if (!$(event.target).hasClass('membership_card')) {
+                        $('.menu').removeClass('slick-active');
+                        var before = $('#before_bar').val();
+                        var move = before - currentSlide;
+                        if (currentSlide == 0) {
+                            $('#menu1').addClass('slick-active');
+                            if (move == 1) {
+                                $('#nav_bar').animate({left: '0'});
+                            } else if (move == 2) {
+                                $('#nav_bar').animate({left: '0'});
+                            }
+                            $('#before_bar').val(currentSlide);
+                        } else if (currentSlide == 1) {
+                            $("#menu2").addClass("slick-active");
+                            if (move == -1) {
+                                $('#nav_bar').animate({left: '33.3%'});
+                            } else if (move == 1) {
+                                $('#nav_bar').animate({left: '33.3%'});
+                            }
+                            $('#before_bar').val(currentSlide);
+                        } else if (currentSlide == 2) {
+                            $("#menu3").addClass("slick-active");
+                            if (move == -1) {
+                                $('#nav_bar').animate({left: '66.6%'});
+                            } else if (move == -2) {
+                                $('#nav_bar').animate({left: '66.6%'});
+                            }
+                            $('#before_bar').val(currentSlide);
+                        }
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>

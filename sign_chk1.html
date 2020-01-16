@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<!-- Bootstrap -->
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+<style> 
+  body {
+    margin: 0;
+  }
+    
+  .find  { 
+    width: 100%;
+    height: 45px;
+    font-size: 13px;
+    border-radius: 10px;
+    border:1px solid #ddd;
+    padding: 12px 20px;
+  }
+  .content  {
+    line-height: 30px;
+    padding-top: 25px;
+    color: #000;
+  }
+
+  .button {
+    height: 45px;;
+    background-color: #808080;
+    border-color: #fff;
+    border-radius:10px;
+    color: #fff;
+    border: none;
+  }
+  .footer {
+    position:relative;
+    bottom:0;
+    height:90px;
+    width: 100%;
+    text-align: center;
+    background-color: #FFCA02;
+    border-color: #FFCA02;
+    color: #fff;
+    font-size: 15px;
+  }
+
+  a:link { color: #808080; text-decoration: none;}
+</style>
+</head>
+<body>
+    <form id="reqKMCISForm" name="reqKMCISForm" method="post">
+      <input type="hidden" id="tr_cert" name="tr_cert">
+      <input type="hidden" id="tr_url" name="tr_url">
+      <input type="hidden" id="tr_add" name="tr_add">
+      <input type="hidden" name="urlCode" value="006002">
+      <input type="hidden" name="urlRequest" value="//mobile.worldplaytime.com:8784/kmc/kmcis_sign_up.jsp">
+    </form>
+
+  <div style="margin:0 8%; text-align:right; padding-top:40px; font-size:20px;"><i class="fas fa-times" id="back"></i></div>
+  <div style="text-align:center; padding-top:25px;">
+    <a href="/login.html"><img src="/images/logo.png" style="width:160px; text-align:center;"></a>
+  </div>
+
+  <div style="text-align:center; height: 160.62px;">
+    <div class="content nsrB" style="font-size:22px; padding-top:50px;"><p>기존 플레이타임<br>회원이신가요?</p></div>
+  </div>
+
+  <div style="height:45px; padding:40px 0; margin:0 5%;">
+    <button class="button nsR" style="text-align:center; width:100%;" type="button" onclick="openKMCISWindow()">인증하기</button>
+  </div>
+
+<script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script src="/js/sweetalert.min.js"></script>
+<script type="text/javascript">
+  window.name = "kmcis_web";
+  var KMCIS_window;
+
+  function openKMCISWindow(){
+
+  var UserAgent = navigator.userAgent;
+  /* 모바일 접근 체크*/
+  /* // 모바일일 경우 (변동사항 있을경우 추가 필요) */
+  if (UserAgent.match(/iPhone|iPod|Android|Windows CE|BlackBerry|Symbian|Windows Phone|webOS|Opera Mini|Opera Mobi|POLARIS|IEMobile|lgtelecom|nokia|SonyEricsson/i) != null || UserAgent.match(/LG|SAMSUNG|Samsung/) != null) {
+  document.reqKMCISForm.target = '';
+  }
+  /* // 모바일이 아닐 경우 */
+  else {
+  KMCIS_window = window.open('', 'KMCISWindow', 'width=425, height=550, resizable=0, scrollbars=no, status=0, titlebar=0, toolbar=0, left=435, top=250' );
+  if(KMCIS_window == null){
+  alert(" ※ 윈도우 XP SP2 또는 인터넷 익스플로러 7 사용자일 경우에는 \n 화면 상단에 있는 팝업 차단 알림줄을 클릭하여 팝업을 허용해 주시기 바랍니다. \n\n※ MSN,야후,구글 팝업 차단 툴바가 설치된 경우 팝업허용을 해주시기 바랍니다.");
+  }
+  document.reqKMCISForm.target = 'KMCISWindow';
+  }
+  document.reqKMCISForm.action = '//www.kmcert.com/kmcis/web/kmcisReq.jsp';
+  document.reqKMCISForm.submit();
+  }
+  
+  $(document).ready(function(){
+    var datas = $("#reqKMCISForm").serialize();
+    
+    $.ajax({
+        url : "/kmc/kmcis_web_sample_step02.jsp",
+        type : 'POST',
+        data : datas,
+        dataType : 'JSON',
+          success:function(response){
+            // console.log(response);
+            $('#tr_cert').val(response.tr_cert);
+            $('#tr_url').val(response.tr_url);
+            $('#tr_add').val(response.tr_add);
+          }
+    });
+
+    $('#back').click(function(){
+      document.location.href="/sign_search.html";
+    });
+  });
+</script>
+</body>
+</html>

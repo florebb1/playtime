@@ -1,0 +1,914 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='TAB01_Q'><![CDATA[ 
+    SELECT  CA.COMP_CD
+         ,  CA.MEMBER_NO
+         ,  DECRYPT(CA.MEMBER_NM)                   AS MEMBER_NM
+         ,  CA.MEMBER_DIV
+         ,  C.CODE_NM                               AS MEMBER_DIV_NM
+         ,  DECRYPT(CA.ORG_NM)                      AS ORG_NM
+         ,  FN_GET_FORMAT_HP_NO(DECRYPT(CA.MOBILE)) AS MOBILE
+         ,  CA.MOBILE_N3
+         ,  CA.ADDR1
+         ,  CA.ADDR2
+         ,  REPLACE(CA.REMARKS, '@$', CHR(13)||CHR(10)) AS REMARKS
+         ,  CA.JOIN_DT
+         ,  CA.AGREE_DT
+         ,  CA.BRAND_CD
+         ,  B.BRAND_NM
+         ,  CA.STOR_CD
+         ,  S.STOR_NM
+         ,  CA.USE_YN
+      FROM  CS_MEMBER CA
+         , (
+            SELECT  S.COMP_CD
+                 ,  S.BRAND_CD
+                 ,  S.STOR_CD
+                 ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+            FROM    STORE       S
+                 ,  LANG_STORE  L
+            WHERE   S.COMP_CD   = L.COMP_CD(+)
+            AND     S.BRAND_CD  = L.BRAND_CD(+)
+            AND     S.STOR_CD   = L.STOR_CD(+)
+            AND     S.COMP_CD   = ${SCH_COMP_CD}
+            AND    (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+            AND     L.LANGUAGE_TP(+) = ${SCH_LANGUAGE}
+            AND     L.USE_YN(+)      = 'Y'
+           )       S
+         , (
+            SELECT  A.COMP_CD
+                  , A.BRAND_CD  
+                  , NVL(B.LANG_NM, A.BRAND_NM) AS BRAND_NM
+            FROM    BRAND        A
+                  ,( 
+                    SELECT  * 
+                    FROM    LANG_TABLE
+                    WHERE   TABLE_NM    = 'BRAND'
+                    AND     COL_NM      = 'BRAND_NM'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE}
+                    AND     COMP_CD     = ${SCH_COMP_CD}
+                    AND     USE_YN      = 'Y'
+                   ) B
+            WHERE   A.BRAND_CD = B.PK_COL(+)
+            AND     A.COMP_CD  = ${SCH_COMP_CD} 
+           ) B
+         , (
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+            FROM    COMMON      C
+                 ,  LANG_COMMON L
+            WHERE   C.COMP_CD       = L.COMP_CD(+)
+            AND     C.CODE_TP       = L.CODE_TP(+)
+            AND     C.CODE_CD       = L.CODE_CD(+)
+            AND     C.COMP_CD       = ${SCH_COMP_CD}
+            AND     C.CODE_TP       = '01870'
+            AND     L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+            AND     L.USE_YN(+)     = 'Y'
+           ) C
+     WHERE  CA.COMP_CD    = B.COMP_CD
+     AND    CA.BRAND_CD   = B.BRAND_CD 
+     AND    CA.COMP_CD    = S.COMP_CD
+     AND    CA.BRAND_CD   = S.BRAND_CD
+     AND    CA.STOR_CD    = S.STOR_CD
+     AND    CA.COMP_CD    = C.COMP_CD(+)
+     AND    CA.MEMBER_DIV = C.CODE_CD(+)
+     AND    CA.COMP_CD    = ${SCH_COMP_CD}
+     AND    (${SCH_MEMBER_NO} IS NULL OR CA.MEMBER_NO = ${SCH_MEMBER_NO})
+     AND    (${SCH_MOBILE}    IS NULL OR DECRYPT(CA.MOBILE) LIKE '%'||REPLACE(${SCH_MOBILE}, '-', ''))
+     AND    (${SCH_USE_YN}    IS NULL OR CA.USE_YN = ${SCH_USE_YN})
+     AND    (
+                (
+                    (${SCH_BRAND_CD}  IS NULL OR CA.BRAND_CD  = ${SCH_BRAND_CD})
+                    AND
+                    (${SCH_STOR_CD}   IS NULL OR CA.STOR_CD   = ${SCH_STOR_CD})
+                )
+                OR
+                CA.MEMBER_NO IN (
+                                    SELECT  MEMBER_NO
+                                      FROM  CS_MEMBER_STORE
+                                     WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                       AND  BRAND_CD    = ${SCH_BRAND_CD}
+                                       AND  STOR_CD     = ${SCH_STOR_CD}
+                                )
+            )
+     ORDER  BY 3, CA.STOR_CD, CA.JOIN_DT
+]]></query>
+
+<query name='TAB02_MAIN_Q'><![CDATA[ 
+    SELECT  CA.COMP_CD
+         ,  CA.MEMBER_NO
+         ,  DECRYPT(CA.MEMBER_NM)                   AS MEMBER_NM
+         ,  CA.MEMBER_DIV
+         ,  C.CODE_NM                               AS MEMBER_DIV_NM
+         ,  DECRYPT(CA.ORG_NM)                      AS ORG_NM
+         ,  FN_GET_FORMAT_HP_NO(DECRYPT(CA.MOBILE)) AS MOBILE
+         ,  CA.MOBILE_N3
+         ,  CA.ADDR1
+         ,  CA.ADDR2
+         ,  REPLACE(CA.REMARKS, '@$', CHR(13)||CHR(10)) AS REMARKS
+         ,  CA.JOIN_DT
+         ,  CA.AGREE_DT
+         ,  CA.BRAND_CD
+         ,  B.BRAND_NM
+         ,  CA.STOR_CD
+         ,  S.STOR_NM
+         ,  CX.SEX_DIV
+         ,  CX.SMS_RCV_YN
+         ,  CA.USE_YN
+      FROM  CS_MEMBER     CA
+         ,  CS_MEMBER_EXT CX
+         , (
+            SELECT  S.COMP_CD
+                 ,  S.BRAND_CD
+                 ,  S.STOR_CD
+                 ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+            FROM    STORE       S
+                 ,  LANG_STORE  L
+            WHERE   S.COMP_CD   = L.COMP_CD(+)
+            AND     S.BRAND_CD  = L.BRAND_CD(+)
+            AND     S.STOR_CD   = L.STOR_CD(+)
+            AND     S.COMP_CD   = ${SCH_COMP_CD}
+            AND    (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+            AND     L.LANGUAGE_TP(+) = ${SCH_LANGUAGE}
+            AND     L.USE_YN(+)      = 'Y'
+           )       S
+         , (
+            SELECT  A.COMP_CD
+                  , A.BRAND_CD  
+                  , NVL(B.LANG_NM, A.BRAND_NM) AS BRAND_NM
+            FROM    BRAND        A
+                  ,( 
+                    SELECT  * 
+                    FROM    LANG_TABLE
+                    WHERE   TABLE_NM    = 'BRAND'
+                    AND     COL_NM      = 'BRAND_NM'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE}
+                    AND     COMP_CD     = ${SCH_COMP_CD}
+                    AND     USE_YN      = 'Y'
+                   ) B
+            WHERE   A.BRAND_CD = B.PK_COL(+)
+            AND     A.COMP_CD  = ${SCH_COMP_CD} 
+           ) B
+         , (
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+            FROM    COMMON      C
+                 ,  LANG_COMMON L
+            WHERE   C.COMP_CD       = L.COMP_CD(+)
+            AND     C.CODE_TP       = L.CODE_TP(+)
+            AND     C.CODE_CD       = L.CODE_CD(+)
+            AND     C.COMP_CD       = ${SCH_COMP_CD}
+            AND     C.CODE_TP       = '01870'
+            AND     L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+            AND     L.USE_YN(+)     = 'Y'
+           ) C
+     WHERE  CA.COMP_CD    = B.COMP_CD
+     AND    CA.BRAND_CD   = B.BRAND_CD 
+     AND    CA.COMP_CD    = S.COMP_CD
+     AND    CA.BRAND_CD   = S.BRAND_CD
+     AND    CA.STOR_CD    = S.STOR_CD
+     AND    CA.COMP_CD    = C.COMP_CD(+)
+     AND    CA.MEMBER_DIV = C.CODE_CD(+)
+     AND    CA.COMP_CD    = CX.COMP_CD(+)
+     AND    CA.MEMBER_NO  = CX.MEMBER_NO(+)
+     AND    CA.COMP_CD    = ${SCH_COMP_CD}
+     AND    CA.MEMBER_NO  = ${SCH_MEMBER_NO}
+     AND    CA.USE_YN     = 'Y'
+     AND   (${SCH_BRAND_CD} IS NULL OR CA.BRAND_CD = ${SCH_BRAND_CD})
+     AND   (${SCH_STOR_CD}  IS NULL OR CA.STOR_CD  = ${SCH_STOR_CD})
+]]></query>
+
+<query name='TAB02_TEL_Q'><![CDATA[ 
+    SELECT  MT.COMP_CD
+         ,  MT.MEMBER_NO
+         ,  MT.TEL_NO
+         ,  DECRYPT(MT.TEL_NM)                      AS TEL_NM
+         ,  FN_GET_FORMAT_HP_NO(DECRYPT(MT.MOBILE)) AS MOBILE
+         ,  MT.MOBILE_N3
+         ,  MT.JOIN_DT
+         ,  MT.BRAND_CD
+         ,  MT.STOR_CD
+         ,  MT.USE_YN
+     FROM   CS_MEMBER_TEL MT
+     WHERE  MT.COMP_CD    = ${SCH_COMP_CD}
+     AND    MT.MEMBER_NO  = ${SCH_MEMBER_NO}
+     AND    MT.USE_YN     = 'Y'
+     AND   (${SCH_BRAND_CD} IS NULL OR MT.BRAND_CD = ${SCH_BRAND_CD})
+     ORDER BY
+            MT.JOIN_DT
+]]></query>
+
+<query name='TAB02_CHD_Q'><![CDATA[ 
+    SELECT  MC.COMP_CD
+         ,  MC.MEMBER_NO
+         ,  MC.CHILD_NO
+         ,  DECRYPT(MC.CHILD_NM)                    AS CHILD_NM
+         ,  MC.SEX_DIV
+         ,  C1.CODE_NM
+         ,  MC.BIRTH_DT
+         ,  MC.AGES
+         ,  MC.ANVS_DT
+         ,  MC.JOIN_DT
+         ,  MC.BRAND_CD
+         ,  MC.STOR_CD
+         ,  MC.USE_YN
+     FROM   CS_MEMBER_CHILD MC
+         , (
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+            FROM    COMMON      C
+                 ,  LANG_COMMON L
+            WHERE   C.COMP_CD       = L.COMP_CD(+)
+            AND     C.CODE_TP       = L.CODE_TP(+)
+            AND     C.CODE_CD       = L.CODE_CD(+)
+            AND     C.COMP_CD       = ${SCH_COMP_CD}
+            AND     C.CODE_TP       = '00315'
+            AND     L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+            AND     L.USE_YN(+)     = 'Y'
+           ) C1
+     WHERE  MC.COMP_CD    = C1.COMP_CD(+)
+     AND    MC.SEX_DIV    = C1.CODE_CD(+)
+     AND    MC.COMP_CD    = ${SCH_COMP_CD}
+     AND    MC.MEMBER_NO  = ${SCH_MEMBER_NO}
+     AND    MC.USE_YN     = 'Y'
+     AND   (${SCH_BRAND_CD} IS NULL OR MC.BRAND_CD = ${SCH_BRAND_CD})
+     ORDER BY 
+            MC.JOIN_DT
+]]></query>
+
+<query name='TAB02_MEMBERSHIP_Q'><![CDATA[ 
+    SELECT  CERT_NO
+      FROM  CS_MEMBERSHIP_SALE
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  MEMBER_NO   = ${SCH_MEMBER_NO}
+       AND  MBS_STAT    IN ('10', '91')
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='TAB02_MAIN1_U'><![CDATA[
+    UPDATE  CS_MEMBER 
+       SET  MEMBER_NM   = encrypt(${MEMBER_NM})
+         ,  MEMBER_DIV  = ${MEMBER_DIV}
+         ,  ORG_NM      = encrypt(${ORG_NM})
+         ,  MOBILE      = encrypt(REPLACE(${MOBILE}, '-', ''))
+         ,  MOBILE_N3   = SUBSTR(REPLACE(${MOBILE}, '-', ''), LENGTH(REPLACE(${MOBILE}, '-', '')) - 3, 4)
+         ,  ADDR1       = ${ADDR1}
+         ,  ADDR2       = ${ADDR2}
+         ,  REMARKS     = REPLACE(${REMARKS}, CHR(13)||CHR(10), '@$')
+         ,  USE_YN      = ${USE_YN}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  MEMBER_NO   = ${MEMBER_NO}
+]]></query>
+
+<query name='TAB02_MAIN2_U'><![CDATA[
+    MERGE INTO CS_MEMBER_EXT
+    USING DUAL
+    ON (
+            COMP_CD   = ${COMP_CD}
+        AND MEMBER_NO = ${MEMBER_NO}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+        SET     SEX_DIV     = ${SEX_DIV}
+              , SMS_RCV_YN  = ${SMS_RCV_YN}
+    WHEN NOT MATCHED THEN
+        INSERT ( 
+                COMP_CD
+              , MEMBER_NO
+              , SEX_DIV
+              , SMS_RCV_YN
+               )
+        VALUES (
+                ${COMP_CD}
+              , ${MEMBER_NO}
+              , ${SEX_DIV}
+              , ${SMS_RCV_YN}
+               )
+]]></query>
+
+<query name='TAB02_TEL_IU'><![CDATA[
+    MERGE INTO CS_MEMBER_TEL
+    USING DUAL
+    ON (
+            COMP_CD   = ${COMP_CD}
+        AND MEMBER_NO = ${MEMBER_NO}
+        AND TEL_NO    = ${TEL_NO}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+        SET     TEL_NM      = encrypt(${TEL_NM})
+              , MOBILE      = encrypt(REPLACE(${MOBILE}, '-', ''))
+              , MOBILE_N3   = SUBSTR(REPLACE(${MOBILE}, '-', ''), LENGTH(REPLACE(${MOBILE}, '-', '')) - 3, 4)
+              , JOIN_DT     = ${JOIN_DT}
+              , BRAND_CD    = ${BRAND_CD}
+              , STOR_CD     = ${STOR_CD}
+              , USE_YN      = ${USE_YN}
+              , UPD_DT      = SYSDATE
+              , UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT ( 
+                COMP_CD
+              , MEMBER_NO
+              , TEL_NO
+              , TEL_NM
+              , MOBILE
+              , MOBILE_N3
+              , REMARKS
+              , JOIN_DT
+              , BRAND_CD
+              , STOR_CD
+              , USE_YN
+              , INST_DT
+              , INST_USER
+              , UPD_DT
+              , UPD_USER
+               )
+        VALUES (
+                ${COMP_CD}
+              , ${MEMBER_NO}
+              , ${TEL_NO}
+              , encrypt(${TEL_NM})
+              , encrypt(REPLACE(${MOBILE}, '-', ''))
+              , SUBSTR(REPLACE(${MOBILE}, '-', ''), LENGTH(REPLACE(${MOBILE}, '-', '')) - 3, 4)
+              , NULL
+              , ${JOIN_DT}
+              , ${BRAND_CD}
+              , ${STOR_CD}
+              , ${USE_YN}
+              , SYSDATE
+              , ${USER_ID}
+              , SYSDATE
+              , ${USER_ID}
+               )
+]]></query>
+
+<query name='TAB02_TEL_SEQ'><![CDATA[
+    SELECT  COUNT(*) + 1 MAX_SEQ
+    FROM    CS_MEMBER_TEL
+    WHERE   COMP_CD   = ${COMP_CD}
+    AND     MEMBER_NO = ${MEMBER_NO}
+]]></query>
+
+<query name='TAB02_CHD_IU'><![CDATA[
+    MERGE INTO CS_MEMBER_CHILD
+    USING DUAL
+    ON (
+            COMP_CD   = ${COMP_CD}
+        AND MEMBER_NO = ${MEMBER_NO}
+        AND CHILD_NO  = ${CHILD_NO}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+        SET     CHILD_NM    = encrypt(${CHILD_NM})
+              , SEX_DIV     = ${SEX_DIV}
+              , BIRTH_DT    = ${BIRTH_DT}
+              , AGES        = ${AGES}
+              , ANVS_DT     = ${ANVS_DT}
+              , JOIN_DT     = ${JOIN_DT}
+              , BRAND_CD    = ${BRAND_CD}
+              , STOR_CD     = ${STOR_CD}
+              , USE_YN      = ${USE_YN}
+              , UPD_DT      = SYSDATE
+              , UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT ( 
+                COMP_CD
+              , MEMBER_NO
+              , CHILD_NO
+              , CHILD_NM
+              , SEX_DIV
+              , BIRTH_DT
+              , AGES
+              , ANVS_DT
+              , REMARKS
+              , JOIN_DT
+              , BRAND_CD
+              , STOR_CD
+              , USE_YN
+              , INST_DT
+              , INST_USER
+              , UPD_DT
+              , UPD_USER
+               )
+        VALUES (
+                ${COMP_CD}
+              , ${MEMBER_NO}
+              , ${CHILD_NO}
+              , encrypt(${CHILD_NM})
+              , ${SEX_DIV}
+              , ${BIRTH_DT}
+              , ${AGES}
+              , ${ANVS_DT}
+              , NULL
+              , ${JOIN_DT}
+              , ${BRAND_CD}
+              , ${STOR_CD}
+              , ${USE_YN}
+              , SYSDATE
+              , ${USER_ID}
+              , SYSDATE
+              , ${USER_ID}
+               )
+]]></query>
+
+<query name='TAB02_CHD_SEQ'><![CDATA[
+    SELECT  COUNT(*) + 1 MAX_SEQ
+    FROM    CS_MEMBER_CHILD
+    WHERE   COMP_CD   = ${COMP_CD}
+    AND     MEMBER_NO = ${MEMBER_NO}
+]]></query>
+
+<query name='TAB03_MAIN_Q'><![CDATA[ 
+    SELECT  CMS.COMP_CD
+          , CMS.CERT_FDT
+          , CMS.CERT_TDT
+          , CMS.PROGRAM_ID
+          , PGM.PROGRAM_NM
+          , CMS.MBS_NO
+          , MEM.MBS_NM
+          , CMS.CERT_NO
+          , SUBSTR(CMS.CERT_NO, 1, 8)||'*****'||SUBSTR(CMS.CERT_NO, 14, 2) AS CERT_NO_DISP
+          , CMS.MEMBER_NO
+          , CMS.MBS_DIV
+          , GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01850', CMS.MBS_DIV, ${SCH_LANGUAGE})  AS MBS_DIV_NM
+          , CMS.MBS_STAT
+          , GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01880', CMS.MBS_STAT, ${SCH_LANGUAGE}) AS MBS_STAT_NM
+          , CMS.CHARGE_YN
+          , GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01860', CMS.CHARGE_YN, ${SCH_LANGUAGE}) AS CHARGE_YN_NM
+    FROM    CS_MEMBERSHIP_SALE CMS
+          , CS_MEMBERSHIP      MEM
+          ,(
+            SELECT  P.COMP_CD
+                 ,  P.BRAND_CD
+                 ,  P.PROGRAM_ID
+                 ,  NVL(L.LANG_NM, P.PROGRAM_NM)    AS PROGRAM_NM
+            FROM    CS_PROGRAM      P
+                 ,  LANG_TABLE      L
+            WHERE  L.COMP_CD(+)    = P.COMP_CD     
+            AND  L.PK_COL(+)     = LPAD(P.PROGRAM_ID, 30, ' ')
+            AND  P.COMP_CD       = ${SCH_COMP_CD}
+            AND  L.TABLE_NM(+)   = 'CS_PROGRAM'
+            AND  L.COL_NM(+)     = 'PROGRAM_NM'
+            AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+            AND  L.USE_YN(+)     = 'Y'
+           )   PGM
+    WHERE   CMS.COMP_CD   = MEM.COMP_CD
+    AND     CMS.PROGRAM_ID= MEM.PROGRAM_ID
+    AND     CMS.MBS_NO    = MEM.MBS_NO
+    AND     CMS.COMP_CD   = PGM.COMP_CD
+    AND     CMS.PROGRAM_ID= PGM.PROGRAM_ID
+    AND     CMS.COMP_CD   = ${SCH_COMP_CD}
+    AND     CMS.MEMBER_NO = ${SCH_MEMBER_NO}
+    AND     CMS.USE_YN    = 'Y'
+    AND    (${SCH_BRAND_CD} IS NULL OR CMS.SALE_BRAND_CD = ${SCH_BRAND_CD})
+    AND    (${SCH_STOR_CD}  IS NULL OR CMS.SALE_STOR_CD  = ${SCH_STOR_CD})
+    ORDER BY 
+            CMS.CERT_FDT DESC
+         ,  CMS.CERT_NO  DESC
+]]></query>
+
+<query name='TAB03_SALE_Q'><![CDATA[ 
+    SELECT  CMS.COMP_CD
+          , CMS.PROGRAM_ID
+          , PGM.PROGRAM_NM
+          , CMS.MBS_NO
+          , MEM.MBS_NM
+          , CMS.CERT_NO
+          , SUBSTR(CMS.CERT_NO, 1, 8)||'*****'||SUBSTR(CMS.CERT_NO, 14, 2) AS CERT_NO_DISP
+          , CMS.MEMBER_NO
+          , CMS.MOBILE
+          , CMS.MBS_DIV
+          , CMS.MBS_STAT
+          , CMS.CHARGE_YN
+          , CMS.CERT_FDT
+          , CMS.CERT_TDT
+          , CMS.SALE_DIV
+          , PGM.BASE_USE_TM
+          , CMS.ENTR_PRC
+          , CMS.SALE_AMT
+          , CMS.DC_AMT
+          , CMS.GRD_AMT
+          , CMS.SALE_BRAND_CD
+          ,(
+            SELECT  BRAND_NM
+            FROM    BRAND BRD
+            WHERE   BRD.COMP_CD  = CMS.COMP_CD
+            AND     BRD.BRAND_CD = CMS.SALE_BRAND_CD
+           ) SALE_BRAND_NM
+          , CMS.SALE_STOR_CD
+          ,(
+            SELECT  STOR_NM
+            FROM    STORE STO
+            WHERE   STO.COMP_CD  = CMS.COMP_CD
+            AND     STO.BRAND_CD = CMS.SALE_BRAND_CD
+            AND     STO.STOR_CD  = CMS.SALE_STOR_CD
+           ) SALE_STOR_NM
+          , CMS.USE_DIV
+          , CMS.OFFER_TM
+          , CMS.USE_TM
+          , CMS.OFFER_CNT
+          , CMS.USE_CNT
+          , CMS.OFFER_AMT
+          , CMS.USE_AMT
+          , CMS.OFFER_MCNT
+          , CMS.USE_MCNT
+          , CMS.REFUND_YN
+          , TO_CHAR(TO_DATE(CMS.REFUND_REQ_DT, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS') AS REFUND_REQ_DT
+          , TO_CHAR(TO_DATE(CMS.REFUND_APPR_DT, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS') AS REFUND_APPR_DT
+          , CMS.REFUND_USER
+          ,(
+            SELECT  USER_NM
+            FROM    HQ_USER HQU
+            WHERE   HQU.COMP_CD = CMS.COMP_CD
+            AND     HQU.USER_ID = CMS.REFUND_USER
+            AND     HQU.USE_YN  = 'Y'
+            AND     ROWNUM      = 1
+           ) REFUND_USER_NM
+          , TO_CHAR(TO_DATE(CMS.REFUND_DT, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS') AS REFUND_DT
+          , CASE WHEN CMS.MBS_STAT= '92' THEN     -- 환불완료금액
+                      CMS.REFUND_AMT             
+                 WHEN CMS.MBS_DIV = '1' THEN      -- 시간권의 환불금액 계산
+                      CASE WHEN TRUNC(CMS.GRD_AMT - (CMS.ENTR_PRC * (CMS.USE_TM / PGM.BASE_USE_TM)), -2) <= 0 THEN 0     -- 사용시간금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(CMS.GRD_AMT - (CMS.ENTR_PRC * (CMS.USE_TM / PGM.BASE_USE_TM)), -2)                 -- 환불금액 10원단위 절삭
+                      END 
+                 WHEN CMS.MBS_DIV = '2' THEN           -- 횟수권의 환불금액 계산
+                      CASE WHEN TRUNC(CMS.GRD_AMT - (CMS.ENTR_PRC * CMS.USE_CNT), -2) <= 0THEN 0                       -- 사용횟수금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(CMS.GRD_AMT - (CMS.ENTR_PRC * CMS.USE_CNT), -2)                                  -- 환불금액 10원단위 절삭
+                      END 
+                 WHEN CMS.MBS_DIV = '3' THEN           -- 금액권의 환불금액 계산
+                      CASE WHEN TRUNC(CMS.GRD_AMT - CMS.USE_AMT, -2) <= 0 THEN 0                                      -- 사용금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(CMS.GRD_AMT - CMS.USE_AMT, -2)                                                  -- 환불금액 10원단위 절삭
+                      END 
+                 ELSE 0                         
+            END                 AS REFUND_AMT     -- 환불금액
+    FROM    CS_MEMBERSHIP_SALE CMS
+          , CS_MEMBERSHIP      MEM
+          ,(
+            SELECT  P.COMP_CD
+                 ,  P.PROGRAM_ID
+                 ,  NVL(L.LANG_NM, P.PROGRAM_NM)    AS PROGRAM_NM
+                 ,  P.BASE_USE_TM
+            FROM    CS_PROGRAM      P
+                 ,  LANG_TABLE      L
+            WHERE  L.COMP_CD(+)    = P.COMP_CD     
+            AND  L.PK_COL(+)     = LPAD(P.PROGRAM_ID, 30, ' ')
+            AND  P.COMP_CD       = ${SCH_COMP_CD}
+            AND  L.TABLE_NM(+)   = 'CS_PROGRAM'
+            AND  L.COL_NM(+)     = 'PROGRAM_NM'
+            AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+            AND  L.USE_YN(+)     = 'Y'
+           )   PGM
+    WHERE   CMS.COMP_CD    = MEM.COMP_CD
+    AND     CMS.PROGRAM_ID = MEM.PROGRAM_ID
+    AND     CMS.MBS_NO     = MEM.MBS_NO
+    AND     CMS.COMP_CD    = PGM.COMP_CD
+    AND     CMS.PROGRAM_ID = PGM.PROGRAM_ID
+    AND     CMS.COMP_CD    = ${SCH_COMP_CD}
+    AND     CMS.PROGRAM_ID = ${SCH_PROGRAM_ID}
+    AND     CMS.MBS_NO     = ${SCH_MBS_NO}
+    AND     CMS.CERT_NO    = ${SCH_CERT_NO}
+]]></query>
+
+<query name='TAB03_HIS_Q'><![CDATA[ 
+    SELECT  HIS.COMP_CD
+          , HIS.SALE_BRAND_CD
+          ,(
+            SELECT  BRAND_NM
+            FROM    BRAND BRD
+            WHERE   BRD.COMP_CD  = HIS.COMP_CD
+            AND     BRD.BRAND_CD = HIS.SALE_BRAND_CD
+           ) BRAND_NM
+          , HIS.SALE_STOR_CD
+          ,(
+            SELECT  STOR_NM
+            FROM    STORE STO
+            WHERE   STO.COMP_CD  = HIS.COMP_CD
+            AND     STO.BRAND_CD = HIS.SALE_BRAND_CD
+            AND     STO.STOR_CD  = HIS.SALE_STOR_CD
+           ) STOR_NM
+          , NVL(EDT.ENTRY_DT, HIS.APPR_DT) AS ENTRY_DT
+          , SUBSTR(EDT.ENTRY_FTM, 1, 4) AS ENTRY_FTM
+          , SUBSTR(EDT.ENTRY_TTM, 1, 4) AS ENTRY_TTM
+          , EDT.USE_TM + EDT.ADD_TM AS ENTRY_USE_TM
+          , HIS.PROGRAM_ID
+          , HIS.MBS_NO
+          , HIS.CERT_NO
+          , HIS.APPR_SEQ
+          , HIS.APPR_DT
+          , HIS.APPR_TM
+          , HIS.SALE_USE_DIV
+          , GET_COMMON_CODE_NM('010', '01940', HIS.SALE_USE_DIV, 'kor') AS SALE_USE_DIV_NM
+          , HIS.SALE_DIV
+          , GET_COMMON_CODE_NM('010', '01935', HIS.SALE_DIV, 'kor') AS SALE_DIV_NM
+          , HIS.CHILD_NO
+          , decrypt(NVL(EDT.ENTRY_NM, HIS.CHILD_NM)) AS CHILD_NM
+          , HIS.SEX_DIV
+          , GET_COMMON_CODE_NM('010', '00315', HIS.SEX_DIV, 'kor') AS SEX_DIV_NM
+          , HIS.AGES
+          , HIS.USE_TM
+          , HIS.USE_CNT
+          , HIS.USE_AMT
+          , HIS.USE_MCNT
+          , HIS.GRD_AMT
+          , HIS.REMARKS
+          , NVL(HU.USER_NM, HIS.UPD_USER)       AS UPD_USER
+    FROM   (          
+            SELECT  HIS.COMP_CD
+                  , HIS.SALE_BRAND_CD
+                  , HIS.SALE_STOR_CD
+                  , HIS.PROGRAM_ID
+                  , HIS.MBS_NO
+                  , SUBSTR(HIS.CERT_NO, 1, 8)||'****'||SUBSTR(HIS.CERT_NO, 14, 2) AS CERT_NO
+                  , HIS.APPR_SEQ
+                  , HIS.APPR_DT
+                  , HIS.APPR_TM
+                  , HIS.SALE_USE_DIV
+                  , HIS.SALE_DIV
+                  , HIS.CHILD_NO
+                  , CHD.CHILD_NM
+                  , CHD.SEX_DIV
+                  , CHD.AGES
+                  , HIS.USE_TM
+                  , HIS.USE_CNT
+                  , HIS.USE_AMT
+                  , HIS.USE_MCNT
+                  , HIS.GRD_AMT
+                  , SDT.ENTRY_NO
+                  , SDT.ENTRY_SEQ
+                  , HIS.REMARKS
+                  , HIS.UPD_USER
+            FROM    CS_MEMBERSHIP_SALE_HIS HIS
+                  , CS_MEMBER_CHILD        CHD
+                  , SALE_DT                SDT
+            WHERE   HIS.COMP_CD      = CHD.COMP_CD  (+)
+            AND     HIS.MEMBER_NO    = CHD.MEMBER_NO(+)
+            AND     HIS.CHILD_NO     = CHD.CHILD_NO (+)
+            AND     HIS.COMP_CD      = SDT.COMP_CD  (+)
+            AND     HIS.APPR_DT      = SDT.SALE_DT  (+)
+            AND     HIS.SALE_BRAND_CD= SDT.BRAND_CD (+) 
+            AND     HIS.SALE_STOR_CD = SDT.STOR_CD  (+)
+            AND     HIS.SALE_POS_NO  = SDT.POS_NO   (+)
+            AND     HIS.SALE_BILL_NO = SDT.BILL_NO  (+)
+            AND     HIS.SALE_SEQ     = SDT.SEQ      (+)
+            AND     HIS.COMP_CD      = ${SCH_COMP_CD}
+            AND     HIS.PROGRAM_ID   = ${SCH_PROGRAM_ID}
+            AND     HIS.MBS_NO       = ${SCH_MBS_NO}
+            AND     HIS.CERT_NO      = ${SCH_CERT_NO}
+           ) HIS
+          , CS_ENTRY_DT            EDT
+          , HQ_USER                HU
+    WHERE   HIS.COMP_CD      = EDT.COMP_CD  (+)
+    AND     HIS.ENTRY_NO     = EDT.ENTRY_NO (+)
+    AND     HIS.ENTRY_SEQ    = EDT.ENTRY_SEQ(+)
+    AND     HIS.COMP_CD      = HU.COMP_CD   (+)
+    AND     HIS.UPD_USER     = HU.USER_ID   (+)
+    AND     'Y'              = EDT.USE_YN   (+)
+    ORDER BY
+            HIS.APPR_DT
+          , HIS.APPR_TM
+          , EDT.ENTRY_NO
+          , EDT.ENTRY_SEQ
+]]></query>
+
+<query name='TAB03_SALE_U'><![CDATA[
+    UPDATE  CS_MEMBERSHIP_SALE 
+       SET  MBS_STAT    = ${MBS_STAT}
+         ,  CERT_TDT    = ${CERT_TDT}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  PROGRAM_ID  = ${PROGRAM_ID}
+       AND  MBS_NO      = ${MBS_NO}
+       AND  CERT_NO     = ${CERT_NO}
+]]></query>
+
+<query name='MEMBER_LIST_Q'><![CDATA[ 
+    SELECT  MEMBER_NO
+         ,  DECRYPT(MEMBER_NM)                      AS MEMBER_NM
+         ,  DECRYPT(ORG_NM)                         AS ORG_NM
+         ,  FN_GET_FORMAT_HP_NO(DECRYPT(MOBILE))    AS MOBILE
+         ,  JOIN_DT
+         ,  '[' || M.STOR_CD || '] ' || S.STOR_NM   AS JOIN_STOR
+      FROM  (
+                SELECT  /*+ INDEX(M PK_CS_MEMBER) */
+                        COMP_CD
+                     ,  MEMBER_NO
+                     ,  MEMBER_NM
+                     ,  ORG_NM
+                     ,  MOBILE
+                     ,  JOIN_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                  FROM  CS_MEMBER   M
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  MEMBER_NO   = ${SCH_MEMBER_NO}
+                UNION
+                SELECT  /*+ INDEX(M IDX01_CS_MEMBER) */
+                        COMP_CD
+                     ,  MEMBER_NO
+                     ,  MEMBER_NM
+                     ,  ORG_NM
+                     ,  MOBILE
+                     ,  JOIN_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                  FROM  CS_MEMBER   M
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  MEMBER_NM   = ENCRYPT(${SCH_MEMBER_NM})
+                UNION
+                SELECT  /*+ INDEX(M IDX04_CS_MEMBER) */
+                        COMP_CD
+                     ,  MEMBER_NO
+                     ,  MEMBER_NM
+                     ,  ORG_NM
+                     ,  MOBILE
+                     ,  JOIN_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                  FROM  CS_MEMBER   M
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  ORG_NM      = ENCRYPT(${SCH_ORG_NM})
+                UNION
+                SELECT  /*+ INDEX(M IDX02_CS_MEMBER) */
+                        COMP_CD
+                     ,  MEMBER_NO
+                     ,  MEMBER_NM
+                     ,  ORG_NM
+                     ,  MOBILE
+                     ,  JOIN_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                  FROM  CS_MEMBER   M
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  MOBILE_N3   = ${SCH_MOBILE}
+                UNION
+                SELECT  /*+ INDEX(M IDX03_CS_MEMBER) */
+                        COMP_CD
+                     ,  MEMBER_NO
+                     ,  MEMBER_NM
+                     ,  ORG_NM
+                     ,  MOBILE
+                     ,  JOIN_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                  FROM  CS_MEMBER   M
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  MOBILE      = ENCRYPT(${SCH_MOBILE})
+            )       M
+         ,  STORE   S
+     WHERE  M.COMP_CD   = S.COMP_CD(+)
+       AND  M.BRAND_CD  = S.BRAND_CD(+)
+       AND  M.STOR_CD   = S.STOR_CD(+)
+     ORDER  BY 2
+         ,  M.STOR_CD
+]]></query>
+
+<query name='TAB04_Q'><![CDATA[ 
+    SELECT  /*+ LEADING(EHD) INDEX(MEM PK_CS_MEMBER) */
+            EHD.COMP_CD
+          , EHD.ENTRY_DT
+          , EHD.BRAND_CD
+          , BRN.BRAND_NM
+          , EHD.STOR_CD
+          , STO.STOR_NM
+          , EHD.MEMBER_NO
+          , decrypt(EHD.MEMBER_NM) AS MEMBER_NM
+          , FN_GET_FORMAT_HP_NO(decrypt(EHD.MOBILE)) AS MOBILE
+          , NVL(MEM.ORG_NM, '_') AS ORG_NM
+          , EHD.ENTRY_CNT
+          , EHD.GRD_AMT
+          , EHD.UNPAID_AMT
+          , CASE WHEN EHD.ENTRY_CNT = 0 THEN 0 ELSE EHD.GRD_AMT / EHD.ENTRY_CNT END AS CUST_AMT
+          , CHD.CHILD_NO
+          , decrypt(NVL(CHD.CHILD_NM, EDT.ENTRY_NM)) AS CHILD_NM
+          , CHD.SEX_DIV
+          , GET_COMMON_CODE_NM(${SCH_COMP_CD}, '00315', CHD.SEX_DIV, ${SCH_LANGUAGE}) AS SEX_DIV_NM
+          , CHD.AGES
+          , EDT.ENTRY_DIV
+          , GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01885', EDT.ENTRY_DIV, ${SCH_LANGUAGE}) AS ENTRY_DIV_NM
+          , EPG.PROGRAM_ID
+          , PGM.PROGRAM_NM||'['||ITM.ITEM_NM||']' AS PROGRAM_NM
+          , EPG.MATL_ITEM_CD
+          , SUBSTR(EDT.ENTRY_FTM, 1, 4) AS ENTRY_FTM
+          , SUBSTR(EDT.ENTRY_TTM, 1, 4) AS ENTRY_TTM
+          , FN_GET_FROMAT_HHMM(EPG.USE_TM)  AS USE_TM
+          , FN_GET_FROMAT_HHMM(EPG.IDLE_TM) AS IDLE_TM
+          , FN_GET_FROMAT_HHMM(EPG.ADD_TM)  AS ADD_TM
+          , EPG.USE_AMT
+          , EPG.ADD_AMT
+          , EPG.MBS_NO
+          , MBS.MBS_NM
+          , CASE WHEN MSL.CERT_NO IS NULL THEN NULL
+                 ELSE SUBSTR(MSL.CERT_NO, 1, 8)||'****'||SUBSTR(MSL.CERT_NO, 14, 2) 
+            END AS CERT_NO
+          , MBS.MBS_DIV
+          , GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01850', MBS.MBS_DIV, ${SCH_LANGUAGE}) AS MBS_DIV_NM
+          , MBS.CHARGE_YN
+          , GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01860', MBS.CHARGE_YN, ${SCH_LANGUAGE}) AS CHARGE_YN_NM
+          , MSL.USE_TM   AS MBS_USE_TM
+          , MSL.USE_CNT  AS MBS_USE_CNT
+          , MSL.USE_AMT  AS MBS_USE_AMT
+          , MSL.USE_MCNT AS MBS_USE_MCNT
+    FROM    CS_ENTRY_HD             EHD
+          , CS_ENTRY_DT             EDT
+          , CS_ENTRY_PROGRAM        EPG
+          ,(
+            SELECT  /*+ NO_MERGE */
+                    P.COMP_CD
+                 ,  P.PROGRAM_ID
+                 ,  NVL(L.LANG_NM, P.PROGRAM_NM)    AS PROGRAM_NM
+                 ,  P.BASE_USE_TM
+            FROM    CS_PROGRAM      P
+                 ,  LANG_TABLE      L
+            WHERE  L.COMP_CD(+)    = P.COMP_CD     
+            AND  L.PK_COL(+)     = LPAD(P.PROGRAM_ID, 30, ' ')
+            AND  P.COMP_CD       = ${SCH_COMP_CD}
+            AND  L.TABLE_NM(+)   = 'CS_PROGRAM'
+            AND  L.COL_NM(+)     = 'PROGRAM_NM'
+            AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+            AND  L.USE_YN(+)     = 'Y'
+           )   PGM
+          , CS_MEMBER               MEM
+          , CS_MEMBER_CHILD         CHD
+          , CS_MEMBERSHIP           MBS
+          , ITEM                    ITM
+          , BRAND                   BRN
+          , STORE                   STO
+          ,(
+            SELECT  /*+ LEADING(MSL) INDEX(SDT IDX01_SALE_DT) */
+                    MSL.COMP_CD
+                 ,  SDT.ENTRY_NO
+                 ,  SDT.ENTRY_SEQ
+                 ,  SDT.PROGRAM_SEQ
+                 ,  SDT.MBS_NO
+                 ,  SDT.CERT_NO
+                 ,  SUM(MSL.USE_TM )  AS USE_TM
+                 ,  SUM(MSL.USE_CNT)  AS USE_CNT
+                 ,  SUM(MSL.USE_AMT)  AS USE_AMT
+                 ,  SUM(MSL.USE_MCNT) AS USE_MCNT
+            FROM    CS_MEMBERSHIP_SALE_HIS  MSL
+                 ,  SALE_DT                 SDT
+            WHERE   SDT.SALE_DT  = MSL.APPR_DT
+            AND     SDT.BRAND_CD = MSL.SALE_BRAND_CD
+            AND     SDT.STOR_CD  = MSL.SALE_STOR_CD
+            AND     SDT.POS_NO   = MSL.SALE_POS_NO
+            AND     SDT.BILL_NO  = MSL.SALE_BILL_NO
+            AND     SDT.SEQ      = MSL.SALE_SEQ
+            AND     MSL.COMP_CD    = ${SCH_COMP_CD}
+            AND     MSL.MEMBER_NO  = ${SCH_MEMBER_NO}
+            AND    (${SCH_BRAND_CD} IS NULL OR MSL.SALE_BRAND_CD = ${SCH_BRAND_CD})
+            AND    (${SCH_STOR_CD}  IS NULL OR MSL.SALE_STOR_CD  = ${SCH_STOR_CD})
+            GROUP BY
+                    MSL.COMP_CD
+                 ,  SDT.ENTRY_NO
+                 ,  SDT.ENTRY_SEQ
+                 ,  SDT.PROGRAM_SEQ
+                 ,  SDT.MBS_NO
+                 ,  SDT.CERT_NO
+           ) MSL
+    WHERE   EHD.COMP_CD    = EDT.COMP_CD
+    AND     EHD.ENTRY_NO   = EDT.ENTRY_NO
+    AND     EDT.COMP_CD    = EPG.COMP_CD
+    AND     EDT.ENTRY_NO   = EPG.ENTRY_NO
+    AND     EDT.ENTRY_SEQ  = EPG.ENTRY_SEQ
+    AND     EPG.COMP_CD    = PGM.COMP_CD
+    AND     EPG.PROGRAM_ID = PGM.PROGRAM_ID
+    AND     EDT.COMP_CD    = CHD.COMP_CD   (+)
+    AND     EDT.MEMBER_NO  = CHD.MEMBER_NO (+)
+    AND     EDT.CHILD_NO   = CHD.CHILD_NO  (+)
+    AND     EHD.COMP_CD    = MEM.COMP_CD
+    AND     EHD.MEMBER_NO  = MEM.MEMBER_NO
+    AND     EPG.COMP_CD    = MBS.COMP_CD   (+)
+    AND     EPG.PROGRAM_ID = MBS.PROGRAM_ID(+)
+    AND     EPG.MBS_NO     = MBS.MBS_NO    (+)
+    AND     EPG.COMP_CD    = MSL.COMP_CD   (+)
+    AND     EPG.ENTRY_NO   = MSL.ENTRY_NO  (+)
+    AND     EPG.ENTRY_SEQ  = MSL.ENTRY_SEQ (+)
+    AND     EPG.PROGRAM_SEQ= MSL.PROGRAM_SEQ(+)
+    AND     EPG.MBS_NO     = MSL.MBS_NO    (+)
+    AND     EPG.CERT_NO    = MSL.CERT_NO   (+)
+    AND     EPG.COMP_CD      = ITM.COMP_CD (+)
+    AND     EPG.MATL_ITEM_CD = ITM.ITEM_CD (+)
+    AND     EHD.COMP_CD    = BRN.COMP_CD
+    AND     EHD.BRAND_CD   = BRN.BRAND_CD
+    AND     EHD.COMP_CD    = STO.COMP_CD
+    AND     EHD.BRAND_CD   = STO.BRAND_CD
+    AND     EHD.STOR_CD    = STO.STOR_CD
+    AND     EHD.COMP_CD    = ${SCH_COMP_CD}
+    AND     EHD.MEMBER_NO  = ${SCH_MEMBER_NO}
+    AND     EDT.USE_YN     = 'Y'
+    AND    (${SCH_BRAND_CD} IS NULL OR EHD.BRAND_CD = ${SCH_BRAND_CD})
+    AND    (${SCH_STOR_CD}  IS NULL OR EHD.STOR_CD  = ${SCH_STOR_CD})
+    ORDER BY
+            EHD.ENTRY_DT  DESC
+          , EDT.ENTRY_FTM DESC
+          , CHD.CHILD_NO
+]]></query>
+
+</SQLResource>
+

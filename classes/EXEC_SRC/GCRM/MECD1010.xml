@@ -1,0 +1,343 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='TAB01_Q'><![CDATA[ 
+    SELECT  DECRYPT(CA.CARD_ID)                                                             AS CARD_ID
+         ,  TO_CHAR(TO_DATE(CA.ISSUE_DT, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD')                 AS ISSUE_DT
+         ,  CA.ISSUE_STOR_CD
+         ,  S.STOR_NM                                                                       AS ISSUE_STOR_NM
+         ,  CA.CARD_STAT
+         ,  C.CODE_NM                                                                       AS CARD_STAT_NM
+         ,  CA.SAV_MLG - CA.LOS_MLG                                                         AS SAV_MLG
+         ,  CA.SAV_PT - CA.USE_PT - CA.LOS_PT                                               AS SAV_PT
+         ,  CA.SAV_CASH - CA.USE_CASH                                                       AS SAV_CASH
+         ,  TO_CHAR(NVL(CA.UPD_DT, CA.INST_DT),'YYYY-MM-DD HH24:MI:SS')                     AS UPD_DT
+         ,  CA.USE_YN
+      FROM  C_CARD  CA
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD   = L.COMP_CD(+)
+                   AND  S.BRAND_CD  = L.BRAND_CD(+)
+                   AND  S.STOR_CD   = L.STOR_CD(+)
+                   AND  S.STOR_TP   IN ('10', '20')
+                   AND  S.COMP_CD   = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+                   AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE}
+                   AND  L.USE_YN(+) = 'Y'
+            )       S
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON      C
+                     ,  LANG_COMMON L
+                 WHERE  C.COMP_CD       = L.COMP_CD(+)
+                   AND  C.CODE_TP       = L.CODE_TP(+)
+                   AND  C.CODE_CD       = L.CODE_CD(+)
+                   AND  C.COMP_CD       = ${SCH_COMP_CD}
+                   AND  C.CODE_TP       = '01725'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+                   AND  L.USE_YN(+)     = 'Y'
+            )           C
+     WHERE  CA.COMP_CD          = S.COMP_CD(+)
+       AND  CA.ISSUE_BRAND_CD   = S.BRAND_CD(+)
+       AND  CA.ISSUE_STOR_CD    = S.STOR_CD(+)
+       AND  CA.COMP_CD          = C.COMP_CD(+)
+       AND  CA.CARD_STAT        = C.CODE_CD(+)
+       AND  CA.COMP_CD          = ${SCH_COMP_CD}
+       AND  (${SCH_BRAND_CD} IS NULL OR CA.ISSUE_BRAND_CD = ${SCH_BRAND_CD})
+       AND  CA.USE_YN           = 'Y'
+       AND  CA.CUST_ID          IS NULL
+       AND  (${SCH_CARD_ID}  IS NULL OR DECRYPT(CA.CARD_ID) LIKE '%'||${SCH_CARD_ID}||'%' )
+     ORDER  BY DECRYPT(CA.CARD_ID), CA.ISSUE_DT DESC
+]]></query>
+
+<query name='TAB02_Q'><![CDATA[ 
+    SELECT  DECRYPT(CA.CARD_ID)                                                         AS CARD_ID
+         ,  CA.PIN_NO
+         ,  TO_CHAR(TO_DATE(CA.ISSUE_DT, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')  AS ISSUE_DT
+         ,  CA.ISSUE_DIV
+         ,  CA.ISSUE_STOR_CD                                                            AS STOR_CD
+         ,  S.STOR_NM                                                                   AS STOR_NM
+         ,  CA.CARD_STAT
+         ,  CA.CARD_STAT                                                                AS PREV_CARD_STAT
+         ,  TO_CHAR(CA.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')                                 AS UPD_DT
+         ,  TO_CHAR(TO_DATE(CA.LOST_DT , 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')  AS LOST_DT
+         ,  TO_CHAR(TO_DATE(CA.CLOSE_DT, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')  AS CLOSE_DT
+         ,  TO_CHAR(TO_DATE(CA.DISUSE_DT,'YYYYMMDD'), 'YYYY-MM-DD')                     AS DISUSE_DT
+         ,  CSH.LATE_BUY_DT
+         ,  CA.SAV_PT - CA.USE_PT - CA.LOS_PT                                           AS SAV_PT
+         ,  NULL                                                                        AS REMARKS
+      FROM  C_CARD      CA 
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+                   AND  L.USE_YN(+)     = 'Y'
+            )           S
+         ,  (
+                SELECT  CSH.COMP_CD
+                     ,  CSH.CARD_ID
+                     ,  MAX(CSH.USE_DT)     AS LATE_BUY_DT
+                  FROM  C_CARD_SAV_HIS  CSH
+                 WHERE  CSH.COMP_CD     = ${SCH_COMP_CD}
+                   AND  CSH.CARD_ID     = ENCRYPT(${SCH_CARD_ID})
+                   AND  CSH.SAV_USE_FG  = '2'
+                 GROUP  BY CSH.COMP_CD
+                     ,  CSH.CARD_ID
+            )           CSH
+     WHERE  CA.COMP_CD        = S.COMP_CD (+) 
+       AND  CA.ISSUE_BRAND_CD = S.BRAND_CD(+) 
+       AND  CA.ISSUE_STOR_CD  = S.STOR_CD (+)
+       AND  CA.COMP_CD        = CSH.COMP_CD (+) 
+       AND  CA.CARD_ID        = CSH.CARD_ID (+)
+       AND  CA.COMP_CD        = ${SCH_COMP_CD}
+       AND  CA.CARD_ID        = ENCRYPT(${SCH_CARD_ID})
+       AND  CA.USE_YN         = 'Y'
+       AND  CA.CUST_ID        IS NULL
+]]></query>
+
+<query name='TAB02_U'><![CDATA[
+    UPDATE  C_CARD 
+       SET  PIN_NO      = ${PIN_NO}
+         ,  CARD_STAT   = ${CARD_STAT}
+         ,  LOST_DT     = CASE WHEN ${PREV_CARD_STAT} = '10' AND ${CARD_STAT} = '90' THEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') 
+                               ELSE LOST_DT 
+                          END
+         ,  CLOSE_DT    = CASE WHEN ${PREV_CARD_STAT} = '10' AND ${CARD_STAT} = '90' THEN NULL
+                               WHEN ${PREV_CARD_STAT} = '90' AND ${CARD_STAT} = '10' THEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') 
+                               ELSE CLOSE_DT 
+                          END
+         ,  CANCEL_DT   = CASE WHEN ${CARD_STAT} = '91' THEN TO_CHAR(SYSDATE, 'YYYYMMDD') 
+                               ELSE CANCEL_DT 
+                          END
+         ,  REFUND_DT   = CASE WHEN ${CARD_STAT} = '92' THEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') 
+                               ELSE REFUND_DT 
+                          END
+         ,  DISUSE_DT   = CASE WHEN ${CARD_STAT} = '99' THEN TO_CHAR(SYSDATE, 'YYYYMMDD')
+                               WHEN ${CARD_STAT} = '10' THEN NULL
+                               ELSE DISUSE_DT 
+                          END
+         ,  REMARKS     = ${REMARKS}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CARD_ID     = ENCRYPT(${CARD_ID})
+]]></query>
+
+<query name='TAB03_Q'><![CDATA[ 
+    SELECT  DECRYPT(CSH.CARD_ID) AS CARD_ID
+         ,  CSH.CHG_DT
+         ,  CSH.CHG_SEQ
+         ,  CSH.REMARKS
+         ,  CSH.CARD_STAT_FR 
+         ,  GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01725', CSH.CARD_STAT_FR, ${SCH_LANGUAGE})  AS CARD_STAT_NM_FR
+         ,  CSH.CARD_STAT_TO
+         ,  GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01725', CSH.CARD_STAT_TO, ${SCH_LANGUAGE})  AS CARD_STAT_NM_TO
+         ,  CSH.INST_USER
+         ,  TO_CHAR(CSH.INST_DT, 'YYYY-MM-DD HH24:MI:SS')                                   AS INST_DT
+      FROM  C_CARD_STAT_HIS CSH
+     WHERE  CSH.COMP_CD = ${SCH_COMP_CD}
+       AND  CSH.CARD_ID = encrypt(${SCH_CARD_ID})
+     ORDER  BY CSH.CHG_DT DESC
+         ,  CSH.CHG_SEQ DESC
+]]></query>
+
+<query name='TAB04_Q'><![CDATA[ 
+    SELECT  CSH.CARD_ID
+         ,  CSH.USE_DT
+         ,  SD.STOR_CD
+         ,  S.STOR_NM
+         ,  SD.ITEM_CD
+         ,  I.ITEM_NM
+         ,  SD.SALE_DIV
+         ,  GET_COMMON_CODE_NM(CSH.COMP_CD, '00435', SD.SALE_DIV, ${SCH_LANGUAGE})   AS SALE_DIV_NM
+         ,  SD.SALE_QTY
+         ,  SD.SALE_AMT
+         ,  SD.DC_AMT + SD.ENR_AMT      AS DC_AMT
+         ,  SD.GRD_AMT
+         ,  SD.SAV_PT
+      FROM  C_CARD_SAV_HIS  CSH
+         ,  SALE_DT         SD
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD   = L.COMP_CD(+)
+                   AND  S.BRAND_CD  = L.BRAND_CD(+)
+                   AND  S.STOR_CD   = L.STOR_CD(+)
+                   AND  S.STOR_TP   IN ('10', '20')
+                   AND  S.COMP_CD   = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+                   AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE}
+                   AND  L.USE_YN(+) = 'Y'
+            )                   S
+         ,  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_NM, I.ITEM_NM)   AS ITEM_NM
+                  FROM  ITEM        I
+                     ,  LANG_ITEM   L
+                 WHERE  I.COMP_CD   = L.COMP_CD(+)
+                   AND  I.ITEM_CD   = L.ITEM_CD(+)
+                   AND  i.COMP_CD   = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE}
+                   AND  L.USE_YN(+) = 'Y'
+            )                   I
+     WHERE  CSH.COMP_CD = SD.COMP_CD
+       AND  CSH.USE_DT  = SD.SALE_DT
+       AND  CSH.BRAND_CD= SD.BRAND_CD
+       AND  CSH.STOR_CD = SD.STOR_CD
+       AND  CSH.POS_NO  = SD.POS_NO
+       AND  CSH.BILL_NO = SD.BILL_NO
+       AND  SD.COMP_CD  = S.COMP_CD (+)
+       AND  SD.BRAND_CD = S.BRAND_CD(+)
+       AND  SD.STOR_CD  = S.STOR_CD (+)
+       AND  SD.COMP_CD  = I.COMP_CD (+)
+       AND  SD.ITEM_CD  = I.ITEM_CD (+)
+       AND  CSH.COMP_CD = ${SCH_COMP_CD}
+       AND  CSH.CARD_ID = ${SCH_CARD_ID}
+     ORDER  BY CSH.CARD_ID
+         ,  CSH.USE_DT DESC
+         ,  SD.STOR_CD
+         ,  SD.ITEM_CD
+]]></query>
+
+<query name='TAB05_I'><![CDATA[ 
+    INSERT  INTO C_CARD_SAV_HIS
+    (
+            COMP_CD
+        ,   CARD_ID
+        ,   USE_DT
+        ,   USE_SEQ
+        ,   SAV_USE_FG
+        ,   LOS_MLG_DT
+        ,   SAV_PT
+        ,   USE_PT
+        ,   SAV_USE_DIV
+        ,   REMARKS
+        ,   USE_YN
+        ,   INST_DT
+        ,   INST_USER
+    ) VALUES ( 
+            ${COMP_CD}
+        ,   ENCRYPT(${CARD_ID})
+        ,   ${USE_DT}
+        ,   SQ_PCRM_SEQ.NEXTVAL
+        ,   CASE WHEN ${SAV_USE_DIV} = '303' THEN '2' ELSE '1' END
+        ,   TO_CHAR(ADD_MONTHS(TO_DATE(${USE_DT}, 'YYYYMMDD'), 12) - 1, 'YYYYMMDD')
+        ,   CASE WHEN ${SAV_USE_DIV} = '303' THEN 0 ELSE TO_NUMBER(${SAV_PT}) END
+        ,   CASE WHEN ${SAV_USE_DIV} = '303' THEN TO_NUMBER(${SAV_PT}) ELSE 0 END
+        ,   ${SAV_USE_DIV}
+        ,   ${REMARKS}
+        , 'Y'
+        , SYSDATE
+        , ${USER_ID}
+    )
+]]></query>
+
+<query name='TAB06_Q'><![CDATA[ 
+    SELECT  V02.CARD_ID
+         ,  V02.USE_DT
+         ,  V02.STOR_CD
+         ,  CASE WHEN V02.BILL_NO IS NULL THEN FC_GET_WORDPACK(${SCH_COMP_CD},${SCH_LANGUAGE}, 'ADMIN_YN')||' '||FC_GET_WORDPACK(${SCH_COMP_CD},${SCH_LANGUAGE}, 'SUB_TOUCH_08')
+                 ELSE V02.STOR_NM
+            END  AS STOR_NM
+         ,  V02.POS_NO
+         ,  V02.BILL_NO
+         ,  V02.SALE_QTY
+         ,  V02.GRD_AMT
+         ,  V02.SAV_USE_DIV
+         ,  GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01740', V02.SAV_USE_DIV, ${SCH_LANGUAGE}) AS SAV_USE_DIV_NM         
+         ,  V02.TOT_SALV_PT - (V02.CMP_SAV_PT - V02.SAV_PT)     AS SAV_PT
+         ,  V02.USE_PT                                          AS USE_PT
+         ,  V02.LOS_PT                                          AS LOS_PT
+         ,  V02.LOS_PT_DT
+      FROM  (
+                SELECT  V01.COMP_CD
+                     ,  decrypt(V01.CARD_ID) AS CARD_ID
+                     ,  V01.USE_DT
+                     ,  SDT.BRAND_CD
+                     ,  V01.STOR_CD
+                     ,  V01.STOR_NM
+                     ,  V01.POS_NO
+                     ,  V01.BILL_NO
+                     ,  SDT.SALE_QTY
+                     ,  SDT.GRD_I_AMT + SDT.GRD_O_AMT   AS GRD_AMT
+                     ,  V01.SAV_USE_DIV                 
+                     ,  TRUNC(V01.SAV_PT) AS SAV_PT
+                     ,  SUM (TRUNC(V01.SAV_PT)) OVER(PARTITION BY V01.CARD_ID,  V01.USE_DT, V01.STOR_CD, V01.POS_NO, V01.BILL_NO) AS CMP_SAV_PT
+                     ,  TRUNC(SUM (V01.SAV_PT) OVER(PARTITION BY V01.CARD_ID,  V01.USE_DT, V01.STOR_CD, V01.POS_NO, V01.BILL_NO)) AS TOT_SALV_PT
+                     ,  V01.USE_PT
+                     ,  V01.LOS_PT
+                     ,  V01.POINT_S
+                     ,  CASE WHEN V01.SAV_USE_FG IN  ('1', '3') AND SAV_PT > 0 THEN V01.LOS_PT_DT ELSE NULL END AS LOS_PT_DT
+                     ,  ROW_NUMBER() OVER(PARTITION BY V01.CARD_ID,  V01.USE_DT, V01.STOR_CD, V01.POS_NO, V01.BILL_NO ORDER BY V01.USE_DT, V01.STOR_CD, V01.POS_NO, V01.BILL_NO) R_NUM
+                  FROM  SALE_HD           SDT
+                     ,  (
+                            SELECT  CSH.COMP_CD
+                                 ,  CSH.BRAND_CD
+                                 ,  CSH.STOR_CD
+                                 ,  STO.STOR_NM
+                                 ,  CSH.POS_NO
+                                 ,  CSH.BILL_NO
+                                 ,  CSH.CARD_ID
+                                 ,  CSH.USE_DT
+                                 ,  CSH.SAV_USE_FG
+                                 ,  CSH.SAV_USE_DIV
+                                 ,  SUM(CSH.SAV_PT)         AS SAV_PT
+                                 ,  SUM(CSH.USE_PT)         AS USE_PT
+                                 ,  SUM(CSH.LOS_PT)         AS LOS_PT
+                                 ,  0                       AS POINT_S
+                                 ,  MAX(CSH.LOS_PT_DT)      AS LOS_PT_DT
+                              FROM  C_CARD_SAV_HIS    CSH
+                                 ,  STORE             STO
+                             WHERE  CSH.COMP_CD  = STO.COMP_CD (+)
+                               AND  CSH.BRAND_CD = STO.BRAND_CD(+)
+                               AND  CSH.STOR_CD  = STO.STOR_CD (+)
+                               AND  CSH.COMP_CD  = ${SCH_COMP_CD}
+                               AND  CSH.CARD_ID  = ENCRYPT(${SCH_CARD_ID})
+                     GROUP  BY CSH.COMP_CD
+                         ,  CSH.BRAND_CD
+                         ,  CSH.STOR_CD
+                         ,  STO.STOR_NM
+                         ,  CSH.POS_NO
+                         ,  CSH.BILL_NO
+                         ,  CSH.CARD_ID
+                         ,  CSH.USE_DT
+                         ,  CSH.SAV_USE_FG
+                         ,  CSH.SAV_USE_DIV
+                    )  V01
+             WHERE  V01.COMP_CD  = SDT.COMP_CD (+)
+               AND  V01.USE_DT   = SDT.SALE_DT (+)
+               AND  V01.BRAND_CD = SDT.BRAND_CD(+)
+               AND  V01.STOR_CD  = SDT.STOR_CD (+)
+               AND  V01.POS_NO   = SDT.POS_NO  (+)
+               AND  V01.BILL_NO  = SDT.BILL_NO (+)
+            )   V02
+     ORDER  BY 
+            V02.CARD_ID
+         ,  V02.USE_DT  DESC
+         ,  V02.STOR_CD
+         ,  V02.POS_NO
+         ,  V02.BILL_NO
+         ,  V02.SAV_USE_DIV
+]]></query>
+
+</SQLResource>
+

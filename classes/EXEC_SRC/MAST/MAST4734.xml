@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='GIFT_MST_Q'><![CDATA[
+    SELECT  GM.COMP_CD
+         ,  GM.GIFT_STAT_CD
+         ,  GM.GIFT_NO
+         ,  NVL(L.GIFT_NM, GCM.GIFT_NM)     AS GIFT_NM
+         ,  GM.PRICE
+         ,  GM.ISSUE_DT
+         ,  GM.EXP_DT
+         ,  GM.IRR_YN
+         ,  GM.GIFT_STAT_CD                 AS LAST_GIFT_STAT_CD
+         ,  GM.REMARK
+      FROM  GIFT_MST        GM
+         ,  GIFT_CODE_MST   GCM
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL  AS GIFT_CD
+                     ,  LANG_NM AS GIFT_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'GIFT_CODE_MST'
+                   AND  COL_NM      = 'GIFT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  GM.COMP_CD      = GCM.COMP_CD
+       AND  GM.GIFT_CD      = GCM.GIFT_CD
+       AND  L.COMP_CD(+)    = GCM.COMP_CD
+       AND  L.GIFT_CD(+)    = LPAD(GCM.GIFT_CD, 2, ' ')
+       AND  GM.GIFT_CD      = ${SCH_GIFT_CD}
+       AND  (${SCH_GIFT_NO} IS NULL OR (GM.GIFT_NO  LIKE '%'||${SCH_GIFT_NO} ||'%'))
+       AND  (
+                (${SCH_USER_DIV} = 'H' AND GM.GIFT_STAT_CD IN ('10', '12', '21', '50', '51', '99')) 
+                OR
+                (
+                    ${SCH_USER_DIV} = 'S'
+                    AND
+                    GM.GIFT_STAT_CD IN ('11', '31', '50', '51', '99')
+                    AND
+                    GM.BRAND_CD = ${SCH_BRAND_CD}
+                    AND
+                    GM.STOR_CD  = ${SCH_STOR_CD}
+                )
+            )
+     ORDER  BY GM.GIFT_NO
+]]></query>
+
+<query name='GIFT_MST_U'><![CDATA[
+    UPDATE  GIFT_MST
+       SET  GIFT_STAT_CD    = ${GIFT_STAT_CD}
+         ,  STAT_CHG_DT     = TO_CHAR(SYSDATE, 'YYYYMMDD')
+         ,  REMARK          = ${REMARK}
+         ,  IRR_YN          = ${IRR_YN}
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${USER_ID}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  GIFT_NO         = ${GIFT_NO}
+]]></query>
+
+</SQLResource>

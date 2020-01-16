@@ -1,0 +1,254 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='COMMON_Q'><![CDATA[
+    SELECT  C.CODE_CD                  AS PGM_ID
+         ,  NVL(L.CODE_NM, C.CODE_NM)  AS PGM_NM
+         ,  C.VAL_C1                   AS PGM_FG
+         ,  C.SORT_SEQ                 AS SORT_SEQ
+         ,  C.VAL_N1                   AS VAL_N1 
+         ,  C.REMARKS                  AS PGM_CD
+      FROM  COMMON      C
+         ,  (
+                SELECT  COMP_CD
+                     ,  CODE_TP
+                     ,  CODE_CD
+                     ,  CODE_NM
+                  FROM  LANG_COMMON
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  CODE_TP     = '01402'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  C.COMP_CD   = L.COMP_CD(+)
+       AND  C.CODE_TP   = L.CODE_TP(+)
+       AND  C.CODE_CD   = L.CODE_CD(+)
+       AND  C.COMP_CD   = ${SCH_COMP_CD}
+       AND  C.CODE_TP   = '01402'
+       AND  C.USE_YN    = 'Y'
+       AND  C.CODE_CD   NOT IN (
+                                    SELECT  PGM_ID
+                                      FROM  POS_PGM_AUTH
+                                     WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                       AND  BRAND_CD    = ${SCH_BRAND_CD}
+                                       AND  STOR_CD     = ${SCH_STOR_CD}
+                                       AND  USER_ID     = ${SCH_USER_ID}
+                                       AND  USE_YN      = 'Y'
+                               )
+     ORDER  BY C.SORT_SEQ
+]]></query>
+
+<query name='STORE_USER_COMBO_Q'><![CDATA[
+    SELECT  SU.USER_ID                      AS CODE_CD
+         ,  NVL(L.LANG_NM, SU.USER_NM )     AS CODE_NM
+      FROM  STORE_USER      SU
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'STORE_USER'
+                   AND  COL_NM      = 'USER_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)= SU.COMP_CD
+       AND  L.PK_COL(+) = LPAD(SU.BRAND_CD, 4, ' ')||LPAD(SU.STOR_CD, 10, ' ')||LPAD(SU.USER_ID, 10, ' ')
+       AND  SU.COMP_CD  = ${SCH_COMP_CD}
+       AND  SU.BRAND_CD = ${SCH_BRAND_CD}
+       AND  SU.STOR_CD  = ${SCH_STOR_CD}
+       AND  SU.USE_YN   = 'Y'
+]]></query>
+
+<query name='POS_PGM_AUTH_Q'><![CDATA[
+    SELECT  PA.COMP_CD
+         ,  PA.BRAND_CD
+         ,  PA.STOR_CD
+         ,  PA.USER_ID
+         ,  SU.USER_NM
+         ,  PA.PGM_ID
+         ,  PA.PGM_NM
+         ,  PA.PGM_FG
+         ,  PA.USE_YN
+      FROM  POS_PGM_AUTH    PA
+         ,  (
+                SELECT  SU.COMP_CD
+                     ,  SU.BRAND_CD
+                     ,  SU.STOR_CD
+                     ,  SU.USER_ID
+                     ,  NVL(L.LANG_NM, SU.USER_NM)  AS USER_NM
+                  FROM  STORE_USER  SU
+                     ,  LANG_TABLE  L
+                 WHERE  L.COMP_CD(+)    = SU.COMP_CD
+                   AND  L.PK_COL(+)     = LPAD(SU.BRAND_CD, 4, ' ')||LPAD(SU.STOR_CD, 10, ' ')||LPAD(SU.USER_ID, 10, ' ')
+                   AND  SU.COMP_CD      = ${SCH_COMP_CD}
+                   AND  SU.BRAND_CD     = ${SCH_BRAND_CD}
+                   AND  SU.STOR_CD      = ${SCH_STOR_CD}
+                   AND  SU.USER_ID      = ${SCH_USER_ID}
+                   AND  L.TABLE_NM(+)   = 'STORE_USER'
+                   AND  L.COL_NM(+)     = 'USER_NM'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )   SU
+     WHERE  PA.COMP_CD  = SU.COMP_CD
+       AND  PA.BRAND_CD = SU.BRAND_CD
+       AND  PA.STOR_CD  = SU.STOR_CD
+       AND  PA.USER_ID  = SU.USER_ID
+       AND  PA.COMP_CD  = ${SCH_COMP_CD}
+       AND  PA.BRAND_CD = ${SCH_BRAND_CD}
+       AND  PA.STOR_CD  = ${SCH_STOR_CD}
+       AND  PA.USER_ID  = ${SCH_USER_ID}
+       AND  PA.USE_YN   = 'Y'
+]]></query>
+
+<!-- POS프로그램 사용자별 권한정보  수정 -->
+<query name='POS_PGM_AUTH_U'><![CDATA[
+    MERGE INTO POS_PGM_AUTH
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  USER_ID     = ${USER_ID}
+           AND  PGM_ID      = ${PGM_ID}
+       )
+    WHEN  MATCHED  THEN
+        UPDATE
+           SET  USE_YN      =  ${USE_YN}
+             ,  UPD_DT      =  SYSDATE
+             ,  UPD_USER    =  ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD 
+             ,  USER_ID
+             ,  PGM_ID
+             ,  PGM_NM
+             ,  PGM_FG
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${USER_ID}
+             ,  ${PGM_ID}
+             ,  ${PGM_NM}
+             ,  ${PGM_FG}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query> 
+
+<query name='STORE_USER_Q'><![CDATA[
+    SELECT  SU.COMP_CD
+         ,  SU.BRAND_CD
+         ,  SU.STOR_CD
+         ,  SU.USER_ID
+         ,  NVL(L.LANG_NM, SU.USER_NM)      AS USER_NM
+      FROM  STORE_USER      SU
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'STORE_USER'
+                   AND  COL_NM      = 'USER_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)= SU.COMP_CD
+       AND  L.PK_COL(+) = LPAD(SU.BRAND_CD, 4, ' ')||LPAD(SU.STOR_CD, 10, ' ')||LPAD(SU.USER_ID, 10, ' ')
+       AND  SU.COMP_CD  = ${SCH_COMP_CD}
+       AND  SU.BRAND_CD = ${SCH_BRAND_CD}
+       AND  SU.STOR_CD  = ${SCH_STOR_CD}
+       AND  SU.USER_ID  <> ${SCH_USER_ID}
+       AND  SU.USE_YN   = 'Y'
+]]></query>
+
+<!-- POS프로그램 사용자별 권한정보  삭제 -->
+<query name='POS_PGM_AUTH_D'><![CDATA[
+    UPDATE  POS_PGM_AUTH 
+       SET  USE_YN      = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_CD     = ${STOR_CD}
+       AND  USER_ID     = ${USER_ID}
+]]></query>
+
+<!-- POS프로그램 사용자별 권한정보  복사 -->
+<query name='POS_PGM_AUTH_C'><![CDATA[
+    MERGE INTO POS_PGM_AUTH TT
+    USING 
+    ( 
+        SELECT  COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  ${TGT_USER_ID}      AS USER_ID
+             ,  PGM_ID
+             ,  PGM_NM
+             ,  PGM_FG
+             ,  USE_YN
+          FROM  POS_PGM_AUTH
+         WHERE  COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  USER_ID     = ${SRC_USER_ID}
+           AND  USE_YN      = 'Y'
+    ) ST
+    ON (
+                TT.COMP_CD  = ST.COMP_CD
+           AND  TT.BRAND_CD = ST.BRAND_CD
+           AND  TT.STOR_CD  = ST.STOR_CD
+           AND  TT.USER_ID  = ST.USER_ID
+           AND  TT.PGM_ID   = ST.PGM_ID
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  USE_YN      = ST.USE_YN
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  USER_ID 
+             ,  PGM_ID
+             ,  PGM_NM
+             ,  PGM_FG
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ST.COMP_CD
+             ,  ST.BRAND_CD
+             ,  ST.STOR_CD
+             ,  ST.USER_ID
+             ,  ST.PGM_ID
+             ,  ST.PGM_NM
+             ,  ST.PGM_FG
+             ,  ST.USE_YN
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>

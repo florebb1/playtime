@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" type="text/css" href="/css/style.css">
+<!-- fontawesome -->
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<!-- nanumsquare -->
+<link rel="stylesheet" type="text/css" href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<!-- Bootstrap -->
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+<style>
+  body {
+    margin: 0px;
+    color: #000;
+  }
+  input {
+    width: 100%;
+    height: 45px;
+    font-size: 13px;
+    border-radius: 10px;
+    border:1px solid #ddd;
+  }
+  select {
+    width: 100%;
+    height:45px;
+    font-size: 13px;
+    border-radius: 10px;
+    border:1px solid #ddd;
+    -webkit-appearance: none;
+    background-color: white;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAJCAYAAAA/33wPAAAAvklEQVQoFY2QMQqEMBBFv7ERa/EMXkGw11K8QbDXzuN4BHv7QO6ifUgj7v4UAdlVM8Uwf+b9YZJISnlqrfEUZVlinucnBGKaJgghbiHOyLyFKIoCbdvecpyReYvo/Ma2bajrGtbaC58kCdZ1RZ7nl/4/4d5EsO/7nzl7IUtodBexMMagaRrs+06JLMvcNWmaOv2W/C/TMAyD58dxROgSmvxFFMdxoOs6lliWBXEcuzokXRbRoJRyvqqqQvye+QDMDz1D6yuj9wAAAABJRU5ErkJggg==);
+    background-position : right center;
+    background-repeat: no-repeat;
+    padding-right: 1.5em;
+  }
+  .content  {
+    line-height: 30px;
+    padding-top: 35px;
+    height: 90px;
+    text-align: center;
+    color: #000;
+  }
+  .button {
+    height: 100%;
+    background-color: #808080;
+    border-color: #fff;
+    border-radius:10px;
+    color: #fff;
+    border: none;
+  }
+  .blank {
+    height: 20px;
+  }
+  .footer {
+    position:relative;
+    bottom:0;
+    height:90px;
+    width: 100%;
+    text-align: center;
+    background-color: #FFCA02;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+  }
+  .active {
+    background-color:#FFCA02 !important;
+  }
+  .check {
+    color:#fff !important;
+  }
+  div.select_box {
+    position: relative;
+    height: 45px;
+    border: 1px solid #E9DDDD;
+    border-radius: 10px;
+  }
+  div.select_box label {
+      position: absolute;
+      color: #8e8e8e;
+      top: 13px;
+      left: 12px;
+      letter-spacing: 1px;
+  }
+  div.select_box select.color {
+      width: 100%;
+      height: 40px;
+      min-height: 40px;
+      line-height: 40px;
+      padding: 0 10px;
+      opacity: 0;
+  }
+	.swal-modal {
+	border-radius: 10px;
+	margin: 0 10px;
+	/* width: calc(100% - 100px) !important; */
+	}
+	.swal-title {
+		background-color: #FFCA02;
+		color: #FFF;
+		margin: 0px !important;
+		font-size: 18px;
+		margin-bottom: 0px;
+		padding-top: 15px;
+		border-top-right-radius: 10px;
+		border-top-left-radius: 10px;
+	}
+	.swal-text { 
+		background-color: #FFF;
+		padding-top: 17px;
+		display: block;
+		margin: 22px;
+		text-align: center;
+		color: #000;
+		font-size: 15px;
+	}
+	.swal-footer {
+		text-align: center;
+		color: #FFF;
+		background-color: #fff;
+	}
+	.swal-button:not([disabled]):hover {
+	    background-color: #FFCA02;
+	}
+	.swal-button:not([disabled]):hover {
+	    background-color: #FFCA02;
+	}
+	.swal-button:active {
+	    background-color: #FFCA02;
+	}
+	.swal-button {
+	    background-color: #FFCA02;
+	    color: #fff;
+	    border: none;
+	    box-shadow: none;
+	    border-radius: 5px;
+	    font-weight: 600;
+	    font-size: 14px;
+	    padding: 10px 24px;
+	    margin: 0;
+	    cursor: pointer;
+	    width: 100px;
+	    height: 40px;
+	}
+</style>
+</head>
+<body style="height:2000px">
+	<div style="margin:0 8%;">
+    <!-- top space -->
+    <div style="text-align:right; padding-top:40px; font-size:25px;"><i class="fas fa-times" id="back"></i></div>
+    <div style="text-align:center; padding-top:25px;">
+    <!-- logo -->
+    <div style="text-align: center;">
+      <a href="/login.html"><img src="/images/logo.png" style="width:160px; text-align:center;"></a>
+    </div>
+	<!-- font -->
+    <div style="height:135px;">
+      <div class="nsrB content" style="font-size:22px;">회원정보를<br>수정해 주세요.</div>
+    </div>
+	<form method="POST" id="sign_frm">
+		<input type="hidden" name="USER_ID" value="MOBILE">
+		<input type="hidden" name="REG_DIV" value="U">
+		<input type="hidden" id="CUST_ID" name="CUST_ID">
+		<input type="hidden" id="CUST_WEB_ID" name="CUST_WEB_ID">
+		<input type="hidden" id="SEX_DIV" name="SEX_DIV">
+		<input type="hidden" id="BIRTH_DT" name="BIRTH_DT">
+		<input type="hidden" id="PUSH_RCV_YN" name="PUSH_RCV_YN">
+		<input type="hidden" id="EMAIL_RCV_YN" name="EMAIL_RCV_YN">
+		<input type="hidden" id="SMS_RCV_YN" name="SMS_RCV_YN">
+		<input type="hidden" id="SIDO_NM"  name="SIDO_NM">
+		<input type="hidden" id="REGION_NM" name="REGION_NM">
+		<input type="hidden" id="CHILD_REL_CD" name="CHILD_REL_CD">
+		<input type="hidden" id="BRAND_CD" name="BRAND_CD" value="101">
+		<input type="hidden" id="STOR_CD" name="STOR_CD" value="1019999">
+		<input type="hidden" id="LOGIN_DIV" name="LOGIN_DIV" value="A">
+		<input type="hidden" id="DI_STR" name="DI_STR">
+	    
+	    <label style="text-align:left; width: 100%; margin:0px 3% 0 3%;">이름/성별</label>
+	    <div style="height:45px;">
+		    <div style="float:left; width:61%; height:100%;">
+			    <input class="nsR" style="color:#000; padding-left:10px;" type="text" id="CUST_NM" name="CUST_NM" readonly="readonly">
+		    </div>
+		    <div style="float:left; width:3%; height:100%;"></div>
+		    <div class="input-group" style="height:100%;">
+			    <div class="input-group-addon nsR sex1" style="border-top-left-radius:10px; border-bottom-left-radius:10px; background-color:#fff; font-size:13px;">남</div>
+			    <div class="input-group-addon nsR sex2" style="border-top-right-radius:10px; border-bottom-right-radius:10px; background-color:#fff; font-size:13px;">여</div>
+		    </div>
+	    </div>
+	    
+	    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%">생년월일</label>
+	    <div style="height:45px;">
+		    <div style="float:left; width:40%; height:100%;">
+			    <input class="nsR year" style="text-align:center" type="text" name="birthYear" readonly="readonly">
+		    </div>
+		    <div style="float:left; width:3%; height:100%;"></div>
+		    <div style="float:left; width:27%; height:100%;">
+			    <input class="nsR month" style="text-align:center" type="text" name="birthMonth"readonly="readonly">
+		    </div>
+		    <div style="float:left; width:3%; height:100%;"></div>
+		    <div class="input-group" style="float:left; width:27%; height:100%;">
+			    <input class="nsR day" style="text-align:center" type="text" name="birthDay" readonly="readonly">
+		    </div>
+	    </div> 
+	    
+	    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%">휴대전화번호</label>
+		<input class="nsR" style="padding-left:10px;" type="text" id="MOBILE" name="MOBILE" readonly="readonly">
+	    
+		<div class="blank"></div>
+	    
+	    <label style="text-align:left; width: 100%; margin:0 3%">이메일</label>
+	    <input class="nsR" style="padding-left:10px;" type="text" id="EMAIL" name="EMAIL" placeholder="e-mail 주소를 입력해 주세요.">
+	    
+		<div class="blank"></div>
+		
+	    <label style="text-align:left; width: 100%; margin:0 3%">우편번호/주소</label>
+      	<div style="height:45px;">
+        	<div style="float:left; width:36%; height:100%;">
+          		<input type="text" style="padding-left:10px;" id="ZIP_CD" name="ZIP_CD" placeholder="우편번호 찾기" onclick="sample3_execDaumPostcode()" readonly="readonly">
+        	</div>
+        	<div style="float:left; width:3%; height:100%;"></div>
+        	<div class="input-group" style="height:100%; width: 61%;">
+          	<input type="text" style="padding-left:10px;" id="ADDR1" name="ADDR1" readonly="readonly">
+        	</div>
+		</div>
+	 	 
+		<label style="text-align:left; width: 100%; margin:20px 3% 0 3%">상세주소</label>
+		<input type="text" style="padding-left:10px;" id="ADDR2" name="ADDR2" placeholder="나머지 주소를 입력해 주세요.">
+
+	  	<label style="text-align:left; width: 100%; margin:20px 3% 0 3%">자녀수</label>
+      	<input type="number" style="padding-left:10px;" id="CHILD_CNT" name="CHILD_CNT" placeholder="자녀수를 입력해주세요.">
+	  	
+	  	<label style="text-align:left; width: 100%; margin:20px 3% 0 3%">자녀와의 관계</label>
+      	<div class="select_box nsR">
+        	<label for="color">자녀분과의 관계를 선택해주세요.</label>
+        	<select id="relation" class="color" title="select color">
+            	<option value="0" disabled >관계 선택</option>
+			</select>
+      	</div>
+      	<input type="text" style="padding-left:10px; display:none;" id="CHILD_REL_NM" name="CHILD_REL_NM" placeholder="관계를 입력해주세요.">
+
+      	<div style="padding-top:50px; text-align:left; font-size:15px; height: 78px;">자녀등록</div>
+
+		<div id="C_frm">
+			
+		</div>	
+		</div>
+	</div>
+    <!-- add children button -->
+    <button id="add-btn" type="button" class="footer nsB" style="font-size:15px; background-color:#fff; color:#000; height:125px;">자녀분이 더 있으신가요?</p></button>
+    <!-- next step button  -->
+    <button id="next-btn" type="button" class="footer nsrEB">회원 수정</p></button>
+    </form>
+
+
+
+  <!-- iOS에서는 position:fixed 버그가 있음, 적용하는 사이트에 맞게 position:absolute 등을 이용하여 top,left값 조정 필요 -->
+  <div id="layer" style="display:none; position:fixed; overflow:hidden; z-index:1; -webkit-overflow-scrolling:touch;">
+    <img src="//t1.daumcdn.net/localimg/localimages/07/postcode/320/close.png" id="btnCloseLayer" style="cursor:pointer;position:absolute;right:-3px;top:-3px;z-index:1" onclick="closeDaumPostcode()" alt="닫기 버튼">
+  </div>
+
+<script src="//code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+<script src="/js/sweetalert.min.js"></script>
+<script src="//ssl.daumcdn.net/dmaps/map_js_init/postcode.v2.js"></script>
+<script type="text/javascript" src="//jsgetip.appspot.com"></script>
+<script type="text/javascript">
+function setCookie(name, value, days) {
+  var d = new Date;
+  d.setTime(d.getTime() + 24*60*60*1000*days);
+  document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+}
+function getCookie(name) {
+  var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : null;
+}
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+function getParameterByName(name) {
+  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+    results = regex.exec(location.search);
+  return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+String.prototype.trim = function() {
+    return this.replace(/(^\s*)|(\s*$)/gi, "");
+}
+var year = new Date();
+$(document).ready(function(){
+	var CHILD_REL_CD = "";
+	// 쿠키정보
+	var user = getCookie('user');
+	$('#CUST_ID').val(user);
+	var webid = getCookie('web_id');
+	$('#CUST_WEB_ID').val(webid);
+	
+	// 	회원정보 불러오기
+	var datas = $("#sign_frm").serialize();
+	$.ajax({
+		url : "/api/mbl_0500.jsp",
+		type : 'POST',
+		dataType : 'JSON',
+		data : datas,
+        success:function(response){
+	        console.log(response);
+			if(response.RET_CD == "0001") {
+				$('#CUST_NM').val(response.RESULT[0].CUST_NM);
+				if(response.RESULT[0].SEX_DIV == 'M') {
+					$('#SEX_DIV').val("M");
+					$('.sex1').addClass('active');
+				}else {
+					$('#SEX_DIV').val("F");
+					$('.sex2').addClass('active');	
+				}
+				var birth = response.RESULT[0].BIRTH_DT;
+				yyyy = birth.substr(0, 4);
+				mm = birth.substr(4, 2);
+				dd = birth.substr(6, 2);
+				$('#BIRTH_DT').val(birth);
+				$('input[name=birthYear]').val(yyyy);
+				$('input[name=birthMonth]').val(mm);
+				$('input[name=birthDay]').val(dd);
+				$('#MOBILE').val(response.RESULT[0].MOBILE);
+				$('#DI_STR').val(response.RESULT[0].DI_STR);
+				
+				$('#ZIP_CD').val(response.RESULT[0].ZIP_CD);
+				$('#ADDR1').val(response.RESULT[0].ADDR1);
+				$('#ADDR2').val(response.RESULT[0].ADDR2);
+				$('#SIDO_NM').val(response.RESULT[0].SIDO_NM);
+				$('#REGION_NM').val(response.RESULT[0].REGION_NM);
+				$('#EMAIL').val(response.RESULT[0].EMAIL);
+				$('#EMAIL_RCV_YN').val(response.RESULT[0].EMAIL_RCV_YN);
+				$('#SMS_RCV_YN').val(response.RESULT[0].SMS_RCV_YN);
+				$('#PUSH_RCV_YN').val(response.RESULT[0].PUSH_RCV_YN);
+				$('#CHILD_CNT').val(response.RESULT[0].CHILD_CNT);
+				$('#CHILD_REL_CD').val(response.RESULT[0].CHILD_REL_CD);
+				$('#CHILD_REL_NM').val(response.RESULT[0].CHILD_REL_MSG);
+				if(response.RESULT[0].BRAND_CD != "") {
+					$('#BRAND_CD').val(response.RESULT[0].BRAND_CD);
+				}
+				if(response.RESULT[0].STOR_CD !== undefined) {
+					$('#STOR_CD').val(response.RESULT[0].STOR_CD);
+				}
+				// CHILD_REL_CD = response.RESULT[0].CHILD_REL_CD;
+				CHILD_REL_CD = response.RESULT[0].CHILD_REL_CD;
+				
+
+
+				$.ajax({
+					url : "/api/mbl_0710.jsp",
+					type : 'POST',
+					dataType : 'JSON',
+					success:function(response){
+						if(response.RET_CD == "0001") {
+							var result = "";
+							for(var i = 0; i < response.RESULT.length; i++) {
+								if(CHILD_REL_CD == response.RESULT[i].CODE_CD){
+									var selected = "selected";
+								}else{
+									var selected = "";
+								}
+								result += "<option data-code='"+response.RESULT[i].CODE_CD+"' data-text='"+response.RESULT[i].CODE_NM+"' "+selected+">"
+									+ response.RESULT[i].CODE_NM
+									+ "</option>";
+							}
+							$("#relation").append(result);
+							$("#relation").trigger("change");
+						}else {
+							swal({
+								button: "확인",
+								title: "안내",
+								// text: "오류코드: "+response.RET_CD+"\n"+response.RET_MSG,
+								text: response.RET_MSG,
+								closeOnClickOutside: false
+							});
+						}
+					}
+				});
+			}else {
+				swal({
+					button: "확인",
+					title: "안내",
+					closeOnClickOutside: false,
+					text: '계정정보를 가져오는데 실패하였습니다.'
+				}).then(function() {
+					window.location = "/mypage.html";
+				});
+			}
+		}
+	});
+	
+	// 관계 셀렉트박스 항목 추가
+// 	$(document).on("change",".year",function(){ 
+//     var C_birth = $(this).parent().parent().parent().find($("input[name=C_BIRTH_DT]"));
+//     var year = $(this);
+//     var month = $(this).parent().parent().find($(".month"));
+//     var day = $(this).parent().parent().find($(".day"));
+//     if(year.val() != "" && month.val() != "" && day.val() != "") {
+//       birthday = year.val() + month.val() + day.val();
+//       if (birthday.length < 8) {
+//         swal({
+//           button: "확인",
+//           title: "안내",
+//           text: "자녀 생년월일 형식이 올바르지 않습니다.",
+// //           closeOnClickOutside: false
+//         });
+//       }
+//       C_birth.val(birthday);
+//     }
+//   });
+//   $(document).on("change",".month",function(){ 
+//     var C_birth = $(this).parent().parent().parent().find($("input[name=C_BIRTH_DT]"));
+//     var year = $(this).parent().parent().find($(".year"));
+//     var month = $(this);
+//     var day = $(this).parent().parent().find($(".day"));
+//     if(year.val() != "" && month.val() != "" && day.val() != "") {
+//       birthday = year.val() + month.val() + day.val();
+//       if (birthday.length < 8) {
+//         swal({
+//           button: "확인",
+//           title: "안내",
+//           text: "자녀 생년월일 형식이 올바르지 않습니다.",
+// //           closeOnClickOutside: false
+//         });
+//       }
+//       C_birth.val(birthday);
+//     }
+//   });
+//   $(document).on("change",".day",function(){ 
+//     var C_birth = $(this).parent().parent().parent().find($("input[name=C_BIRTH_DT]"));
+//     var year = $(this).parent().parent().find($(".year"));
+//     var month = $(this).parent().parent().find($(".month"));
+//     var day = $(this);
+//     if(year.val() != "" && month.val() != "" && day.val() != "") {
+//       birthday = year.val() + month.val() + day.val();
+//       if (birthday.length < 8) {
+//         swal({
+//           button: "확인",
+//           title: "안내",
+//           text: "자녀 생년월일 형식이 올바르지 않습니다.",
+// //           closeOnClickOutside: false
+//         });
+//       }
+//       C_birth.val(birthday);
+//     }
+//   });
+	$(document).on("change",".month",function(){ 
+	    var month = $(this);
+	    var setdate = $(this).data("day");
+	  
+	    var day = $(this).parent().parent().find($(".day"));
+	    day.empty();
+	    day.append('<option value="">일 선택</option>');
+	    if(setdate === undefined){
+	      var dayoption = getDays(month.val(),'');
+	    }else{
+	      var dayoption = getDays(month.val(),setdate);
+	    }
+	    
+	    day.append(dayoption);
+	  });
+	// 	자녀정보 검색
+	var datas = $("#sign_frm").serialize();
+	$.ajax({
+		url : "/api/mbl_0110.jsp",
+		type : 'POST',
+		dataType : 'JSON',
+		data : datas,
+        success:function(response){
+	        console.log(response);
+	        
+	        if(response.RET_CD == "0001") {
+				var result = "";
+				for(var i = 0; i < response.RESULT.length; i++) {
+					// if(i == 0){
+					// 	var addhtml = "";
+					// }else{
+						var addhtml = "<i class='fas fa-times cancel' onclick='console.log(2)'></i>";
+					// }
+					result += "<div class='children'>"
+						+ "<div style='padding-top:20px; text-align:right; font-size:25px;'>"+addhtml+"</div>"
+						+ "<label style='text-align:left; width: 100%; margin:0px 3% 0 3%;'>자녀이름/성별</label>"
+						+ "<div style='height:45px;'>"
+						+ "<div style='float:left; width:61%; height:100%;'>"
+						+ "<input type='hidden' name='C_SEX_DIV' class='sex_div' value='"+response.RESULT[i].SEX_DIV+"'>"
+						+ "<input type='hidden' name='C_BIRTH_DT' class='birth_dt' value='"+response.RESULT[i].BIRTH_DT+"'>"
+						+ "<input type='hidden' name='C_USE_YN' class='c_use_yn' value='Y'>"
+						+ "<input type='hidden' name='C_CHILD_NO' class='c_child_no' value='"+response.RESULT[i].CHILD_NO+"'>"
+						+ "<input class='nsR child_nm' style='color:#000; padding-left:10px;' type='text' name='C_CHILD_NM' value='"+response.RESULT[i].CHILD_NM+"' placeholder='자녀의 이름을 입력해주세요.'>"
+						+ "</div>"
+						+ "<div style='float:left; width:3%; height:100%;'></div>"
+						+ "<div class='input-group' style='height:100%;'>";
+						if(response.RESULT[i].SEX_DIV == "M"){
+							result += "<div class='input-group-addon nsR ch_sex1' style='border-top-left-radius:10px; border-bottom-left-radius:10px; background-color:#FFCA02; font-size:13px;color:#fff' onclick='console.log(2)'>남</div>"
+						}else{
+							result += "<div class='input-group-addon nsR ch_sex1' style='border-top-left-radius:10px; border-bottom-left-radius:10px; background-color:#fff; font-size:13px;' onclick='console.log(2)'>남</div>"
+						}
+
+						if(response.RESULT[i].SEX_DIV == "F"){
+							result += "<div class='input-group-addon nsR ch_sex2' style='border-top-right-radius:10px; border-bottom-right-radius:10px; background-color:#FFCA02; font-size:13px; color:#fff' onclick='console.log(2)'>여</div>"
+						}else{
+							result += "<div class='input-group-addon nsR ch_sex2' style='border-top-right-radius:10px; border-bottom-right-radius:10px; background-color:#fff; font-size:13px;' onclick='console.log(2)'>여</div>"
+						}
+						
+						if(response.RESULT[i].BIRTH_DT !== null){
+							var birth1 = response.RESULT[i].BIRTH_DT.substring(0,4);
+							var birth2 = response.RESULT[i].BIRTH_DT.substring(4,6);
+							var birth3 = response.RESULT[i].BIRTH_DT.substring(6,8);
+						}else{
+							var birth1 = "";
+							var birth2 = "";
+							var birth3 = "";
+						}
+						result += "</div>"
+						+ "</div>"
+						+ "<label style='text-align:left; width: 100%; margin:20px 3% 0 3%;'>자녀 생년월일</label>"
+						+ "<div style='height:45px; margin-bottom: 20px;'>"
+						+ "<div style='float:left; width:40%; height:100%;'>"
+						// + "<input class='nsR year childYear' style='text-align:center' type='text' name='childrenBirthYear' placeholder='ex) 2002' maxlength='4' value='"+birth1+"'>"
+						+ "<select class='nsR year childYear' name='childrenBirthYear'>"
+		                  + "<option value=''>연도 선택</option>"
+		                  for(var j = 2000;j <= year.getFullYear();j++){
+		                    if(j == birth1){
+		                      var selected = "selected";
+		                    }else{
+		                      var selected = "";
+		                    }
+		                    result += "<option value='"+j+"' "+selected+">"+j+"년</option>";
+		                  }
+		                  result += "</select>"
+						+ "</div>"
+						+ "<div style='float:left; width:3%; height:100%;'></div>"
+						+ "<div style='float:left; width:27%; height:100%;'>"
+						// + "<input class='nsR month childMonth' style='text-align:center' type='text' name='childrenBirthMonth' placeholder='ex) 01' maxlength='2' value='"+birth2+"'>"
+						+ "<select class='nsR month childMonth' name='childrenBirthMonth' data-day='"+birth3+"'>"
+		                  + "<option value=''>월 선택</option>"
+		                  + '<option value="01" '+(birth2 == "01" ? "selected":"")+'>1월</option>'
+		                  + '<option value="02" '+(birth2 == "02" ? "selected":"")+'>2월</option>'
+		                  + '<option value="03" '+(birth2 == "03" ? "selected":"")+'>3월</option>'
+		                  + '<option value="04" '+(birth2 == "04" ? "selected":"")+'>4월</option>'
+		                  + '<option value="05" '+(birth2 == "05" ? "selected":"")+'>5월</option>'
+		                  + '<option value="06" '+(birth2 == "06" ? "selected":"")+'>6월</option>'
+		                  + '<option value="07" '+(birth2 == "07" ? "selected":"")+'>7월</option>'
+		                  + '<option value="08" '+(birth2 == "08" ? "selected":"")+'>8월</option>'
+		                  + '<option value="09" '+(birth2 == "09" ? "selected":"")+'>9월</option>'
+		                  + '<option value="10" '+(birth2 == "10" ? "selected":"")+'>10월</option>'
+		                  + '<option value="11" '+(birth2 == "11" ? "selected":"")+'>11월</option>'
+		                  + '<option value="12" '+(birth2 == "12" ? "selected":"")+'>12월</option>'
+		                  + "</select>"
+						+ "</div>"
+						+ "<div style='float:left; width:3%; height:100%;'></div>"
+						+ "<div class='input-group' style='float:left; width:27%; height:100%;'>"
+						// + "<input class='nsR day childDay' style='text-align:center' type='text' name='childrenBirthDay' placeholder='ex) 01' maxlength='2' value='"+birth3+"'>"
+						+ "<select class='nsR day childDay' name='childrenBirthDay'>"
+		                  + "<option value=''>일 선택</option>"
+		                  + "</select>"
+						+ "<div class='blank'></div>"
+						+ "</div>"
+						+ "</div>"
+						+ "</div>"
+						+ "</div>"
+				}
+				$("#C_frm").append(result);	
+
+				$(".children").each(function(){
+					var day = $(this).find(".month").data("day");
+					var dayselect = getDays($(this).find(".month").val(),day);
+					$(this).find(".day").empty();
+    				$(this).find(".day").append('<option value="">일 선택</option>');
+					$(this).find(".day").append(dayselect);
+				})
+			}
+		}  
+    });
+
+  // 자녀 추가버튼 이벤트
+	$("#add-btn").click(function(){
+		var result = "";
+		result += "<div class='children'>"
+			+ "<div style='padding-top:20px; text-align:right; font-size:25px;'><i class='fas fa-times cancel' onclick='console.log(2)'></i></div>"
+			+ "<label style='text-align:left; width: 100%; margin:0px 3% 0 3%;'>자녀이름/성별</label>"
+			+ "<div style='height:45px;'>"
+			+ "<div style='float:left; width:61%; height:100%;'>"
+			+ "<input type='hidden' class='sex_div' name='C_SEX_DIV'>"
+			+ "<input type='hidden' class='birth_dt' name='C_BIRTH_DT'>"
+			+ "<input type='hidden' name='C_USE_YN' value='Y'>"
+			+ "<input type='hidden' name='C_CHILD_NO' class='c_child_no' value='0'>"
+			+ "<input class='nsR child_nm' style='color:#000; padding-left:10px;' type='text' name='C_CHILD_NM' placeholder='자녀의 이름을 입력해주세요.'>"
+			+ "</div>"
+			+ "<div style='float:left; width:3%; height:100%;'></div>"
+			+ "<div class='input-group' style='height:100%;'>"
+			+ "<div class='input-group-addon nsR ch_sex1' style='border-top-left-radius:10px; border-bottom-left-radius:10px; background-color:#fff; font-size:13px;' onclick='console.log(2)'>남</div>"
+			+ "<div class='input-group-addon nsR ch_sex2' style='border-top-right-radius:10px; border-bottom-right-radius:10px; background-color:#fff; font-size:13px;' onclick='console.log(2)'>여</div>"	
+			+ "</div>"
+			+ "</div>"
+			+ "<label style='text-align:left; width: 100%; margin:20px 3% 0 3%;'>자녀 생년월일</label>"
+			+ "<div style='height:45px; margin-bottom: 20px;'>"
+			+ "<div style='float:left; width:40%; height:100%;'>"
+			// + "<input class='nsR year childYear' style='text-align:center' type='text' name='childrenBirthYear' placeholder='ex) 2002' maxlength='4'>"
+			+ "<select class='nsR year childYear' name='childrenBirthYear'>"
+              + "<option value=''>연도 선택</option>"
+              for(var i = 2000;i <= year.getFullYear();i++){
+                
+                result += "<option value='"+i+"'>"+i+"년</option>";
+              }
+              result += "</select>"
+			+ "</div>"
+			+ "<div style='float:left; width:3%; height:100%;'></div>"
+			+ "<div style='float:left; width:27%; height:100%;'>"
+			// + "<input class='nsR month childMonth' style='text-align:center' type='text' name='childrenBirthMonth' placeholder='ex) 01' maxlength='2'>"
+			+ "<select class='nsR month childMonth' name='childrenBirthMonth'>"
+              + "<option value=''>월 선택</option>"
+              + '<option value="01" >1월</option>'
+              + '<option value="02" >2월</option>'
+              + '<option value="03" >3월</option>'
+              + '<option value="04" >4월</option>'
+              + '<option value="05" >5월</option>'
+              + '<option value="06" >6월</option>'
+              + '<option value="07" >7월</option>'
+              + '<option value="08" >8월</option>'
+              + '<option value="09" >9월</option>'
+              + '<option value="10" >10월</option>'
+              + '<option value="11" >11월</option>'
+              + '<option value="12" >12월</option>'
+              + "</select>"
+			+ "</div>"
+			+ "<div style='float:left; width:3%; height:100%;'></div>"
+			+ "<div class='input-group' style='float:left; width:27%; height:100%;'>"
+			// + "<input class='nsR day childDay' style='text-align:center' type='text' name='childrenBirthDay' placeholder='ex) 01' maxlength='2'>"
+			+ "<select class='nsR day childDay' name='childrenBirthDay'>"
+              + "<option value=''>일 선택</option>"
+              + "</select>"
+			+ "<div class='blank'></div>"
+			+ "</div>"
+			+ "</div>"
+			+ "</div>"
+			+ "</div>"
+		$("#C_frm").append(result);	  
+	});
+
+  // 자녀 삭제버튼
+  $(document).on("click",".cancel",function(){ 
+    var children = $(this).parent().parent();
+    // children.remove();
+    if(children.find(".c_child_no").val() != "0"){
+    	children.hide();
+    	children.find(".c_use_yn").val("N");
+    }else{
+    	children.remove();
+    }
+  });
+
+  // 자녀성별 클릭이벤트
+  $(document).on("click",".ch_sex1",function(){ 
+
+    var m_sex = $(this).parent().parent().find($(".ch_sex1"));
+    var f_sex = $(this).parent().parent().find($(".ch_sex2"));
+    var v_sex = $(this).parent().parent().find($("input[name=C_SEX_DIV]"));
+    m_sex.css('background-color','#FFCA02');
+    f_sex.css('background-color','#FFF');
+    v_sex.val("M");
+  });
+  $(document).on("click",".ch_sex2",function(){ 
+    var m_sex = $(this).parent().parent().find($(".ch_sex1"));
+    var f_sex = $(this).parent().parent().find($(".ch_sex2"));
+    var v_sex = $(this).parent().parent().find($("input[name=C_SEX_DIV]"));
+    f_sex.css('background-color','#FFCA02');
+    m_sex.css('background-color','#FFF');
+    v_sex.val("F");
+  });
+  // selectbox list 변경
+  var select = $("select.color");
+  select.change(function(){
+    var select_name = $(this).children("option:selected").text();
+    $(this).siblings("label").text(select_name);
+  });
+
+  $("#relation").on("change", function() {
+    var option = $(this).find("option:selected");
+    if(CHILD_REL_CD != 99){
+	    r_code = option.data('code');
+	    r_name = option.data('text');
+	    $('#CHILD_REL_CD').val(r_code);
+	    $('#CHILD_REL_NM').val(r_name);
+	    if(r_code != 99) {
+	      $("#CHILD_REL_NM").css('display','none');
+	      $('#CHILD_REL_CD').val(r_code);
+	      $('#CHILD_REL_NM').val(r_name);
+	    }else {
+	      $("#CHILD_REL_NM").css('display','block');
+	      $('#CHILD_REL_CD').val(r_code);
+	      $('#CHILD_REL_NM').val("");
+	    }
+	}else{
+		$("#CHILD_REL_NM").css('display','block');
+	     $('#CHILD_REL_CD').val(r_code);
+	}
+  });
+
+  // 수정하기 버튼 클릭 이벤트
+  	var able = true;
+	$("#next-btn").click(function(){
+	  	
+	    var email = $("#CUST_WEB_ID").val();
+	    var email2 = $("#EMAIL").val().trim();
+	    var regExp = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
+	    if($("#CHILD_REL_CD").val() == "") {
+	      swal({
+	        button: "확인",
+	        title: "안내",
+	        text: "관계를 선택해주세요.",
+	        closeOnClickOutside: false
+	      });
+      		return false;
+	    }
+	    if($("#CHLD_CNT").val() == "") {
+	      swal({
+	        button: "확인",
+	        title: "안내",
+	        text: "자녀수를 입력해주세요.",
+	        closeOnClickOutside: false
+	      });
+	      return false;
+	    }
+	
+	    if($("#EMAIL").val() == "") {
+	      swal({
+	        button: "확인",
+	        title: "안내",
+	        text: "이메일 주소를 입력해 주세요.",
+	        closeOnClickOutside: false
+	      });
+	      return false;
+	    }
+	    if($("#ZIP_CD").val() == "") {
+	      swal({
+	        button: "확인",
+	        title: "안내",
+	        text: "우편번호를 입력해 주세요.",
+	        closeOnClickOutside: false
+	      });
+	      return false;
+	    }
+	    if($("#ADDR1").val() == "") {
+	      swal({
+	        button: "확인",
+	        title: "안내",
+	        text: "우편주소를 입력해 주세요.",
+	        closeOnClickOutside: false
+	      });
+	      return false;
+	    }
+
+	    var childrenYn = true;
+	    if($(".children").length == 0){
+	    	swal({
+		        button: "확인",
+		        title: "안내",
+		        text: "자녀는 1명이상 등록 하셔야 합니다.",
+		            closeOnClickOutside: false
+		      });
+		      return false;
+	    }
+	    var showChildren = 0
+	    $(".children").each(function(){
+	      if($(this).css("display") != "none"){
+	      	showChildren++;
+	        var child_nm = $(this).find(".child_nm").val();
+	        var sex_div = $(this).find(".sex_div").val();
+	        var year = $(this).find(".childYear").val();
+	        var month = $(this).find(".childMonth").val();
+	        var day = $(this).find(".childDay").val();
+	        console.log(child_nm);
+	        if(child_nm == ""){
+	          childrenYn = false;
+	        }
+
+	        if(sex_div == ""){
+	          childrenYn = false;
+	        }
+
+	        if(year == ""){
+	          childrenYn = false;
+	        }
+	        if(month == ""){
+	          childrenYn = false;
+	        }
+	        if(day == ""){
+	          childrenYn = false;
+	        }
+	        $(this).find($("input[name=C_BIRTH_DT]")).val(year+month+day);
+	      }
+	    });
+
+	    if(showChildren == 0){
+	    	swal({
+		        button: "확인",
+		        title: "안내",
+		        text: "자녀는 1명이상 등록 하셔야 합니다.",
+		            closeOnClickOutside: false
+		      });
+		      return false;
+	    }
+
+	    if(!childrenYn){
+	      swal({
+	        button: "확인",
+	        title: "안내",
+	        text: "아이 정보중 이름, 성별, 생년월일은 필수값입니다.",
+	            closeOnClickOutside: false
+	      });
+	      return false;
+	    }
+
+	    var timestamp = new Date().getTime();
+	    var datas = $("#sign_frm").serialize();
+		if(able == true) {
+      		able = false;
+		    $.ajax({
+		      url : "/api/mbl_0200.jsp",
+		      type : 'POST',
+		      dataType : 'JSON',
+		      data : datas,
+		        success:function(response){
+		        	//console.log(response);
+			        if(response.RET_CD == '0001') {
+			        	if(response.RET_CD2 != "0001"){
+			        		swal({
+								button: "확인",
+								title: "안내",
+								// text: '오류코드: '+response.RET_CD2+'\n'+response.RET_MSG2,
+								text: response.RET_MSG,
+								closeOnClickOutside: false
+							}).then(function() {
+								able = true;
+								return false;
+		          			});
+			        	}else{
+							swal({
+							  	button: "확인",
+							  	title: "안내",
+							  	text: '회원정보가 수정되었습니다.',
+							  	closeOnClickOutside: false
+							}).then(function() {
+						  		// $("#next-btn").css('background-color','#ddd');
+						  		// $("#next-btn").attr('disabled', true);
+								able = true;
+							    window.location = "/mypage.html";
+							});
+						}
+					}else {
+						swal({
+							button: "확인",
+							title: "안내",
+							// text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG,
+							text: response.RET_MSG,
+							closeOnClickOutside: false
+						});
+					  	able = true;
+					  	return false;
+						    // $("#next-btn").attr('disabled', false);
+						    // $("#next-btn").css('backgroud-color', '#FFCA02');
+					}
+		        }
+		    });
+		    
+		}else {
+			swal({
+	          button: "확인",
+	          title: "안내",
+	          text: '처리중입니다.\n잠시만기다려주세요.',
+	          closeOnClickOutside: false
+	        });
+		}
+		return false;  	
+	})	
+
+  // 뒤로가기버튼
+  $('#back').click(function(){
+    document.location.href="/mypage.html";
+  });
+
+});
+</script>
+<script type="text/javascript">
+    // 우편번호 찾기 화면을 넣을 element
+    var element_layer = document.getElementById('layer');
+
+    function closeDaumPostcode() {
+        // iframe을 넣은 element를 안보이게 한다.
+        element_layer.style.display = 'none';
+    }
+
+    function sample2_execDaumPostcode() {
+        // $("body").css("background-color","#333").css("filter","Alpha(opacity=60)").css("opacity","0.6").css("-moz-opacity","0.6");
+        new daum.Postcode({
+            oncomplete: function(data) {
+                // 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+                // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+                // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+                var fullAddr = data.address; // 최종 주소 변수
+                var extraAddr = ''; // 조합형 주소 변수
+
+                // 기본 주소가 도로명 타입일때 조합한다.
+                if(data.addressType === 'R'){
+                    //법정동명이 있을 경우 추가한다.
+                    if(data.bname !== ''){
+                        extraAddr += data.bname;
+                    }
+                    // 건물명이 있을 경우 추가한다.
+                    if(data.buildingName !== ''){
+                        extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                    }
+                    // 조합형주소의 유무에 따라 양쪽에 괄호를 추가하여 최종 주소를 만든다.
+                    fullAddr += (extraAddr !== '' ? ' ('+ extraAddr +')' : '');
+                }
+                // 우편번호와 주소 정보를 해당 필드에 넣는다.
+                $("#SIDO_NM").val(data.sido);
+                $("#REGION_NM").val(data.sigungu);
+                document.getElementById('ZIP_CD').value = data.zonecode; //5자리 새우편번호 사용
+                document.getElementById('ADDR1').value = fullAddr;
+
+                // iframe을 넣은 element를 안보이게 한다.
+                // (autoClose:false 기능을 이용한다면, 아래 코드를 제거해야 화면에서 사라지지 않는다.)
+                element_layer.style.display = 'none';
+            },
+            width : '100%',
+            height : '100%',
+            maxSuggestItems : 5
+        }).embed(element_layer);
+
+        // iframe을 넣은 element를 보이게 한다.
+        element_layer.style.display = 'block';
+
+        // iframe을 넣은 element의 위치를 화면의 가운데로 이동시킨다.
+        initLayerPosition();
+    }
+
+    // 브라우저의 크기 변경에 따라 레이어를 가운데로 이동시키고자 하실때에는
+    // resize이벤트나, orientationchange이벤트를 이용하여 값이 변경될때마다 아래 함수를 실행 시켜 주시거나,
+    // 직접 element_layer의 top,left값을 수정해 주시면 됩니다.
+    function initLayerPosition(){
+        var width = 300; //우편번호서비스가 들어갈 element의 width
+        var height = 400; //우편번호서비스가 들어갈 element의 height
+        var borderWidth = 1; //샘플에서 사용하는 border의 두께
+
+        // 위에서 선언한 값들을 실제 element에 넣는다.
+        element_layer.style.width = width + 'px';
+        element_layer.style.height = height + 'px';
+        element_layer.style.border = borderWidth + 'px solid';
+        // 실행되는 순간의 화면 너비와 높이 값을 가져와서 중앙에 뜰 수 있도록 위치를 계산한다.
+        element_layer.style.left = (((window.innerWidth || document.documentElement.clientWidth) - width)/2 - borderWidth) + 'px';
+        element_layer.style.top = (((window.innerHeight || document.documentElement.clientHeight) - height)/2 - borderWidth) + 'px';
+    }
+    function sample3_execDaumPostcode() {
+        // 현재 scroll 위치를 저장해놓는다.
+        var currentScroll = Math.max(document.body.scrollTop, document.documentElement.scrollTop);
+        new daum.Postcode({
+            oncomplete: function(data) {
+                // 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+
+                // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+                // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+                var fullAddr = data.address; // 최종 주소 변수
+                var extraAddr = ''; // 조합형 주소 변수
+
+                //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+
+                // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
+                if(data.addressType === 'R'){
+                    //법정동명이 있을 경우 추가한다.
+                    if(data.bname !== ''){
+                        extraAddr += data.bname;
+                    }
+                    // 건물명이 있을 경우 추가한다.
+                    if(data.buildingName !== ''){
+                        extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                    }
+                    // 조합형주소의 유무에 따라 양쪽에 괄호를 추가하여 최종 주소를 만든다.
+                    fullAddr += (extraAddr !== '' ? ' ('+ extraAddr +')' : '');
+                }
+                // 우편번호와 주소 정보를 해당 필드에 넣는다.
+                $("#SIDO_NM").val(data.sido);
+                $("#REGION_NM").val(data.sigungu);
+                document.getElementById('ZIP_CD').value = data.zonecode; //5자리 새우편번호 사용
+                document.getElementById('ADDR1').value = fullAddr;
+
+                // iframe을 넣은 element를 안보이게 한다.
+                // (autoClose:false 기능을 이용한다면, 아래 코드를 제거해야 화면에서 사라지지 않는다.)
+                element_layer.style.display = 'none';
+
+                // 우편번호 찾기 화면이 보이기 이전으로 scroll 위치를 되돌린다.
+                document.body.scrollTop = currentScroll;
+            },
+            // 우편번호 찾기 화면 크기가 조정되었을때 실행할 코드를 작성하는 부분. iframe을 넣은 element의 높이값을 조정한다.
+            onresize : function(size) {
+                // element_layer.style.height = size.height+'px';
+            },
+            width : '100%',
+            height : '100%'
+        }).embed(element_layer);
+        initLayerPosition();
+        // iframe을 넣은 element를 보이게 한다.
+        element_layer.style.display = 'block';
+    }
+    function getDays(month,setday){
+      var html = "";
+      if(month == "02"){
+        for(var i =1;i<30;i++){
+          if(i < 10){
+            var day = "0"+i;
+          }else{
+            var day = i;
+          }
+          if(setday == day){
+            var selected = "selected";
+          }else{
+            var selected = "";
+          }
+          html += "<option value='"+i+"' "+selected+">"+i+"일</option>";
+        }
+      }else if(month == "01" || month == "03" || month == "05" || month == "07" || month == "08" || month == "10" || month == "12"){
+        for(var i =1;i<32;i++){
+          if(i < 10){
+            var day = "0"+i;
+          }else{
+            var day = i;
+          }
+          if(setday == day){
+            var selected = "selected";
+          }else{
+            var selected = "";
+          }
+          html += "<option value='"+day+"' "+selected+">"+i+"일</option>";
+        }
+      }else{
+        for(var i =1;i<31;i++){
+          if(i < 10){
+            var day = "0"+i;
+          }else{
+            var day = i;
+          }
+          if(setday == day){
+            var selected = "selected";
+          }else{
+            var selected = "";
+          }
+          html += "<option value='"+i+"' "+selected+">"+i+"일</option>";
+        }
+      }
+      return html;
+    }
+</script>
+</body>
+</html>

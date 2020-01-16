@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+    <!-- 사용자 조회 -->
+    <query name='USER_Q_01'><![CDATA[
+        SELECT  A.USER_ID 
+             ,  A.USER_NM 
+             ,  B.CODE_NM  AS DEPT_NM
+             ,  B.CODE_CD  AS DEPT_CD
+             ,  C.CODE_NM  AS TEAM_NM
+             ,  C.CODE_CD  AS TEAM_CD
+          FROM  HQ_USER A
+             ,  COMMON  B
+             ,  COMMON  C
+         WHERE  A.COMP_CD   = B.COMP_CD(+)
+           AND  A.DEPT_CD   = B.CODE_CD(+)
+           AND  B.CODE_TP(+)= '00600'
+           AND  A.COMP_CD   = C.COMP_CD(+)
+           AND  A.TEAM_CD   = C.CODE_CD(+)
+           AND  C.CODE_TP(+)= '00605'
+           AND  A.COMP_CD = ${SCH_COMP_CD}
+           AND  (NVL(LENGTH(${SCH_USER_TXT} ),0)=0 OR (NVL(LENGTH(${SCH_USER_TXT} ),0)>0
+           AND  (USER_NM LIKE ('%'|| ${SCH_USER_TXT} || '%') OR USER_ID LIKE ('%'|| ${SCH_USER_TXT} || '%')) ))
+           @SCH_DEPT_CD@
+           @SCH_TEAM_CD@
+         ORDER  BY A.DEPT_CD, A.TEAM_CD, A.USER_ID, A.USER_NM
+]]></query>
+
+
+        
+</SQLResource>
+

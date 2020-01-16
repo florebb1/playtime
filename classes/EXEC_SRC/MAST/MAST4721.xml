@@ -1,0 +1,557 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='GIFT_CODE_MST_Q'><![CDATA[
+    SELECT  G.COMP_CD
+         ,  G.GIFT_CD
+         ,  G.GIFT_NM
+         ,  L1.LANG_GIFT_NM
+         ,  G.GIFT_SNM
+         ,  L2.LANG_GIFT_SNM
+         ,  G.PRICE
+         ,  G.REMARK
+         ,  G.APPR_YN
+         ,  G.POINT_YN
+         ,  G.MAND_YN
+         ,  G.BTN_BCL
+         ,  G.BTN_FCL
+         ,  G.USE_YN
+         ,  G.USE_ISSUE_DT
+         ,  G.CHECKSUM_MASK1
+         ,  G.CHECKSUM_MASK2
+         ,  NVL(GC.CNT , '0' )      AS GIFT_IN_CNT
+         ,  G.CHANGE_STD_DIV
+         ,  G.CHANGE_STD_VALUE
+         ,  G.GIFT_PUB_DIV
+         ,  G.GIFT_LCD
+         ,  G.STAMP_TAX
+         ,  G.DC_DIV
+         ,  H.DC_NM
+         ,  G.ITEM_CD
+         ,  I.ITEM_NM
+      FROM  GIFT_CODE_MST  G
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM     AS LANG_GIFT_NM
+                  FROM  LANG_TABLE     
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'GIFT_CODE_MST'
+                   AND  COL_NM      = 'GIFT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            ) L1
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM     AS LANG_GIFT_SNM
+                  FROM  LANG_TABLE     
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'GIFT_CODE_MST'
+                   AND  COL_NM      = 'GIFT_SNM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            ) L2
+         ,  (
+                SELECT  COMP_CD
+                     ,  GIFT_CD
+                     ,  COUNT(*) AS CNT
+                  FROM  GIFT_IN_HD
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  USE_YN  = 'Y'
+                 GROUP  BY COMP_CD, GIFT_CD
+            ) GC
+         ,  (
+                SELECT  COMP_CD
+                     ,  MAX(GIFT_CD_ISSUE_DIV)  AS GIFT_CD_ISSUE_DIV
+                     ,  MAX(GIFT_CD_DIGIT)      AS GIFT_CD_DIGIT
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  VAL_C1      AS GIFT_CD_ISSUE_DIV
+                                 ,  ''          AS GIFT_CD_DIGIT
+                              FROM  COMMON
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  CODE_TP = '01205'
+                               AND  CODE_CD = '01'
+                            UNION ALL
+                            SELECT  COMP_CD
+                                 ,  ''          AS GIFT_CD_ISSUE_DIV
+                                 ,  VAL_C1      AS GIFT_CD_DIGIT
+                              FROM  COMMON
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  CODE_TP = '01205'
+                               AND  CODE_CD = '02'
+                        )
+                 GROUP  BY COMP_CD
+            )   GS
+          , (
+                SELECT  D.COMP_CD
+                      , D.DC_DIV
+                      , NVL(LT.LANG_NM, D.DC_NM) AS DC_NM
+                FROM    DC D
+                      ,(
+                        SELECT  COMP_CD
+                             ,  PK_COL   
+                             ,  LANG_NM  
+                        FROM  LANG_TABLE
+                        WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        AND  TABLE_NM    = 'DC'
+                        AND  COL_NM      = 'DC_NM'
+                        AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                        AND  USE_YN      = 'Y'
+                       ) LT
+                WHERE   D.COMP_CD   = LT.COMP_CD(+)
+                AND     LPAD(D.BRAND_CD,4,' ')||LPAD(D.DC_DIV,5,' ') = LT.PK_COL(+)
+            ) H
+          , (
+                SELECT  I.COMP_CD
+                      , I.ITEM_CD
+                      , NVL(L.ITEM_NM, I.ITEM_NM) AS ITEM_NM 
+                FROM    ITEM I
+                      ,(
+                        SELECT  COMP_CD
+                             ,  ITEM_CD
+                             ,  ITEM_NM
+                        FROM    LANG_ITEM
+                        WHERE   COMP_CD     = ${SCH_COMP_CD}
+                        AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                        AND     USE_YN      = 'Y'
+                       ) L
+                WHERE   I.ITEM_CD  = L.ITEM_CD (+)
+                AND     I.COMP_CD  = ${SCH_COMP_CD}
+                AND     I.ITEM_DIV = '15'
+              ) I
+     WHERE  L1.COMP_CD(+)   = G.COMP_CD
+       AND  L1.PK_COL (+)   = LPAD(G.GIFT_CD, 2, ' ')
+       AND  L2.COMP_CD(+)   = G.COMP_CD
+       AND  L2.PK_COL (+)   = LPAD(G.GIFT_CD, 2, ' ')
+       AND  GC.COMP_CD(+)   = G.COMP_CD
+       AND  GC.GIFT_CD(+)   = G.GIFT_CD 
+       AND  GS.COMP_CD(+)   = G.COMP_CD
+       AND  H.COMP_CD (+)   = G.COMP_CD
+       AND  H.DC_DIV  (+)   = G.DC_DIV
+       AND  I.COMP_CD (+)   = G.COMP_CD
+       AND  I.ITEM_CD (+)   = G.ITEM_CD
+       AND  G.COMP_CD       = ${SCH_COMP_CD}
+       AND  (
+                ${SCH_BRAND_CD} IS NULL
+                OR
+                G.GIFT_CD IN (
+                                SELECT  GIFT_CD
+                                  FROM  GIFT_CODE_BRAND
+                                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                                   AND  USE_YN  = 'Y'
+                                   AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                             )
+            )
+       AND  (${SCH_USE_YN} IS NULL OR G.USE_YN = ${SCH_USE_YN})
+     ORDER  BY G.GIFT_CD
+]]></query>
+
+
+<query name='GIFT_CODE_MST_I'><![CDATA[
+    INSERT  INTO GIFT_CODE_MST
+    (
+            COMP_CD
+         ,  GIFT_CD
+         ,  GIFT_NM
+         ,  GIFT_SNM
+         ,  PRICE
+         ,  REMARK
+         ,  APPR_YN
+         ,  MAND_YN
+         ,  BTN_BCL
+         ,  BTN_FCL
+         ,  POINT_YN
+         ,  CHECKSUM_MASK1
+         ,  CHECKSUM_MASK2
+         ,  USE_ISSUE_DT
+         ,  USE_YN
+         ,  INST_DT
+         ,  INST_USER
+         ,  UPD_DT
+         ,  UPD_USER
+         ,  CHANGE_STD_DIV
+         ,  CHANGE_STD_VALUE
+         ,  GIFT_PUB_DIV
+         ,  GIFT_LCD
+         ,  STAMP_TAX
+         ,  DC_DIV
+         ,  ITEM_CD
+    ) VALUES (
+            ${COMP_CD}
+         ,  ${GIFT_CD}
+         ,  ${GIFT_NM}
+         ,  ${GIFT_SNM}
+         ,  ${PRICE}
+         ,  ${REMARK}
+         ,  ${APPR_YN}
+         ,  ${MAND_YN}
+         ,  ${BTN_BCL}
+         ,  ${BTN_FCL}
+         ,  ${POINT_YN}
+         ,  ${CHECKSUM_MASK_1}
+         ,  ${CHECKSUM_MASK_2}
+         ,  ${USE_ISSUE_DT}
+         ,  DECODE( ${USE_YN}, '1', 'Y', '0', 'N', ${USE_YN} )
+         ,  SYSDATE
+         ,  ${USER_ID}
+         ,  SYSDATE
+         ,  ${USER_ID}
+         ,  ${CHANGE_STD_DIV}
+         ,  ${CHANGE_STD_VALUE}
+         ,  ${GIFT_PUB_DIV}
+         ,  ${GIFT_LCD}
+         ,  REPLACE(${STAMP_TAX}, ',', '')
+         ,  ${DC_DIV}
+         ,  ${ITEM_CD}
+    )
+]]></query>
+
+<query name='GIFT_CODE_MST_U'><![CDATA[
+    UPDATE  GIFT_CODE_MST
+       SET  GIFT_NM        =  ${GIFT_NM}
+         ,  GIFT_SNM       =  ${GIFT_SNM}
+         ,  PRICE          =  ${PRICE}
+         ,  REMARK         =  ${REMARK}
+         ,  APPR_YN        =  ${APPR_YN}
+         ,  MAND_YN        =  ${MAND_YN}
+         ,  BTN_BCL        =  ${BTN_BCL}
+         ,  BTN_FCL        =  ${BTN_FCL}
+         ,  POINT_YN       =  ${POINT_YN}
+         ,  CHECKSUM_MASK1 =  ${CHECKSUM_MASK_1}
+         ,  CHECKSUM_MASK2 =  ${CHECKSUM_MASK_2}
+         ,  USE_ISSUE_DT   =  ${USE_ISSUE_DT}
+         ,  USE_YN         =  DECODE( ${USE_YN}, '1', 'Y', '0', 'N', ${USE_YN} )
+         ,  UPD_DT         =  SYSDATE
+         ,  UPD_USER       =  ${USER_ID}
+         ,  CHANGE_STD_DIV      = ${CHANGE_STD_DIV}
+         ,  CHANGE_STD_VALUE    = ${CHANGE_STD_VALUE}
+         ,  GIFT_PUB_DIV   =  ${GIFT_PUB_DIV}
+         ,  GIFT_LCD       =  ${GIFT_LCD}
+         ,  STAMP_TAX      =  REPLACE(${STAMP_TAX}, ',', '')
+         ,  DC_DIV         =  ${DC_DIV}
+         ,  ITEM_CD        =  ${ITEM_CD}
+     WHERE  COMP_CD        =  ${COMP_CD}
+       AND  GIFT_CD        =  ${GIFT_CD}
+]]></query>
+
+<query name='GIFT_CODE_MST_D'><![CDATA[
+    UPDATE  GIFT_CODE_MST
+       SET  USE_YN  = 'N'
+     WHERE  COMP_CD  =  ${COMP_CD}
+       AND  GIFT_CD  =  ${GIFT_CD}
+]]></query>
+
+<query name='GIFT_CODE_BRAND_D'><![CDATA[
+    UPDATE  GIFT_CODE_BRAND
+       SET  USE_YN  = 'N'
+     WHERE  COMP_CD  =  ${COMP_CD}
+       AND  GIFT_CD  =  ${GIFT_CD}
+]]></query>
+
+<query name='LANG_TABLE_U'><![CDATA[
+    MERGE INTO  LANG_TABLE
+    USING DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+            AND TABLE_NM    = ${TABLE_NM}
+            AND COL_NM      = ${COL_NM}
+            AND LANGUAGE_TP = ${LANGUAGE_TP}
+            AND PK_COL      = ${PK_COL}
+        )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  LANG_NM     = ${LANG_NM}
+             ,  UPD_DT      = SYSDATE    
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT  
+        (
+                COMP_CD
+            ,   TABLE_NM   
+            ,   COL_NM     
+            ,   LANGUAGE_TP
+            ,   PK_COL     
+            ,   LANG_NM    
+            ,   USE_YN     
+            ,   INST_DT    
+            ,   INST_USER  
+            ,   UPD_DT     
+            ,   UPD_USER 
+        ) VALUES (  
+                ${COMP_CD}  
+            ,   ${TABLE_NM}
+            ,   ${COL_NM}
+            ,   ${LANGUAGE_TP}
+            ,   ${PK_COL}
+            ,   ${LANG_NM}
+            ,   'Y'       
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+        )
+]]></query>
+
+<query name='GIFT_BRAND_Q'><![CDATA[
+    SELECT  B1.COMP_CD
+         ,  NVL(B2.GIFT_CD, ${SCH_GIFT_CD}) AS GIFT_CD
+         ,  B1.BRAND_CD
+         ,  B1.BRAND_NM
+         ,  NVL(B2.USE_YN, 'N')             AS USE_YN
+      FROM  ( 
+                SELECT  A1.COMP_CD
+                     ,  A1.BRAND_CD
+                     ,  NVL(A2.BRAND_NM, A1.BRAND_NM)  AS BRAND_NM 
+                  FROM  BRAND A1
+                     ,  (
+                            SELECT  COMP_CD AS COMP_CD
+                                 ,  PK_COL  AS BRAND_CD
+                                 ,  LANG_NM AS BRAND_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'BRAND'
+                               AND  COL_NM      = 'BRAND_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        ) A2
+                 WHERE  A1.COMP_CD  = A2.COMP_CD (+)
+                   AND  LPAD(A1.BRAND_CD, 4, ' ') = A2.BRAND_CD(+)
+                   AND  A1.COMP_CD  = ${SCH_COMP_CD}
+                   AND  A1.USE_YN   = 'Y'
+                   AND  A1.BRAND_CD <> '0000'
+            )  B1
+         ,  (
+                SELECT  COMP_CD
+                     ,  GIFT_CD
+                     ,  BRAND_CD
+                     ,  USE_YN
+                  FROM  GIFT_CODE_BRAND
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  GIFT_CD = ${SCH_GIFT_CD}
+            )  B2 
+     WHERE  B1.COMP_CD   = B2.COMP_CD  (+)    
+       AND  B1.BRAND_CD  = B2.BRAND_CD (+)
+       AND  B1.COMP_CD   = ${SCH_COMP_CD}
+     ORDER  BY B1.BRAND_CD
+]]></query>
+
+<query name='GIFT_CODE_BRAND_U'><![CDATA[
+    MERGE INTO GIFT_CODE_BRAND
+    USING DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+            AND GIFT_CD     = ${GIFT_CD}  
+            AND BRAND_CD    = ${BRAND_CD}  
+        )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  USE_YN   = ${USE_YN}
+             ,  UPD_DT   = SYSDATE
+             ,  UPD_USER = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT
+        ( 
+                COMP_CD
+            ,   GIFT_CD
+            ,   BRAND_CD
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER
+            ,   UPD_DT
+            ,   UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+            ,   ${GIFT_CD}
+            ,   ${BRAND_CD}
+            ,   'Y'
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+        )
+]]></query>
+
+<query name='GIFT_SET_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  MAX(GIFT_CD_ISSUE_DIV)  AS GIFT_CD_ISSUE_DIV
+         ,  MAX(GIFT_CD_DIGIT)      AS GIFT_CD_DIGIT
+      FROM  (
+                SELECT  COMP_CD
+                     ,  VAL_C1      AS GIFT_CD_ISSUE_DIV
+                     ,  ''          AS GIFT_CD_DIGIT
+                  FROM  COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '01205'
+                   AND  CODE_CD = '01'
+                UNION ALL
+                SELECT  COMP_CD
+                     ,  ''          AS GIFT_CD_ISSUE_DIV
+                     ,  VAL_C1      AS GIFT_CD_DIGIT
+                  FROM  COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '01205'
+                   AND  CODE_CD = '02'
+            )
+     GROUP  BY COMP_CD
+]]></query>
+
+<query name='S_STAMP_TAX_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  VAL_C1 AS STAMP_TAX
+    FROM    COMMON
+    WHERE   COMP_CD = ${SCH_COMP_CD}
+    AND     CODE_TP = '01711'
+    AND     REPLACE(${SCH_GIFT_PRICE}, ',', '') BETWEEN VAL_N1 AND VAL_N2
+    AND     USE_YN ='Y'
+]]></query>
+
+<query name='ITEM_Q'><![CDATA[
+    SELECT  /*+ USE_NL(I L M S) */
+            I.COMP_CD
+         ,  I.ITEM_CD
+         ,  I.ITEM_NM
+         ,  L.L_CLASS_NM
+         ,  M.M_CLASS_NM
+         ,  S.S_CLASS_NM
+         ,  I.USE_YN
+      FROM  (
+                SELECT  /*+ LEADING(I2) USE_HASH(I) */
+                        I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_NM,     I.ITEM_NM)       AS ITEM_NM
+                     ,  NVL(IC.L_CLASS_CD, I.L_CLASS_CD)    AS L_CLASS_CD
+                     ,  NVL(IC.M_CLASS_CD, I.M_CLASS_CD)    AS M_CLASS_CD
+                     ,  NVL(IC.S_CLASS_CD, I.S_CLASS_CD)    AS S_CLASS_CD
+                     ,  I.USE_YN
+                  FROM  ITEM    I
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                              FROM  ITEM_CHAIN
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                               AND  ORD_SALE_DIV IN ('2', '3')
+                               AND  USE_YN      = 'Y'
+                             GROUP  BY COMP_CD, ITEM_CD
+                        )       I2
+                    ,   (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )       L
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  L_CLASS_CD
+                                 ,  M_CLASS_CD
+                                 ,  S_CLASS_CD
+                              FROM  ITEM_CLASS
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  ORG_CLASS_CD= ${SCH_ORG_CLASS_CD}
+                               AND  USE_YN      = 'Y'
+                        )       IC
+                 WHERE  I.COMP_CD   = I2.COMP_CD
+                   AND  I.ITEM_CD   = I2.ITEM_CD
+                   AND  I.COMP_CD   = L.COMP_CD(+)
+                   AND  I.ITEM_CD   = L.ITEM_CD(+)
+                   AND  I.COMP_CD   = IC.COMP_CD(+)
+                   AND  I.ITEM_CD   = IC.ITEM_CD(+)
+                   AND  I.COMP_CD   = ${SCH_COMP_CD}
+                   AND  I.ORD_SALE_DIV IN ('2', '3')
+                   AND  I.USE_YN    = 'Y'
+            )   I
+         ,  (
+                SELECT  L.COMP_CD
+                     ,  L.L_CLASS_CD
+                     ,  NVL(LL.LANG_NM, L.L_CLASS_NM)   AS L_CLASS_NM
+                     ,  L.SORT_ORDER
+                  FROM  ITEM_L_CLASS    L
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_L_CLASS'
+                               AND  COL_NM      = 'L_CLASS_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )               LL
+                 WHERE  L.COMP_CD       = LL.COMP_CD(+)
+                   AND  L.COMP_CD||L.ORG_CLASS_CD||L.L_CLASS_CD = LL.PK_COL(+)
+                   AND  L.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.ORG_CLASS_CD  = ${SCH_ORG_CLASS_CD}
+                   AND  L.USE_YN        = 'Y'
+            )   L
+         ,  (
+                SELECT  M.COMP_CD
+                     ,  M.L_CLASS_CD
+                     ,  M.M_CLASS_CD
+                     ,  NVL(ML.LANG_NM, M.M_CLASS_NM)   AS M_CLASS_NM
+                     ,  M.SORT_ORDER
+                  FROM  ITEM_M_CLASS    M
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_M_CLASS'
+                               AND  COL_NM      = 'M_CLASS_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )               ML
+                 WHERE  M.COMP_CD       = ML.COMP_CD(+)
+                   AND  M.COMP_CD||M.ORG_CLASS_CD||M.L_CLASS_CD||M.M_CLASS_CD = ML.PK_COL(+)
+                   AND  M.COMP_CD       = ${SCH_COMP_CD}
+                   AND  M.ORG_CLASS_CD  = ${SCH_ORG_CLASS_CD}
+                   AND  M.USE_YN        = 'Y'
+            )   M
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.L_CLASS_CD
+                     ,  S.M_CLASS_CD
+                     ,  S.S_CLASS_CD
+                     ,  NVL(SL.LANG_NM, S.S_CLASS_NM)   AS S_CLASS_NM
+                     ,  S.SORT_ORDER
+                  FROM  ITEM_S_CLASS    S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_S_CLASS'
+                               AND  COL_NM      = 'S_CLASS_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )               SL
+                 WHERE  S.COMP_CD       = SL.COMP_CD(+)
+                   AND  S.COMP_CD||S.ORG_CLASS_CD||S.L_CLASS_CD||S.M_CLASS_CD||S.S_CLASS_CD = SL.PK_COL(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  S.ORG_CLASS_CD  = ${SCH_ORG_CLASS_CD}
+                   AND  S.USE_YN        = 'Y'
+            )   S
+     WHERE  I.COMP_CD   = L.COMP_CD(+)
+       AND  I.L_CLASS_CD= L.L_CLASS_CD(+)
+       AND  I.COMP_CD   = M.COMP_CD(+)
+       AND  I.L_CLASS_CD= M.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD= M.M_CLASS_CD(+)
+       AND  I.COMP_CD   = S.COMP_CD(+)
+       AND  I.L_CLASS_CD= S.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD= S.M_CLASS_CD(+)
+       AND  I.S_CLASS_CD= S.S_CLASS_CD(+)
+       AND  (${SCH_L_CLASS_CD} IS NULL OR I.L_CLASS_CD = ${SCH_L_CLASS_CD})
+       AND  (${SCH_M_CLASS_CD} IS NULL OR I.M_CLASS_CD = ${SCH_M_CLASS_CD})
+       AND  (${SCH_S_CLASS_CD} IS NULL OR I.S_CLASS_CD = ${SCH_S_CLASS_CD})
+       AND  (${SCH_ITEM_TXT} IS NULL OR (I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%'))
+     ORDER  BY L.SORT_ORDER, I.L_CLASS_CD, M.SORT_ORDER, I.M_CLASS_CD, S.SORT_ORDER, I.S_CLASS_CD, I.ITEM_CD
+]]></query>
+
+</SQLResource>

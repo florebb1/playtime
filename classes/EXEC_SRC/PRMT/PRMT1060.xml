@@ -1,0 +1,683 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!-- TAB01 -->
+<query name='MARKETING_GP_Q'><![CDATA[
+    SELECT  G.COMP_CD
+         ,  G.CUST_GP_ID
+         ,  G.CUST_GP_NM
+         ,  NVL(GC.CUST_GP_CNT, 0)                          AS CUST_GP_CNT 
+         ,  G.SMS_SEND_YN
+         ,  G.PUSH_SEND_YN
+         ,  G.NOTES
+         ,  G.USE_YN
+         ,  U.USER_NM                                       AS UPD_USER
+         ,  TO_CHAR(G.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+      FROM  MARKETING_GP    G
+         ,  (
+                SELECT  COMP_CD
+                     ,  CUST_GP_ID
+                     ,  COUNT(CUST_ID)      AS CUST_GP_CNT
+                  FROM  MARKETING_GP_CUST
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                 GROUP  BY COMP_CD, CUST_GP_ID
+            )               GC
+         ,  HQ_USER         U
+     WHERE  G.COMP_CD       = GC.COMP_CD(+)
+       AND  G.CUST_GP_ID    = GC.CUST_GP_ID(+)
+       AND  G.COMP_CD       = U.COMP_CD(+)
+       AND  G.UPD_USER      = U.USER_ID(+)
+       AND  G.COMP_CD       = ${SCH_COMP_CD}
+       AND  (${SCH_SMS_SEND_YN}  IS NULL OR G.SMS_SEND_YN   = ${SCH_SMS_SEND_YN})
+       AND  (${SCH_PUSH_SEND_YN} IS NULL OR G.PUSH_SEND_YN  = ${SCH_PUSH_SEND_YN})
+       AND  (${SCH_CUST_GP_TXT}  IS NULL OR (G.CUST_GP_ID   LIKE '%'||${SCH_CUST_GP_TXT}||'%' OR G.CUST_GP_NM LIKE '%'||${SCH_CUST_GP_TXT}||'%'))
+       AND  (${SCH_USE_YN}       IS NULL OR G.USE_YN        = ${SCH_USE_YN})
+     ORDER  BY G.CUST_GP_ID DESC
+]]></query>
+
+<query name='MARKETING_GP_U'><![CDATA[
+    MERGE INTO  MARKETING_GP
+    USING DUAL
+    ON ( 
+                COMP_CD         = ${COMP_CD}
+           AND  CUST_GP_ID      = ${CUST_GP_ID}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  CUST_GP_NM      =  ${CUST_GP_NM}
+             ,  NOTES           =  ${NOTES}
+             ,  USE_YN          =  ${USE_YN}
+             ,  UPD_DT          =  SYSDATE
+             ,  UPD_USER        =  ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  CUST_GP_ID
+             ,  CUST_GP_NM
+             ,  SMS_SEND_YN
+             ,  PUSH_SEND_YN
+             ,  NOTES
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  (
+                    SELECT  NVL(MAX(TO_NUMBER(CUST_GP_ID)),0) + 1   AS CUST_GP_ID
+                      FROM  MARKETING_GP
+                     WHERE  COMP_CD     = ${COMP_CD}
+                )
+             ,  ${CUST_GP_NM}
+             ,  'N'
+             ,  'N'
+             ,  ${NOTES}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<!-- TAB02 상위테이블 -->
+<query name='TAB02_MARKETING_GP_Q'><![CDATA[
+    SELECT  G.COMP_CD
+         ,  G.CUST_GP_ID
+         ,  G.CUST_GP_NM
+         ,  NVL(GC.CUST_GP_CNT, 0)                  AS CUST_GP_CNT 
+         ,  NVL(G.SMS_SEND_YN,  'N')                AS SMS_SEND_YN
+         ,  NVL(G.PUSH_SEND_YN, 'N')                AS PUSH_SEND_YN
+         ,  G.NOTES
+         ,  G.USE_YN
+      FROM  MARKETING_GP    G
+         ,  (
+                SELECT  COMP_CD
+                     ,  CUST_GP_ID
+                     ,  COUNT(CUST_ID)      AS CUST_GP_CNT
+                  FROM  MARKETING_GP_CUST
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  CUST_GP_ID  = ${SCH_CUST_GP_ID}
+                 GROUP  BY COMP_CD, CUST_GP_ID
+            )               GC
+     WHERE  G.COMP_CD       = GC.COMP_CD(+)
+       AND  G.CUST_GP_ID    = GC.CUST_GP_ID(+)
+       AND  G.COMP_CD       = ${SCH_COMP_CD}
+       AND  G.CUST_GP_ID    = ${SCH_CUST_GP_ID}
+]]></query>
+
+<!-- TAB02 검색조건 -->
+<query name='MARKETING_GP_SEARCH_Q'><![CDATA[
+    SELECT
+           COMP_CD
+         , CUST_GP_ID
+         , SEARCH_ID
+         , SEARCH_COL_ID
+         , SEARCH_TYPE
+         , SEARCH_COLUMN
+         , SEARCH_VALUE
+         , NVL(SEARCH_VALUE_TEXT,SEARCH_VALUE) AS SEARCH_VALUE_TEXT
+         , USE_YN
+         , SEARCH_TAB_ID
+         , SEARCH_COL_ID
+         , SEARCH_COL_TYPE
+         , SEARCH_CODE_TP
+      FROM MARKETING_GP_SEARCH G 
+     WHERE COMP_CD        = ${SCH_COMP_CD}
+      AND  CUST_GP_ID     = TO_NUMBER(${SCH_CUST_GP_ID})
+      AND  (${SCH_USE_YN} IS NULL OR G.USE_YN   = ${SCH_USE_YN})
+    ORDER  BY G.SEARCH_ID
+]]></query>
+
+<!-- TAB02 검색조건 수정-->
+<query name='MARKETING_GP_SEARCH_U'><![CDATA[
+    MERGE INTO MARKETING_GP_SEARCH
+    USING DUAL
+    ON ( COMP_CD      = ${COMP_CD}
+    AND  CUST_GP_ID   = ${CUST_GP_ID}
+    AND  SEARCH_ID    = ${SEARCH_ID}
+    )
+    WHEN MATCHED THEN
+       UPDATE SET
+              SEARCH_TYPE         =  ${SEARCH_TYPE}
+            , SEARCH_COLUMN       =  NVL(${SEARCH_TAB_ID},'')||'-' ||NVL(${SEARCH_COL_ID},'')||'-'||NVL(${SEARCH_COL_TYPE},'')||'-'||NVL(${SEARCH_CODE_TP},'')||'-'||NVL(${ADDITION_YN},'')
+            , SEARCH_VALUE        =  ${SEARCH_VALUE}
+            , SEARCH_VALUE_TEXT   =  ${SEARCH_VALUE_TEXT}
+            , SEARCH_TAB_ID       =  ${SEARCH_TAB_ID}
+            , SEARCH_COL_ID       =  ${SEARCH_COL_ID}
+            , SEARCH_COL_TYPE     =  ${SEARCH_COL_TYPE}
+            , SEARCH_CODE_TP      =  ${SEARCH_CODE_TP}
+            , ADDITION_YN         =  ${ADDITION_YN}
+            , ADDITIONAL          =  (SELECT ADDITIONAL FROM MARKETING_META_COL WHERE COMP_CD = ${COMP_CD} AND TAB_ID = ${SEARCH_TAB_ID}  AND COL_ID = ${SEARCH_COL_ID} AND  ADDITION_YN = 'Y' )
+            , USE_YN              =  ${USE_YN}
+            , UPD_DT              =  SYSDATE
+            , UPD_USER            =  ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT(
+              COMP_CD
+            , CUST_GP_ID
+            , SEARCH_ID
+            , SEARCH_TYPE
+            , SEARCH_COLUMN
+            , SEARCH_VALUE
+            , SEARCH_VALUE_TEXT
+            , SEARCH_TAB_ID
+            , SEARCH_COL_ID
+            , SEARCH_COL_TYPE
+            , SEARCH_CODE_TP
+            , ADDITION_YN
+            , ADDITIONAL
+            , USE_YN
+            , INST_DT
+            , INST_USER
+        )VALUES(
+              ${COMP_CD}
+            , ${CUST_GP_ID}
+            , (SELECT COUNT(*) + 1 FROM  MARKETING_GP_SEARCH WHERE COMP_CD = ${COMP_CD} AND CUST_GP_ID = ${CUST_GP_ID})
+            , ${SEARCH_TYPE}
+            , NVL(${SEARCH_TAB_ID},'')||'-' ||NVL(${SEARCH_COL_ID},'')||'-'||NVL(${SEARCH_COL_TYPE},'')||'-'||NVL(${SEARCH_CODE_TP},'')||'-'||NVL(${ADDITION_YN},'')
+            , ${SEARCH_VALUE}
+            , ${SEARCH_VALUE_TEXT}
+            , ${SEARCH_TAB_ID}
+            , ${SEARCH_COL_ID}
+            , ${SEARCH_COL_TYPE}
+            , ${SEARCH_CODE_TP}
+            , ${ADDITION_YN}
+            , (SELECT ADDITIONAL FROM MARKETING_META_COL WHERE COMP_CD = ${COMP_CD} AND TAB_ID = ${SEARCH_TAB_ID}  AND COL_ID = ${SEARCH_COL_ID} AND  ADDITION_YN = 'Y' )
+            , ${USE_YN}
+            , SYSDATE
+            , ${INST_USER} 
+        )        
+]]></query>
+
+<query name='MARKETING_GP_SEARCH_CONDITION_Q'><![CDATA[
+SELECT  
+       IS_ETC
+     , TAB_SEQ
+     , T_SEQ
+     , CASE
+            WHEN IS_ETC = 1 AND T_SEQ = 1 AND ROWNUM <> 1 AND (HAS_MAIN = 0 AND MAX(TAB_SEQ) OVER() > 2 )  THEN 'INTERSECT' 
+            WHEN IS_ETC = 1 AND T_SEQ = 1 AND ROWNUM <> 1 AND (HAS_MAIN = 1 AND MAX(TAB_SEQ) OVER() > 1 )  THEN 'INTERSECT'
+            ELSE ''
+       END                                         AS INTER 
+     , CASE
+            WHEN  T_SEQ = 1 AND SEARCH_TAB_ID IN('CS_MEMBER_CHILD','CS_ENTRY_HD', 'CS_MEMBERSHIP_SALE')
+                THEN 'SELECT COMP_CD, MEMBER_NO AS CUST_ID FROM '||SEARCH_TAB_ID||' WHERE 1 = 1 '
+            WHEN  T_SEQ = 1 AND SEARCH_TAB_ID NOT IN('C_CUST','CS_MEMBER')
+                THEN 'SELECT COMP_CD, CUST_ID              FROM '||SEARCH_TAB_ID||' WHERE 1 = 1 '
+            ELSE '' 
+       END                                         AS SEL_PARSE
+     , CASE 
+            WHEN INSTR(SEARCH_COL_ID ,'MOBILE') > 0 OR INSTR(SEARCH_COL_ID ,'CUST_NM') > 0 THEN  'DECRYPT('||SEARCH_COL_ID||')'
+            ELSE    SEARCH_COL_ID
+       END                                         AS SEARCH_COL_ID
+     , SEARCH_TYPE
+     , SEARCH_COL_TYPE
+     , SEARCH_VALUE
+     , SEARCH_TAB_ID
+     , SEARCH_CODE_TP
+     , ADDITION_YN
+     , USE_YN
+     , SEARCH_ID
+FROM(
+    SELECT 
+           IS_ETC 
+         , MIN(IS_ETC) OVER() AS HAS_MAIN
+         , DENSE_RANK () OVER ( ORDER  BY SEARCH_TAB_ID )                                                          AS TAB_SEQ
+         , ROW_NUMBER() OVER ( PARTITION BY SEARCH_TAB_ID ORDER BY IS_ETC DESC, SEARCH_TAB_ID , ADDITION_YN DESC ) AS T_SEQ
+         , SEARCH_TAB_ID
+         , DECODE(IS_ETC, 0 , SEARCH_TAB_ID||'.'||REPLACE(SEARCH_COL_ID, '@COMP_CD@', '010'), REPLACE(SEARCH_COL_ID, '@COMP_CD@', '010') )  AS SEARCH_COL_ID 
+         , SEARCH_TYPE
+         , SEARCH_COL_TYPE
+         , SEARCH_VALUE
+         , SEARCH_CODE_TP
+         , ADDITION_YN
+         , USE_YN
+         , SEARCH_ID
+    FROM(
+        SELECT
+               CASE 
+                   WHEN SEARCH_TAB_ID = 'C_CUST'    THEN 0
+                   WHEN SEARCH_TAB_ID = 'CS_MEMBER' THEN 0
+                   ELSE 1
+               END                                 AS IS_ETC
+             , SEARCH_ID
+             , SEARCH_TAB_ID
+             , DECODE(ADDITION_YN , 'Y' , ADDITIONAL, SEARCH_COL_ID) AS SEARCH_COL_ID
+             , SEARCH_TYPE
+             , SEARCH_COL_TYPE
+             , SEARCH_VALUE
+             , SEARCH_CODE_TP
+             , ADDITION_YN
+             , USE_YN
+         FROM  MARKETING_GP_SEARCH G    
+        WHERE  COMP_CD    = ${SCH_COMP_CD}               -- XX
+          AND  CUST_GP_ID = TO_NUMBER(${SCH_CUST_GP_ID}) -- XX
+          AND  USE_YN     = 'Y'
+    ) 
+)
+ORDER BY IS_ETC DESC, SEARCH_TAB_ID, T_SEQ 
+]]></query>
+
+<!-- TAB02 고객목록 PAGE -->
+<query name='MARKETING_GP_CUST_Q'><![CDATA[
+SELECT 
+       NUM                                      AS SEQ
+     , TOTAL  
+     , G.COMP_CD  
+     , G.CUST_ID
+     , G.CUST_GP_ID
+     , FC_GET_FORMAT_HP_NO(DECRYPT(M.MOBILE))    AS MOBILE
+     , DECRYPT(M.MEMBER_NM) AS CUST_NM
+     , G.APPEND_YN
+     , (SELECT LVL_NM FROM C_CUST_LVL L WHERE L.LVL_CD = C.LVL_CD ) AS LVL_NM
+FROM
+    ( 
+        SELECT
+               NUM
+             , (SELECT COUNT(*) FROM MARKETING_GP_CUST WHERE COMP_CD  = ${SCH_COMP_CD} AND CUST_GP_ID = TO_NUMBER(${SCH_CUST_GP_ID}) ) AS TOTAL
+             , COMP_CD
+             , CUST_ID
+             , CUST_GP_ID
+             , APPEND_YN
+        FROM 
+        (
+            SELECT 
+                   ROW_NUMBER() OVER(ORDER BY INST_DT, CUST_ID)AS   NUM
+                 , COMP_CD  
+                 , CUST_ID
+                 , CUST_GP_ID
+                 , APPEND_YN
+            FROM   MARKETING_GP_CUST
+            WHERE  CUST_GP_ID = TO_NUMBER(${SCH_CUST_GP_ID})
+            AND    COMP_CD    = ${SCH_COMP_CD}
+        )
+        WHERE 1 = 1 
+        AND NUM <=  TO_NUMBER(${PAGE})      * TO_NUMBER(${ROWS}) 
+        AND NUM >= (TO_NUMBER(${PAGE}) - 1) * TO_NUMBER(${ROWS}) + 1
+    ) G ,  CS_MEMBER M , C_CUST C
+WHERE G.COMP_CD = M.COMP_CD (+)
+  AND G.CUST_ID = M.MEMBER_NO(+)
+  AND G.COMP_CD = C.COMP_CD (+)  
+  AND G.CUST_ID = C.CUST_ID (+)
+ORDER BY NUM
+]]></query>
+
+
+<query name='EXCEL_MARKETING_GP_CUST_Q'><![CDATA[
+SELECT 
+       NUM                  AS SEQ
+     , G.CUST_ID
+     , DECRYPT(M.MEMBER_NM) AS CUST_NM
+     , FC_GET_FORMAT_HP_NO(DECRYPT(M.MOBILE))    AS MOBILE
+     , (SELECT LVL_NM FROM C_CUST_LVL L WHERE L.COMP_CD = C.COMP_CD AND L.LVL_CD = C.LVL_CD ) AS LVL_NM
+FROM
+    ( 
+        SELECT
+               NUM
+             , ${SCH_COMP_CD} AS COMP_CD
+             , CUST_ID
+        FROM 
+        (
+            SELECT 
+                   ROW_NUMBER() OVER(ORDER BY INST_DT, CUST_ID)AS   NUM
+                 , CUST_ID
+            FROM   MARKETING_GP_CUST
+            WHERE  CUST_GP_ID = TO_NUMBER(${SCH_CUST_GP_ID})
+            AND    COMP_CD    = ${SCH_COMP_CD}
+        )
+        WHERE 1 = 1 
+        AND NUM <=  TO_NUMBER(${PAGE})      * @ROWS 
+        AND NUM >= (TO_NUMBER(${PAGE}) - 1) * @ROWS + 1
+    ) G ,  CS_MEMBER M , C_CUST C
+WHERE G.COMP_CD = M.COMP_CD  (+)
+  AND G.COMP_CD = C.COMP_CD  (+) 
+  AND G.CUST_ID = M.MEMBER_NO(+)  
+  AND G.CUST_ID = C.CUST_ID  (+)
+ORDER BY NUM
+]]></query>
+
+<!-- TAB02 고객목록 삭제-->
+<query name='MARKETING_GP_CUST_D'><![CDATA[
+    DELETE FROM MARKETING_GP_CUST
+    WHERE COMP_CD     = ${COMP_CD}
+    AND   CUST_GP_ID  = ${CUST_GP_ID}
+    AND   CUST_ID     = ${CUST_ID}
+]]></query>
+
+<!-- TAB02 고객목록 수정-->
+<query name='MARKETING_GP_CUST_U'><![CDATA[
+    MERGE INTO MARKETING_GP_CUST
+    USING DUAL
+    ON ( COMP_CD      = ${COMP_CD}
+    AND  CUST_GP_ID   = ${CUST_GP_ID}
+    AND  CUST_ID      = ${CUST_ID}
+    )
+    WHEN NOT MATCHED THEN
+        INSERT(
+              COMP_CD
+            , CUST_GP_ID
+            , CUST_ID
+            , APPEND_YN
+            , INST_DT
+            , INST_USER
+        )VALUES(
+              ${COMP_CD}
+            , ${CUST_GP_ID}
+            , ${CUST_ID}
+            , 'Y'
+            , SYSDATE
+            , ${INST_USER} 
+        )  
+]]></query>
+
+<!-- TAB02 고객목록 수정을 위한검증-->
+<query name='CHECK_MARKETING_GP_CUST_Q'><![CDATA[
+    SELECT 
+           CUST_ID
+      FROM MARKETING_GP_CUST
+     WHERE COMP_CD      = ${COMP_CD}
+       AND CUST_GP_ID   = ${CUST_GP_ID}
+       AND CUST_ID      = ${CUST_ID}
+]]></query>
+
+
+
+
+<query name='MARKETING_META_TAB_Q'><![CDATA[
+    SELECT
+           null as CHK_YN 
+         , TAB_ID
+         , TAB_NM
+         , USE_YN
+      FROM MARKETING_META_TAB T 
+     WHERE T.COMP_CD    = ${SCH_COMP_CD}
+      AND  (${SCH_USE_YN}      IS NULL OR T.USE_YN      = ${SCH_USE_YN})
+]]></query>
+
+<query name='MARKETING_META_COMBO_Q'><![CDATA[
+SELECT
+       NVL(TAB_ID,'')||'-' ||NVL(COL_ID,'')||'-'||NVL(COL_TYPE,'')||'-'||NVL(CODE_TP,'')||'-'||NVL(ADDITION_YN,'')  AS SEARCH_TEXT
+     , COL_NM AS SEARCH_COLUMN
+  FROM MARKETING_META_COL
+ WHERE USE_YN = 'Y'
+ ORDER BY ORDER_SEQ
+]]></query>
+
+
+
+<query name='MARKETING_META_COL_Q'><![CDATA[    
+    SELECT 
+            NVL(Z.TAB_ID, T.TAB_ID ) AS TAB_ID 
+          , NVL(T.COL_NM ,
+                          NVL(CASE 
+                                   WHEN INSTR(Z.COMMENTS,'(') > 0 THEN   SUBSTR( Z.COMMENTS, 0, INSTR(Z.COMMENTS, '(') -1)
+                                   ELSE Z.COMMENTS
+                               END ,'N/A')
+            )                                                                     AS  COL_NM
+          , NVL(Z.COLUMN_NAME , T.COL_ID)                                         AS  COL_ID
+          , NVL(CASE 
+                    WHEN NVL(T.COL_TYPE, Z.DATA_TYPE ) IN ('V', 'VARCHAR2') THEN 'V'                                                             
+                    WHEN NVL(T.COL_TYPE, Z.DATA_TYPE ) IN ('N', 'NUMBER'  ) THEN 'N'
+                    WHEN NVL(T.COL_TYPE, Z.DATA_TYPE ) IN ('D' , 'DATE'   ) THEN 'D'
+                    ELSE 'B'
+                END , T.COL_TYPE)                                                 AS  COL_TYPE
+          , Z.DATA_TYPE                                                           AS  COL_TYPE_NM    
+          , NVL(T.CODE_TP, 
+                CASE 
+                    WHEN INSTR(Z.COMMENTS,'[') > 0 AND  INSTR(Z.COMMENTS,']') > 0 THEN  SUBSTR( SUBSTR(Z.COMMENTS , 0, INSTR(Z.COMMENTS, ']') - 1 ), INSTR(Z.COMMENTS, '[') + 1 , LENGTH(Z.COMMENTS)  ) 
+                ELSE NULL END 
+             )                                                          AS  CODE_TP
+          , NVL(T.USE_YN ,'N') AS USE_YN 
+          , Z.COMMENTS                                                            AS  COMMENTS_ORI
+          , T.ADDITIONAL
+          , T.ADDITION_YN
+          , T.ORDER_SEQ
+    FROM
+    (
+        SELECT  
+                A.TABLE_NAME   AS TAB_ID 
+             ,  B.DATA_TYPE
+             ,  D.COLUMN_NAME  
+             ,  D.COMMENTS
+        FROM    USER_ALL_TABLES   A
+             ,  USER_TAB_COLUMNS  B
+             ,  USER_TAB_COMMENTS C
+             ,  USER_COL_COMMENTS D
+        WHERE   A.TABLE_NAME   = B.TABLE_NAME
+        AND     A.TABLE_NAME   = C.TABLE_NAME
+        AND     A.TABLE_NAME   = D.TABLE_NAME
+        AND     B.COLUMN_NAME  = D.COLUMN_NAME
+        AND     A.TABLE_NAME   = ${SCH_TAB_ID}
+    )Z 
+    FULL OUTER JOIN  ( SELECT * FROM MARKETING_META_COL WHERE  TAB_ID = ${SCH_TAB_ID} )  T
+    ON    Z.TAB_ID       = T.TAB_ID
+    AND   Z.COLUMN_NAME  = T.COL_ID
+ORDER by T.ORDER_SEQ
+]]></query>
+
+<query name='MARKETING_META_CODE_Q'><![CDATA[
+    SELECT  
+           NVL(D.TAB_ID , ${SCH_TAB_ID}) AS TAB_ID 
+         , NVL(D.COL_ID , ${SCH_COL_ID}) AS COL_ID 
+         , C.CODE_TP
+         , C.CODE_CD
+         , C.CODE_NM
+         , D.USE_YN
+      FROM MARKETING_META_CODE D, COMMON C 
+     WHERE D.COMP_CD (+)  =  ${SCH_COMP_CD}
+      AND  D.TAB_ID  (+)  =  ${SCH_TAB_ID}
+      AND  D.COL_ID  (+)  =  ${SCH_COL_ID}
+      AND  D.CODE_TP (+)  =  C.CODE_TP
+      AND  D.CODE_CD (+)  =  C.CODE_CD
+      AND  C.CODE_TP      =  ${SCH_CODE_TP}
+      AND  C.USE_YN = 'Y'
+      ORDER   BY D.USE_YN    
+]]></query>
+
+
+<query name='MARKETING_META_TAB_U'><![CDATA[
+    MERGE INTO MARKETING_META_TAB
+    USING DUAL
+    ON ( COMP_CD  = ${COMP_CD}
+    AND  TAB_ID   = ${TAB_ID}
+    )
+    WHEN MATCHED THEN
+        UPDATE SET
+              TAB_NM          =  ${TAB_NM}
+            , USE_YN          =  ${USE_YN}
+    WHEN NOT MATCHED THEN
+        INSERT(
+              COMP_CD
+            , TAB_ID
+            , TAB_NM
+            , USE_YN
+        )VALUES(
+              ${COMP_CD}
+            , ${TAB_ID}
+            , ${TAB_NM}
+            , ${USE_YN} 
+        )    
+]]></query>
+
+<query name='MARKETING_META_COL_U'><![CDATA[
+    MERGE INTO MARKETING_META_COL
+    USING DUAL
+    ON ( COMP_CD  = ${COMP_CD}
+    AND  TAB_ID   = ${TAB_ID}
+    AND  COL_ID   = ${COL_ID}
+    )
+    WHEN MATCHED THEN
+        UPDATE SET      
+              USE_YN          =  ${USE_YN}
+            , COL_NM          =  ${COL_NM}
+            , COL_TYPE        =  ${COL_TYPE}
+            , CODE_TP         =  ${CODE_TP}
+            , ADDITIONAL      =  ${ADDITIONAL}
+            , ADDITION_YN     =  ${ADDITION_YN}
+            , ORDER_SEQ       =  TO_NUMBER(${ORDER_SEQ})
+    WHEN NOT MATCHED THEN
+        INSERT(
+              COMP_CD
+            , TAB_ID
+            , COL_ID
+            , COL_NM
+            , COL_TYPE
+            , CODE_TP
+            , USE_YN
+            , ADDITIONAL
+            , ADDITION_YN
+            , ORDER_SEQ 
+        )VALUES(
+              ${COMP_CD}
+            , ${TAB_ID}
+            , ${COL_ID}
+            , ${COL_NM}
+            , ${COL_TYPE}
+            , ${CODE_TP}
+            , ${USE_YN}
+            , ${ADDITIONAL}
+            , ${ADDITION_YN}
+            , TO_NUMBER(${ORDER_SEQ})
+        )
+]]></query>
+
+<query name='MARKETING_META_CODE_U'><![CDATA[
+    MERGE INTO MARKETING_META_CODE
+    USING DUAL
+    ON ( COMP_CD  = ${COMP_CD}
+    AND  TAB_ID   = ${TAB_ID}
+    AND  COL_ID   = ${COL_ID}
+    AND  CODE_TP  = ${CODE_TP}
+    AND  CODE_CD  = ${CODE_CD}
+    )
+    WHEN MATCHED THEN
+        UPDATE SET      
+              USE_YN          =  ${USE_YN}
+    WHEN NOT MATCHED THEN
+        INSERT(
+              COMP_CD
+            , TAB_ID
+            , COL_ID
+            , CODE_TP
+            , CODE_CD
+            , CODE_NM
+            , USE_YN
+        )VALUES(
+              ${COMP_CD}
+            , ${TAB_ID}
+            , ${COL_ID}
+            , ${CODE_TP}
+            , ${CODE_CD}
+            , ${CODE_NM}
+            , ${USE_YN}
+        )     
+]]></query>
+
+<query name='CUST_GP_ID_Q'><![CDATA[
+    SELECT 
+           NVL(MAX(CUST_GP_ID),0) + 1 as KEY 
+     FROM  MARKETING_GP 
+    WHERE COMP_CD = ${SCH_COMP_CD}
+]]></query>
+
+
+<query name='CODE_TP_Q'><![CDATA[
+    SELECT  NULL       AS CHK_YN  
+         ,  C.COMP_CD
+         ,  C.CODE_TP
+         ,  C.CODE_CD
+         ,  C.CODE_NM
+         ,  L.CODE_NM   AS LANG_NM
+         ,  C.BRAND_CD
+         ,  C.SORT_SEQ
+         ,  C.REMARKS
+         ,  C.USE_YN
+      FROM  COMMON      C
+         ,  LANG_COMMON L
+     WHERE  C.COMP_CD       = L.COMP_CD(+)
+       AND  C.CODE_TP       = L.CODE_TP(+)
+       AND  C.CODE_CD       = L.CODE_CD(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CODE_TP       = ${SCH_CODE_TP}
+       AND  C.USE_YN = 'Y'
+       AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+       AND  L.USE_YN(+)     = 'Y'
+     ORDER  BY C.SORT_SEQ, C.CODE_CD
+]]></query>
+
+<query name='C_CUST_LVL_Q'><![CDATA[
+    SELECT  L.COMP_CD
+         ,  L.LVL_CD        AS CODE_CD
+         ,  L.LVL_NM        AS CODE_NM
+         ,  L.USE_YN
+      FROM  C_CUST_LVL  L
+     WHERE  L.COMP_CD   = ${SCH_COMP_CD}
+       AND  L.USE_YN    = 'Y'
+     ORDER  BY L.LVL_RANK, L.LVL_CD
+]]></query>
+
+<query name='CS_CONTENT_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  C.CONTENT_SEQ
+         ,  C.CONTENT_FG
+         ,  C.CONTENT_DIV1
+         ,  C.CONTENT_DIV2
+         ,  C.SUBJECT
+         ,  REPLACE(C.CONTENT, '@$', CHR(13)||CHR(10))  AS CONTENT
+         ,  C.TEMPLETE_ID
+         ,  C.USE_YN
+      FROM  CS_CONTENT      C
+     WHERE  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CONTENT_FG    = ${SCH_CONTENT_FG}
+       AND  C.STOR_CD       IS NULL
+       AND  (${SCH_CONTENT_DIV1} IS NULL OR C.CONTENT_DIV1  = ${SCH_CONTENT_DIV1})
+       AND  (${SCH_CONTENT_DIV2} IS NULL OR C.CONTENT_DIV2  = ${SCH_CONTENT_DIV2})
+       AND  (${SCH_USE_YN}       IS NULL OR C.USE_YN        = ${SCH_USE_YN})
+     ORDER  BY C.CONTENT_DIV1, C.CONTENT_DIV2, C.CONTENT_SEQ
+]]></query>
+
+<query name='CUST_TOT_Q'><![CDATA[
+    SELECT  COUNT(*)        AS TOTAL
+      FROM  MARKETING_GP_CUST   M
+         ,  CS_MEMBER           C
+     WHERE  M.COMP_CD       = C.COMP_CD
+       AND  M.CUST_ID       = C.MEMBER_NO
+       AND  M.COMP_CD       = ${SCH_COMP_CD}
+       AND  M.CUST_GP_ID    = ${SCH_CUST_GP_ID}
+       AND  C.MEMBER_DIV    = '1'
+       AND  C.USE_YN        = 'Y'
+]]></query>
+
+<query name='CUST_LIST_Q'><![CDATA[
+    SELECT  *
+      FROM  (
+                SELECT  ROW_NUMBER() OVER(ORDER BY M.CUST_ID DESC)   AS SEQ
+                     ,  M.CUST_ID               AS MEMBER_NO
+                     ,  DECRYPT(C.MEMBER_NM)    AS MEMBER_NM
+                     ,  C.MOBILE                AS MOBILE
+                  FROM  MARKETING_GP_CUST   M
+                     ,  CS_MEMBER           C
+                 WHERE  M.COMP_CD       = C.COMP_CD
+                   AND  M.CUST_ID       = C.MEMBER_NO
+                   AND  M.COMP_CD       = ${SCH_COMP_CD}
+                   AND  M.CUST_GP_ID    = ${SCH_CUST_GP_ID}
+                   AND  C.MEMBER_DIV    = '1'
+                   AND  C.USE_YN        = 'Y'
+            )
+     WHERE  SEQ BETWEEN (TO_NUMBER(${PAGE}) - 1) * TO_NUMBER(${ROWS}) + 1 AND TO_NUMBER(${PAGE}) * TO_NUMBER(${ROWS})
+]]></query>
+
+<query name='MARKETING_GP_SEND_U'><![CDATA[
+    UPDATE  MARKETING_GP
+       SET  SMS_SEND_YN     = CASE WHEN ${SEND_DIV} = 'S' THEN 'Y' ELSE SMS_SEND_YN  END
+         ,  PUSH_SEND_YN    = CASE WHEN ${SEND_DIV} = 'P' THEN 'Y' ELSE PUSH_SEND_YN END
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  CUST_GP_ID      = ${CUST_GP_ID}
+]]></query>
+
+</SQLResource>

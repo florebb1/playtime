@@ -1,0 +1,1583 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='TAB01_Q'><![CDATA[
+    SELECT  P.COMP_CD
+         ,  P.PRMT_ID          --프로모션ID
+         ,  P.PRMT_NM          --프로모션명
+         ,  P.PRMT_CLASS       --프로모션분류
+         ,  P.PRMT_TYPE        --프로모션유형
+         ,  P.PRMT_TYPE_DET    --프로모션유형
+         ,  P.BRAND_CLASS      --카테고리
+         ,  P.BRAND_CD         --브랜드
+         ,  P.PRMT_DT_START    --시작일자
+         ,  P.PRMT_DT_END      --종료일자
+         ,  P.SUB_PRMT_YN      --서브프로모션여부
+         ,  P.SUB_PRMT_ID      --서브프로모션
+         ,  P.PRMT_COUPON_YN   --쿠폰프로모션여부
+         ,  P.COUPON_IMG_TYPE  --쿠폰이미지구분(APP)
+         ,  P.AGREE_YN         --승인여부
+         ,  P.PAY_DIV          --결제수단
+         ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+         ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+         ,  P.USE_YN
+      FROM  PROMOTION   P
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  P.COMP_CD       = U.COMP_CD(+)
+       AND  P.UPD_USER      = U.USER_ID(+) 
+       AND  P.COMP_CD       = ${SCH_COMP_CD}
+       AND  (${SCH_PRMT_CLASS}      IS NULL OR P.PRMT_CLASS     = ${SCH_PRMT_CLASS})
+       AND  (${SCH_PRMT_TYPE}       IS NULL OR P.PRMT_TYPE      = ${SCH_PRMT_TYPE})
+       AND  (${SCH_PRMT_TYPE_DET}   IS NULL OR P.PRMT_TYPE_DET  = ${SCH_PRMT_TYPE_DET})
+       AND  (${SCH_BRAND_CLASS}     IS NULL OR P.BRAND_CLASS    = ${SCH_BRAND_CLASS})
+       AND  (${SCH_BRAND_CD}        IS NULL OR P.BRAND_CD       = ${SCH_BRAND_CD})
+       AND  (
+                P.PRMT_DT_START     BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+                OR
+                P.PRMT_DT_END       BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+            )
+       AND  (${SCH_USE_YN}          IS NULL OR P.USE_YN      = ${SCH_USE_YN})
+     ORDER  BY P.PRMT_ID DESC
+]]></query>
+
+<query name='TAB02_Q'><![CDATA[
+    SELECT  P.COMP_CD
+         ,  P.PRMT_ID
+         ,  P.SUB_PRMT_YN
+         ,  P.SUB_PRMT_ID
+         ,  P.BRAND_CLASS
+         ,  P.BRAND_CD
+         ,  P.PRMT_CLASS
+         ,  P.PRMT_TYPE
+         ,  P.PRMT_TYPE_DET
+         ,  P.PRMT_NM
+         ,  P.PRMT_DT_START
+         ,  P.PRMT_DT_END
+         ,  P.PRMT_TIME_HH_START
+         ,  P.PRMT_TIME_MM_START
+         ,  P.PRMT_TIME_HH_END
+         ,  P.PRMT_TIME_MM_END
+         ,  P.PRMT_WEEK_1
+         ,  P.PRMT_WEEK_2
+         ,  P.PRMT_WEEK_3
+         ,  P.PRMT_WEEK_4
+         ,  P.PRMT_WEEK_5
+         ,  P.PRMT_WEEK_6
+         ,  P.PRMT_WEEK_7
+         ,  CASE WHEN P.PRMT_WEEK_1 = 'Y' AND P.PRMT_WEEK_2 = 'Y' AND P.PRMT_WEEK_3 = 'Y' AND P.PRMT_WEEK_4 = 'Y' AND P.PRMT_WEEK_5 = 'Y' AND P.PRMT_WEEK_6 = 'Y' AND P.PRMT_WEEK_7 = 'Y' THEN 'Y'
+                 ELSE 'N'
+            END                 AS PRMT_WEEK_ALL
+         ,  P.CUST_DIV
+         ,  CASE WHEN P.CUST_DIV = 'C6101' OR P.CUST_DIV = 'C6102' THEN 'Y'
+                 ELSE 'N'
+            END                 AS LVL_CD_0
+         ,  P.LVL_CD_1
+         ,  P.LVL_CD_2
+         ,  P.LVL_CD_3
+         ,  P.LVL_CD_4
+         ,  P.PRMT_COUPON_YN
+         ,  P.COUPON_DT_TYPE
+         ,  P.COUPON_START_DT
+         ,  P.COUPON_CLOSE_DT
+         ,  P.COUPON_EXPIRE
+         ,  P.COUPON_IMG_TYPE
+         ,  P.PAY_DIV
+         ,  P.COUPON_NOTICE
+         ,  P.COUPON_NOTICE_PRINT
+         ,  P.REMARKS
+         ,  P.AGREE_YN
+         ,  P.AGREE_DT
+         ,  P.AGREE_ID
+         ,  NVL(U.USER_NM, P.AGREE_ID)      AS AGREE_NM
+         ,  P.USE_YN
+      FROM  PROMOTION   P
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  USER_NM
+                  FROM  HQ_USER
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+            )       U
+     WHERE  P.COMP_CD   = U.COMP_CD(+)
+       AND  P.AGREE_ID  = U.USER_ID(+)
+       AND  P.COMP_CD   = ${SCH_COMP_CD} 
+       AND  P.PRMT_ID   = ${SCH_PRMT_ID}
+]]></query>
+
+<query name='PRMT_ID_Q'><![CDATA[
+    SELECT  TO_CHAR(SYSDATE, 'YY')  ||
+            TO_CHAR(SYSDATE, 'MM')  ||
+            LPAD(NVL(MAX(TO_NUMBER(SUBSTR(PRMT_ID, 5, LENGTH(PRMT_ID)))) ,0) + 1, 4, '0')  AS PRMT_ID 
+      FROM  PROMOTION   P
+     WHERE  COMP_CD                 = ${SCH_COMP_CD}
+       AND  SUBSTR(PRMT_ID, 1, 4)   = TO_CHAR(SYSDATE, 'YYMM')
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='PROMOTION_U'><![CDATA[
+    MERGE   INTO PROMOTION
+    USING   DUAL
+    ON (    
+                COMP_CD  = ${COMP_CD}
+           AND  PRMT_ID   = ${PRMT_ID}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  SUB_PRMT_YN         = ${SUB_PRMT_YN}
+             ,  SUB_PRMT_ID         = ${SUB_PRMT_ID}
+             ,  BRAND_CLASS         = ${BRAND_CLASS}
+             ,  BRAND_CD            = ${BRAND_CD}
+             ,  PRMT_CLASS          = ${PRMT_CLASS}
+             ,  PRMT_TYPE           = ${PRMT_TYPE}
+             ,  PRMT_TYPE_DET       = ${PRMT_TYPE_DET}
+             ,  PRMT_NM             = ${PRMT_NM}
+             ,  PRMT_DT_START       = ${PRMT_DT_START}
+             ,  PRMT_DT_END         = ${PRMT_DT_END}
+             ,  PRMT_TIME_HH_START  = ${PRMT_TIME_HH_START}
+             ,  PRMT_TIME_MM_START  = ${PRMT_TIME_MM_START}
+             ,  PRMT_TIME_HH_END    = ${PRMT_TIME_HH_END}
+             ,  PRMT_TIME_MM_END    = ${PRMT_TIME_MM_END}
+             ,  PRMT_WEEK_1         = ${PRMT_WEEK_1}
+             ,  PRMT_WEEK_2         = ${PRMT_WEEK_2}
+             ,  PRMT_WEEK_3         = ${PRMT_WEEK_3}
+             ,  PRMT_WEEK_4         = ${PRMT_WEEK_4}
+             ,  PRMT_WEEK_5         = ${PRMT_WEEK_5}
+             ,  PRMT_WEEK_6         = ${PRMT_WEEK_6}
+             ,  PRMT_WEEK_7         = ${PRMT_WEEK_7}
+             ,  CUST_DIV            = ${CUST_DIV}
+             ,  LVL_CD_1            = ${LVL_CD_1}
+             ,  LVL_CD_2            = ${LVL_CD_2}
+             ,  LVL_CD_3            = ${LVL_CD_3}
+             ,  LVL_CD_4            = ${LVL_CD_4}
+             ,  PRMT_COUPON_YN      = ${PRMT_COUPON_YN}
+             ,  COUPON_DT_TYPE      = ${COUPON_DT_TYPE}
+             ,  COUPON_START_DT     = ${COUPON_START_DT}
+             ,  COUPON_CLOSE_DT     = ${COUPON_CLOSE_DT}
+             ,  COUPON_EXPIRE       = ${COUPON_EXPIRE}
+             ,  COUPON_IMG_TYPE     = ${COUPON_IMG_TYPE}
+             ,  PAY_DIV             = NVL(${PAY_DIV}, 'C6201')
+             ,  COUPON_NOTICE       = ${COUPON_NOTICE}
+             ,  COUPON_NOTICE_PRINT = ${COUPON_NOTICE_PRINT}
+             ,  REMARKS             = ${REMARKS}
+             ,  AGREE_YN            = ${AGREE_YN}
+             ,  AGREE_ID            = CASE WHEN ${AGREE_YN} = 'Y' THEN ${UPD_USER} ELSE NULL END
+             ,  AGREE_DT            = CASE WHEN ${AGREE_YN} = 'Y' THEN TO_CHAR(SYSDATE, 'YYYYMMDD') ELSE NULL END
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  SUB_PRMT_YN
+             ,  SUB_PRMT_ID
+             ,  BRAND_CLASS
+             ,  BRAND_CD
+             ,  PRMT_CLASS
+             ,  PRMT_TYPE
+             ,  PRMT_TYPE_DET
+             ,  PRMT_NM
+             ,  PRMT_DT_START
+             ,  PRMT_DT_END
+             ,  PRMT_USE_DIV
+             ,  PRMT_TIME_HH_START
+             ,  PRMT_TIME_MM_START
+             ,  PRMT_TIME_HH_END
+             ,  PRMT_TIME_MM_END
+             ,  PRMT_WEEK_1
+             ,  PRMT_WEEK_2
+             ,  PRMT_WEEK_3
+             ,  PRMT_WEEK_4
+             ,  PRMT_WEEK_5
+             ,  PRMT_WEEK_6
+             ,  PRMT_WEEK_7
+             ,  CUST_DIV
+             ,  LVL_CD_1
+             ,  LVL_CD_2
+             ,  LVL_CD_3
+             ,  LVL_CD_4
+             ,  PRMT_COUPON_YN
+             ,  COUPON_DT_TYPE
+             ,  COUPON_START_DT
+             ,  COUPON_CLOSE_DT
+             ,  COUPON_EXPIRE
+             ,  COUPON_IMG_TYPE
+             ,  PAY_DIV
+             ,  CONDITION_AMT
+             ,  MODIFY_DIV_1
+             ,  DC_RATE
+             ,  DC_AMT
+             ,  CONDITION_QTY_REQ
+             ,  CONDITION_QTY_NOR
+             ,  GIVE_QTY
+             ,  ADD_MLG
+             ,  ADD_MLG_DIV
+             ,  ADD_MLG_CLOSE_DT
+             ,  ADD_MLG_USE_DAY
+             ,  ADD_PT
+             ,  ADD_PT_DIV
+             ,  ADD_PT_CLOSE_DT
+             ,  ADD_PT_USE_DAY
+             ,  COUPON_NOTICE
+             ,  COUPON_NOTICE_PRINT
+             ,  REMARKS
+             ,  AGREE_YN
+             ,  AGREE_ID
+             ,  AGREE_DT
+             ,  CONTENT_SEQ
+             ,  SUBJECT
+             ,  CONTENT
+             ,  SEND_MOBILE
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  ${SUB_PRMT_YN}
+             ,  ${SUB_PRMT_ID}
+             ,  ${BRAND_CLASS}
+             ,  ${BRAND_CD}
+             ,  ${PRMT_CLASS}
+             ,  ${PRMT_TYPE}
+             ,  ${PRMT_TYPE_DET}
+             ,  ${PRMT_NM}
+             ,  ${PRMT_DT_START}
+             ,  ${PRMT_DT_END}
+             ,  'C6924'
+             ,  ${PRMT_TIME_HH_START}
+             ,  ${PRMT_TIME_MM_START}
+             ,  ${PRMT_TIME_HH_END}
+             ,  ${PRMT_TIME_MM_END}
+             ,  ${PRMT_WEEK_1}
+             ,  ${PRMT_WEEK_2}
+             ,  ${PRMT_WEEK_3}
+             ,  ${PRMT_WEEK_4}
+             ,  ${PRMT_WEEK_5}
+             ,  ${PRMT_WEEK_6}
+             ,  ${PRMT_WEEK_7}
+             ,  ${CUST_DIV}
+             ,  ${LVL_CD_1}
+             ,  ${LVL_CD_2}
+             ,  ${LVL_CD_3}
+             ,  ${LVL_CD_4}
+             ,  ${PRMT_COUPON_YN}
+             ,  ${COUPON_DT_TYPE}
+             ,  ${COUPON_START_DT}
+             ,  ${COUPON_CLOSE_DT}
+             ,  ${COUPON_EXPIRE}
+             ,  ${COUPON_IMG_TYPE}
+             ,  NVL(${PAY_DIV}, 'C6201')
+             ,  0
+             ,  NULL
+             ,  0
+             ,  0
+             ,  0
+             ,  0
+             ,  0
+             ,  0
+             ,  NULL
+             ,  NULL
+             ,  0
+             ,  0
+             ,  NULL
+             ,  NULL
+             ,  0
+             ,  ${COUPON_NOTICE}
+             ,  ${COUPON_NOTICE_PRINT}
+             ,  ${REMARKS}
+             ,  NVL(${AGREE_YN}, 'N')
+             ,  NULL
+             ,  NULL
+             ,  NULL
+             ,  NULL
+             ,  NULL
+             ,  NULL
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB03_MAIN_Q'><![CDATA[
+    SELECT  P.COMP_CD
+         ,  P.PRMT_ID
+         ,  P.BRAND_CLASS
+         ,  P.BRAND_CD
+         ,  P.PRMT_CLASS
+         ,  P.PRMT_TYPE
+         ,  P.PRMT_TYPE_DET
+         ,  P.PRMT_NM
+         ,  P.CONDITION_AMT
+         ,  P.MODIFY_DIV_1
+         ,  P.DC_RATE
+         ,  P.DC_AMT
+         ,  P.CONDITION_QTY_REQ
+         ,  P.CONDITION_QTY_NOR
+         ,  P.GIVE_QTY
+         ,  P.ADD_MLG
+         ,  P.ADD_MLG_DIV
+         ,  P.ADD_MLG_CLOSE_DT
+         ,  P.ADD_MLG_USE_DAY
+         ,  P.ADD_PT
+         ,  P.ADD_PT_DIV
+         ,  P.ADD_PT_CLOSE_DT
+         ,  P.ADD_PT_USE_DAY
+      FROM  PROMOTION   P
+     WHERE  P.COMP_CD   = ${SCH_COMP_CD} 
+       AND  P.PRMT_ID   = ${SCH_PRMT_ID}
+]]></query>
+
+<query name='PROMOTION_ITEM_U'><![CDATA[
+    UPDATE  PROMOTION
+       SET  CONDITION_AMT       = ${CONDITION_AMT}
+         ,  MODIFY_DIV_1        = ${MODIFY_DIV_1}
+         ,  DC_RATE             = ${DC_RATE}
+         ,  DC_AMT              = ${DC_AMT}
+         ,  CONDITION_QTY_REQ   = ${CONDITION_QTY_REQ}
+         ,  CONDITION_QTY_NOR   = ${CONDITION_QTY_NOR}
+         ,  GIVE_QTY            = ${GIVE_QTY}
+         ,  ADD_MLG             = ${ADD_MLG}
+         ,  ADD_MLG_DIV         = ${ADD_MLG_DIV}
+         ,  ADD_MLG_CLOSE_DT    = ${ADD_MLG_CLOSE_DT}
+         ,  ADD_MLG_USE_DAY     = ${ADD_MLG_USE_DAY}
+         ,  ADD_PT              = ${ADD_PT}
+         ,  ADD_PT_DIV          = ${ADD_PT_DIV}
+         ,  ADD_PT_CLOSE_DT     = ${ADD_PT_CLOSE_DT}
+         ,  ADD_PT_USE_DAY      = ${ADD_PT_USE_DAY}
+         ,  UPD_DT              = SYSDATE
+         ,  UPD_USER            = ${UPD_USER}
+     WHERE  COMP_CD             = ${COMP_CD}
+       AND  PRMT_ID             = ${PRMT_ID}
+]]></query>
+
+<query name='TAB03_T_CLS_Q'><![CDATA[
+    SELECT  T.COMP_CD
+         ,  T.PRMT_ID
+         ,  ${SCH_ORG_CLASS_CD}                             AS ORG_CLASS_CD
+         ,  T.L_CLASS_CD
+         ,  T.M_CLASS_CD
+         ,  T.S_CLASS_CD
+         ,  T.ITEM_DIV
+         ,  T.QTY
+         ,  T.USE_YN
+         ,  TO_CHAR(T.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+         ,  NVL(U.USER_NM, T.UPD_USER)                      AS UPD_USER
+      FROM  PROMOTION_TARGET_MN_GP  T
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  T.COMP_CD       = U.COMP_CD(+)
+       AND  T.UPD_USER      = U.USER_ID(+) 
+       AND  T.COMP_CD       = ${SCH_COMP_CD} 
+       AND  T.PRMT_ID       = ${SCH_PRMT_ID}
+       AND  (${SCH_USE_YN} IS NULL OR T.USE_YN = ${SCH_USE_YN})
+     ORDER  BY T.L_CLASS_CD, T.M_CLASS_CD, T.S_CLASS_CD, T.ITEM_DIV
+]]></query>
+
+<query name='TAB03_T_CLS_U'><![CDATA[
+    MERGE   INTO PROMOTION_TARGET_MN_GP
+    USING   DUAL
+    ON (    
+                COMP_CD     = ${COMP_CD}
+           AND  PRMT_ID     = ${PRMT_ID}
+           AND  L_CLASS_CD  = ${L_CLASS_CD}
+           AND  M_CLASS_CD  = ${M_CLASS_CD}
+           AND  S_CLASS_CD  = ${S_CLASS_CD}
+           AND  ITEM_DIV    = ${ITEM_DIV}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  QTY         = ${QTY}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  S_CLASS_CD
+             ,  ITEM_DIV
+             ,  QTY
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${S_CLASS_CD}
+             ,  ${ITEM_DIV}
+             ,  ${QTY}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB03_T_ITEM_Q'><![CDATA[
+    SELECT  T.COMP_CD
+         ,  T.PRMT_ID
+         ,  T.ITEM_CD
+         ,  I.ITEM_NM
+         ,  I.SALE_PRC
+         ,  T.ITEM_DIV
+         ,  T.QTY
+         ,  T.USE_YN
+         ,  TO_CHAR(T.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+         ,  NVL(U.USER_NM, T.UPD_USER)                      AS UPD_USER
+      FROM  PROMOTION_TARGET_MN     T
+         ,  ITEM                    I
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  T.COMP_CD       = I.COMP_CD(+)
+       AND  T.ITEM_CD       = I.ITEM_CD(+) 
+       AND  T.COMP_CD       = U.COMP_CD(+)
+       AND  T.UPD_USER      = U.USER_ID(+) 
+       AND  T.COMP_CD       = ${SCH_COMP_CD} 
+       AND  T.PRMT_ID       = ${SCH_PRMT_ID}
+       AND  (${SCH_USE_YN} IS NULL OR T.USE_YN = ${SCH_USE_YN})
+     ORDER  BY T.ITEM_CD, T.ITEM_DIV
+]]></query>
+
+<query name='TAB03_T_ITEM_U'><![CDATA[
+    MERGE   INTO PROMOTION_TARGET_MN
+    USING   DUAL
+    ON (    
+                COMP_CD     = ${COMP_CD}
+           AND  PRMT_ID     = ${PRMT_ID}
+           AND  ITEM_CD     = ${ITEM_CD}
+           AND  ITEM_DIV    = ${ITEM_DIV}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  QTY         = ${QTY}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  ITEM_CD
+             ,  ITEM_DIV
+             ,  QTY
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  ${ITEM_CD}
+             ,  ${ITEM_DIV}
+             ,  ${QTY}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB03_B_CLS_Q'><![CDATA[
+    SELECT  B.COMP_CD
+         ,  B.PRMT_ID
+         ,  ${SCH_ORG_CLASS_CD}                             AS ORG_CLASS_CD
+         ,  B.L_CLASS_CD
+         ,  B.M_CLASS_CD
+         ,  B.S_CLASS_CD
+         ,  B.BNFIT_DIV
+         ,  B.QTY
+         ,  B.DC_AMT
+         ,  B.DC_RATE
+         ,  B.OFFER_TM
+         ,  B.USE_YN
+         ,  TO_CHAR(B.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+         ,  NVL(U.USER_NM, B.UPD_USER)                      AS UPD_USER
+      FROM  PROMOTION_BNFIT_MN_GP   B
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  B.COMP_CD       = U.COMP_CD(+)
+       AND  B.UPD_USER      = U.USER_ID(+) 
+       AND  B.COMP_CD       = ${SCH_COMP_CD} 
+       AND  B.PRMT_ID       = ${SCH_PRMT_ID}
+       AND  (${SCH_USE_YN} IS NULL OR B.USE_YN = ${SCH_USE_YN})
+     ORDER  BY B.L_CLASS_CD, B.M_CLASS_CD, B.S_CLASS_CD, B.BNFIT_DIV
+]]></query>
+
+<query name='TAB03_B_CLS_U'><![CDATA[
+    MERGE   INTO PROMOTION_BNFIT_MN_GP
+    USING   DUAL
+    ON (    
+                COMP_CD     = ${COMP_CD}
+           AND  PRMT_ID     = ${PRMT_ID}
+           AND  L_CLASS_CD  = ${L_CLASS_CD}
+           AND  M_CLASS_CD  = ${M_CLASS_CD}
+           AND  S_CLASS_CD  = ${S_CLASS_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  BNFIT_DIV   = ${BNFIT_DIV}
+             ,  QTY         = ${QTY}
+             ,  DC_AMT      = ${DC_AMT}
+             ,  DC_RATE     = ${DC_RATE}
+             ,  OFFER_TM    = ${OFFER_TM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  S_CLASS_CD
+             ,  BNFIT_DIV
+             ,  QTY
+             ,  DC_AMT
+             ,  DC_RATE
+             ,  OFFER_TM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${S_CLASS_CD}
+             ,  ${BNFIT_DIV}
+             ,  ${QTY}
+             ,  ${DC_AMT}
+             ,  ${DC_RATE}
+             ,  ${OFFER_TM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB03_B_ITEM_Q'><![CDATA[
+    SELECT  B.COMP_CD
+         ,  B.PRMT_ID
+         ,  B.ITEM_CD
+         ,  I.ITEM_NM
+         ,  I.SALE_PRC
+         ,  B.BNFIT_DIV
+         ,  B.QTY
+         ,  B.DC_RATE
+         ,  B.DC_AMT
+         ,  B.OFFER_TM
+         ,  B.USE_YN
+         ,  TO_CHAR(B.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+         ,  NVL(U.USER_NM, B.UPD_USER)                      AS UPD_USER
+      FROM  PROMOTION_BNFIT_MN      B
+         ,  ITEM                    I
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  B.COMP_CD       = I.COMP_CD(+)
+       AND  B.ITEM_CD       = I.ITEM_CD(+) 
+       AND  B.COMP_CD       = U.COMP_CD(+)
+       AND  B.UPD_USER      = U.USER_ID(+) 
+       AND  B.COMP_CD       = ${SCH_COMP_CD} 
+       AND  B.PRMT_ID       = ${SCH_PRMT_ID}
+       AND  (${SCH_USE_YN} IS NULL OR B.USE_YN = ${SCH_USE_YN})
+     ORDER  BY B.ITEM_CD, B.BNFIT_DIV
+]]></query>
+
+<query name='TAB03_B_ITEM_U'><![CDATA[
+    MERGE   INTO PROMOTION_BNFIT_MN
+    USING   DUAL
+    ON (    
+                COMP_CD     = ${COMP_CD}
+           AND  PRMT_ID     = ${PRMT_ID}
+           AND  ITEM_CD     = ${ITEM_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  BNFIT_DIV   = ${BNFIT_DIV}
+             ,  QTY         = ${QTY}
+             ,  DC_AMT      = ${DC_AMT}
+             ,  DC_RATE     = ${DC_RATE}
+             ,  OFFER_TM    = ${OFFER_TM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  ITEM_CD
+             ,  BNFIT_DIV
+             ,  QTY
+             ,  DC_AMT
+             ,  DC_RATE
+             ,  OFFER_TM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  ${ITEM_CD}
+             ,  ${BNFIT_DIV}
+             ,  ${QTY}
+             ,  ${DC_AMT}
+             ,  ${DC_RATE}
+             ,  ${OFFER_TM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB04_GROUP_Q'><![CDATA[
+    SELECT  P.COMP_CD
+         ,  P.PRMT_ID
+         ,  P.STOR_GP_ID
+         ,  G.STOR_GP_NM
+         ,  P.USE_YN
+         ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+         ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+      FROM  PROMOTION_STOR_GP       P
+         ,  STORE_GP                G
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  P.COMP_CD       = G.COMP_CD(+)
+       AND  P.STOR_GP_ID    = G.STOR_GP_ID(+) 
+       AND  P.COMP_CD       = U.COMP_CD(+)
+       AND  P.UPD_USER      = U.USER_ID(+) 
+       AND  P.COMP_CD       = ${SCH_COMP_CD} 
+       AND  P.PRMT_ID       = ${SCH_PRMT_ID}
+       AND  (${SCH_USE_YN} IS NULL OR P.USE_YN = ${SCH_USE_YN})
+     ORDER  BY P.STOR_GP_ID
+]]></query>
+
+<query name='TAB04_GROUP_U'><![CDATA[
+    MERGE   INTO PROMOTION_STOR_GP
+    USING   DUAL
+    ON (    
+                COMP_CD     = ${COMP_CD}
+           AND  PRMT_ID     = ${PRMT_ID}
+           AND  STOR_GP_ID  = ${STOR_GP_ID}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  STOR_GP_ID
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  ${STOR_GP_ID}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB04_STORE_Q'><![CDATA[
+    SELECT  P.COMP_CD
+         ,  P.PRMT_ID
+         ,  P.BRAND_CD
+         ,  S.STOR_TP
+         ,  P.STOR_CD
+         ,  S.STOR_NM
+         ,  P.USE_YN
+         ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+         ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+      FROM  PROMOTION_STOR          P
+         ,  STORE                   S
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  P.COMP_CD       = S.COMP_CD(+)
+       AND  P.BRAND_CD      = S.BRAND_CD(+)
+       AND  P.STOR_CD       = S.STOR_CD(+) 
+       AND  P.COMP_CD       = U.COMP_CD(+)
+       AND  P.UPD_USER      = U.USER_ID(+) 
+       AND  P.COMP_CD       = ${SCH_COMP_CD} 
+       AND  P.PRMT_ID       = ${SCH_PRMT_ID}
+       AND  (${SCH_USE_YN} IS NULL OR P.USE_YN = ${SCH_USE_YN})
+     ORDER  BY P.BRAND_CD, STOR_CD
+]]></query>
+
+<query name='TAB04_STORE_U'><![CDATA[
+    MERGE   INTO PROMOTION_STOR
+    USING   DUAL
+    ON (    
+                COMP_CD     = ${COMP_CD}
+           AND  PRMT_ID     = ${PRMT_ID}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB05_Q'><![CDATA[
+    SELECT  P.COMP_CD
+         ,  P.PRMT_ID
+         ,  P.BRAND_CLASS
+         ,  P.BRAND_CD
+         ,  P.PRMT_CLASS
+         ,  P.PRMT_TYPE
+         ,  P.PRMT_TYPE_DET
+         ,  P.PRMT_NM
+         ,  NVL(T.PRINT_YN, 'N')        AS PRINT_YN
+         ,  T.PREFACE
+         ,  T.MAIN_TEXT
+         ,  T.FOOTER
+      FROM  PROMOTION           P
+         ,  PROMOTION_PRINT     T
+     WHERE  P.COMP_CD   = T.COMP_CD(+)
+       AND  P.PRMT_ID   = T.PRMT_ID(+)
+       AND  P.COMP_CD   = ${SCH_COMP_CD} 
+       AND  P.PRMT_ID   = ${SCH_PRMT_ID}
+]]></query>
+
+<query name='TAB05_U'><![CDATA[
+    MERGE   INTO PROMOTION_PRINT
+    USING   DUAL
+    ON (    
+                COMP_CD     = ${COMP_CD}
+           AND  PRMT_ID     = ${PRMT_ID}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  PRINT_YN    = ${PRINT_YN}
+             ,  PREFACE     = ${PREFACE}
+             ,  MAIN_TEXT   = ${MAIN_TEXT}
+             ,  FOOTER      = ${FOOTER}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  RECEIPT_TYPE
+             ,  PRINT_YN
+             ,  PREFACE
+             ,  MAIN_TEXT
+             ,  FOOTER
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  'C6301'
+             ,  ${PRINT_YN}
+             ,  ${PREFACE}
+             ,  ${MAIN_TEXT}
+             ,  ${FOOTER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB06_PUB_TOT_Q'><![CDATA[
+    SELECT  COUNT(*)        AS TOTAL
+      FROM  PROMOTION_COUPON_PUBLISH    P
+         ,  MARKETING_GP                M
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.PUBLISH_ID
+                     ,  COUNT(*)        AS USE_COUNT
+                  FROM  PROMOTION_COUPON    C
+                 WHERE  C.COMP_CD       = ${SCH_COMP_CD}
+                   AND  C.COUPON_STATE  = 'P0301'
+                 GROUP  BY C.COMP_CD, C.PUBLISH_ID
+            )   C
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  P.COMP_CD       = M.COMP_CD(+)
+       AND  P.CUST_GP_ID    = M.CUST_GP_ID(+)
+       AND  P.COMP_CD       = C.COMP_CD(+)
+       AND  P.PUBLISH_ID    = C.PUBLISH_ID(+)
+       AND  P.COMP_CD       = U.COMP_CD(+)
+       AND  P.UPD_USER      = U.USER_ID(+)
+       AND  P.COMP_CD       = ${SCH_COMP_CD} 
+       AND  P.PRMT_ID       = ${SCH_PRMT_ID}
+       AND  (${SCH_COUPON_CD} IS NULL OR EXISTS (
+                                                     SELECT  '1'
+                                                       FROM  PROMOTION_COUPON
+                                                      WHERE  COMP_CD     = P.COMP_CD
+                                                        AND  PUBLISH_ID  = P.PUBLISH_ID
+                                                        AND  COUPON_CD = ${SCH_COUPON_CD}
+                                                 ))
+]]></query>
+
+<query name='TAB06_PUB_LIST_Q'><![CDATA[
+    SELECT  *
+      FROM  (
+                SELECT  ROW_NUMBER() OVER(ORDER BY P.PUBLISH_ID DESC)   AS SEQ
+                     ,  P.COMP_CD
+                     ,  P.PRMT_ID
+                     ,  P.PUBLISH_ID
+                     ,  P.COUPON_DT_TYPE
+                     ,  P.COUPON_START_DT
+                     ,  P.COUPON_CLOSE_DT
+                     ,  P.COUPON_EXPIRE
+                     ,  P.STOR_LIMIT
+                     ,  P.OWN_YN
+                     ,  P.PUBLISH_COUNT
+                     ,  C.USE_COUNT
+                     ,  P.CUST_GP_ID
+                     ,  M.CUST_GP_NM
+                     ,  P.COUPON_PREFIX
+                     ,  P.NOTES
+                     ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+                     ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+                  FROM  PROMOTION_COUPON_PUBLISH    P
+                     ,  MARKETING_GP                M
+                     ,  (
+                            SELECT  C.COMP_CD
+                                 ,  C.PUBLISH_ID
+                                 ,  COUNT(*)        AS USE_COUNT
+                              FROM  PROMOTION_COUPON    C
+                             WHERE  C.COMP_CD       = ${SCH_COMP_CD}
+                               AND  C.COUPON_STATE  = 'P0301'
+                             GROUP  BY C.COMP_CD, C.PUBLISH_ID
+                        )   C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  MAX(USER_NM)        AS USER_NM
+                              FROM  (
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  HQ_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                        UNION
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  STORE_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                    )
+                             GROUP  BY COMP_CD, USER_ID
+                        )       U
+                 WHERE  P.COMP_CD       = M.COMP_CD(+)
+                   AND  P.CUST_GP_ID    = M.CUST_GP_ID(+)
+                   AND  P.COMP_CD       = C.COMP_CD(+)
+                   AND  P.PUBLISH_ID    = C.PUBLISH_ID(+)
+                   AND  P.COMP_CD       = U.COMP_CD(+)
+                   AND  P.UPD_USER      = U.USER_ID(+)
+                   AND  P.COMP_CD       = ${SCH_COMP_CD} 
+                   AND  P.PRMT_ID       = ${SCH_PRMT_ID}
+                   AND  (${SCH_COUPON_CD} IS NULL OR EXISTS (
+                                                                SELECT  '1'
+                                                                  FROM  PROMOTION_COUPON
+                                                                 WHERE  COMP_CD     = P.COMP_CD
+                                                                   AND  PUBLISH_ID  = P.PUBLISH_ID
+                                                                   AND  COUPON_CD = ${SCH_COUPON_CD}
+                                                            ))
+            )
+     WHERE  SEQ BETWEEN (TO_NUMBER(${PAGE}) - 1) * TO_NUMBER(${ROWS}) + 1 AND TO_NUMBER(${PAGE}) * TO_NUMBER(${ROWS})
+]]></query>
+
+<query name='TAB06_PUB_LIST_E_Q'><![CDATA[
+    SELECT  *
+      FROM  (
+                SELECT  ROW_NUMBER() OVER(ORDER BY P.PUBLISH_ID DESC)   AS SEQ
+                     ,  P.COMP_CD
+                     ,  P.PRMT_ID
+                     ,  P.PUBLISH_ID
+                     ,  P.COUPON_DT_TYPE
+                     ,  FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, 'C6910', P.COUPON_DT_TYPE, ${SCH_LANGUAGE_TP})    AS COUPON_DT_TYPE_NM
+                     ,  P.COUPON_START_DT
+                     ,  P.COUPON_CLOSE_DT
+                     ,  P.COUPON_EXPIRE
+                     ,  P.STOR_LIMIT
+                     ,  FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, 'C6550', P.STOR_LIMIT, ${SCH_LANGUAGE_TP})        AS STOR_LIMIT_NM
+                     ,  P.OWN_YN
+                     ,  CASE WHEN P.OWN_YN = 'Y' THEN FC_GET_WORDPACK(${SCH_COMP_CD}, ${SCH_LANGUAGE_TP}, 'NAMED')
+                             ELSE FC_GET_WORDPACK(${SCH_COMP_CD}, ${SCH_LANGUAGE_TP}, 'ANONYMOUS')
+                        END                                                                                     AS OWN_YN_NM
+                     ,  P.PUBLISH_COUNT
+                     ,  C.USE_COUNT
+                     ,  P.CUST_GP_ID
+                     ,  M.CUST_GP_NM
+                     ,  P.COUPON_PREFIX
+                     ,  FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, 'C6590', P.COUPON_PREFIX, ${SCH_LANGUAGE_TP})     AS COUPON_PREFIX_NM
+                     ,  P.NOTES
+                     ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+                     ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+                  FROM  PROMOTION_COUPON_PUBLISH    P
+                     ,  MARKETING_GP                M
+                     ,  (
+                            SELECT  C.COMP_CD
+                                 ,  C.PUBLISH_ID
+                                 ,  COUNT(*)        AS USE_COUNT
+                              FROM  PROMOTION_COUPON    C
+                             WHERE  C.COMP_CD       = ${SCH_COMP_CD}
+                               AND  C.COUPON_STATE  = 'P0301'
+                             GROUP  BY C.COMP_CD, C.PUBLISH_ID
+                        )   C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  MAX(USER_NM)        AS USER_NM
+                              FROM  (
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  HQ_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                        UNION
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  STORE_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                    )
+                             GROUP  BY COMP_CD, USER_ID
+                        )       U
+                 WHERE  P.COMP_CD       = M.COMP_CD(+)
+                   AND  P.CUST_GP_ID    = M.CUST_GP_ID(+)
+                   AND  P.COMP_CD       = C.COMP_CD(+)
+                   AND  P.PUBLISH_ID    = C.PUBLISH_ID(+)
+                   AND  P.COMP_CD       = U.COMP_CD(+)
+                   AND  P.UPD_USER      = U.USER_ID(+)
+                   AND  P.COMP_CD       = ${SCH_COMP_CD} 
+                   AND  P.PRMT_ID       = ${SCH_PRMT_ID}
+                   AND  (${SCH_COUPON_CD} IS NULL OR EXISTS (
+                                                                SELECT  '1'
+                                                                  FROM  PROMOTION_COUPON
+                                                                 WHERE  COMP_CD     = P.COMP_CD
+                                                                   AND  PUBLISH_ID  = P.PUBLISH_ID
+                                                                   AND  COUPON_CD = ${SCH_COUPON_CD}
+                                                            ))
+            )
+     WHERE  SEQ BETWEEN (TO_NUMBER(${PAGE}) - 1) * TO_NUMBER(${ROWS}) + 1 AND TO_NUMBER(${PAGE}) * TO_NUMBER(${ROWS})
+]]></query>
+
+<query name='PUBLISH_ID_Q'><![CDATA[
+    SELECT  TO_CHAR(SYSDATE, 'YY')  ||
+            LPAD(NVL(MAX(TO_NUMBER(SUBSTR(PUBLISH_ID, 3, LENGTH(PUBLISH_ID)))) ,0) + 1, 8, '0')  AS PUBLISH_ID 
+      FROM  PROMOTION_COUPON_PUBLISH    P
+     WHERE  COMP_CD                 = ${SCH_COMP_CD}
+       AND  SUBSTR(PUBLISH_ID, 1, 2)= TO_CHAR(SYSDATE, 'YY')
+]]></query>
+
+<query name='TAB06_PUB_U'><![CDATA[
+    MERGE   INTO PROMOTION_COUPON_PUBLISH
+    USING   DUAL
+    ON (    
+                COMP_CD     = ${COMP_CD}
+           AND  PRMT_ID     = ${PRMT_ID}
+           AND  PUBLISH_ID  = ${PUBLISH_ID}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  NOTES       = ${NOTES}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  PRMT_ID
+             ,  PUBLISH_ID
+             ,  PUBLISH_TYPE
+             ,  COUPON_DT_TYPE
+             ,  COUPON_START_DT
+             ,  COUPON_CLOSE_DT
+             ,  COUPON_EXPIRE
+             ,  STOR_LIMIT
+             ,  OWN_YN
+             ,  PUBLISH_COUNT
+             ,  CUST_GP_ID
+             ,  COUPON_PREFIX
+             ,  NOTES
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${PRMT_ID}
+             ,  ${PUBLISH_ID}
+             ,  'C6502'
+             ,  ${COUPON_DT_TYPE}
+             ,  ${COUPON_START_DT}
+             ,  ${COUPON_CLOSE_DT}
+             ,  ${COUPON_EXPIRE}
+             ,  ${STOR_LIMIT}
+             ,  ${OWN_YN}
+             ,  ${PUBLISH_COUNT}
+             ,  ${CUST_GP_ID}
+             ,  ${COUPON_PREFIX}
+             ,  ${NOTES}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB06_NOTES_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON_PUBLISH
+       SET  NOTES       = ${NOTES}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  PRMT_ID     = ${PRMT_ID}
+       AND  PUBLISH_ID  = ${PUBLISH_ID}
+]]></query>
+
+<query name='TAB06_PUBLISH_COUNT_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON_PUBLISH    P
+       SET  PUBLISH_COUNT   = (
+                                    SELECT  COUNT(*)
+                                      FROM  PROMOTION_COUPON
+                                     WHERE  COMP_CD     = P.COMP_CD
+                                       AND  PUBLISH_ID  = P.PUBLISH_ID
+                              )
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  PRMT_ID         = ${PRMT_ID}
+       AND  PUBLISH_ID      = ${PUBLISH_ID}
+]]></query>
+
+<query name='TAB06_PUB_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON_PUBLISH
+       SET  NOTES       = ${NOTES}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  PRMT_ID     = ${PRMT_ID}
+       AND  PUBLISH_ID  = ${PUBLISH_ID}
+]]></query>
+
+<query name='TAB06_CPN_TOT_Q'><![CDATA[
+    SELECT  COUNT(*)            AS TOTAL
+      FROM  PROMOTION_COUPON_PUBLISH    CP
+         ,  PROMOTION_COUPON            P
+         ,  CS_MEMBER                   C
+         ,  STORE   S
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  CP.COMP_CD      = P.COMP_CD
+       AND  CP.PUBLISH_ID   = P.PUBLISH_ID
+       AND  P.COMP_CD       = C.COMP_CD(+)
+       AND  P.CUST_ID       = C.MEMBER_NO(+)
+       AND  P.COMP_CD       = S.COMP_CD(+)
+       AND  P.BRAND_CD      = S.BRAND_CD(+)
+       AND  P.STOR_CD       = S.STOR_CD(+)
+       AND  P.COMP_CD       = U.COMP_CD(+)
+       AND  P.UPD_USER      = U.USER_ID(+)
+       AND  P.COMP_CD       = ${SCH_COMP_CD}
+       AND  P.PUBLISH_ID    = ${SCH_PUBLISH_ID}
+       AND  CP.PRMT_ID      = ${SCH_PRMT_ID}
+       AND  (${SCH_COUPON_CD} IS NULL OR P.COUPON_CD = ${SCH_COUPON_CD})
+       AND  C.MEMBER_DIV(+) = '1'
+]]></query>
+
+<query name='TAB06_CPN_LIST_Q'><![CDATA[
+    SELECT  *
+      FROM  (
+                SELECT  ROW_NUMBER() OVER(ORDER BY P.COUPON_CD DESC)    AS SEQ
+                     ,  P.COMP_CD
+                     ,  CP.PRMT_ID
+                     ,  P.PUBLISH_ID
+                     ,  P.COUPON_CD
+                     ,  P.START_DT
+                     ,  P.CLOSE_DT
+                     ,  P.CUST_ID
+                     ,  DECRYPT(C.MEMBER_NM)                            AS CUST_NM
+                     ,  FC_GET_FORMAT_HP_NO(DECRYPT(P.CUST_MOBILE))     AS MOBILE
+                     ,  P.COUPON_STATE
+                     ,  P.SALE_DT
+                     ,  P.STOR_CD
+                     ,  S.STOR_NM
+                     ,  P.POS_NO
+                     ,  P.BILL_NO
+                     ,  P.DESTROY_DT
+                     ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+                     ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+                  FROM  PROMOTION_COUPON_PUBLISH    CP
+                     ,  PROMOTION_COUPON            P
+                     ,  CS_MEMBER                   C
+                     ,  STORE   S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  MAX(USER_NM)        AS USER_NM
+                              FROM  (
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  HQ_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                        UNION
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  STORE_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                    )
+                             GROUP  BY COMP_CD, USER_ID
+                        )       U
+                 WHERE  CP.COMP_CD      = P.COMP_CD
+                   AND  CP.PUBLISH_ID   = P.PUBLISH_ID
+                   AND  P.COMP_CD       = C.COMP_CD(+)
+                   AND  P.CUST_ID       = C.MEMBER_NO(+)
+                   AND  P.COMP_CD       = S.COMP_CD(+)
+                   AND  P.BRAND_CD      = S.BRAND_CD(+)
+                   AND  P.STOR_CD       = S.STOR_CD(+)
+                   AND  P.COMP_CD       = U.COMP_CD(+)
+                   AND  P.UPD_USER      = U.USER_ID(+)
+                   AND  P.COMP_CD       = ${SCH_COMP_CD} 
+                   AND  P.PUBLISH_ID    = ${SCH_PUBLISH_ID}
+                   AND  CP.PRMT_ID      = ${SCH_PRMT_ID}
+                   AND  (${SCH_COUPON_CD} IS NULL OR P.COUPON_CD = ${SCH_COUPON_CD})
+                   AND  C.MEMBER_DIV(+) = '1'
+            )
+     WHERE  SEQ BETWEEN (TO_NUMBER(${PAGE}) - 1) * TO_NUMBER(${ROWS}) + 1 AND TO_NUMBER(${PAGE}) * TO_NUMBER(${ROWS})
+]]></query>
+
+<query name='TAB06_CPN_CLOSE_DT_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON
+       SET  CLOSE_DT    = CASE WHEN ${CLOSE_DT_TYPE} = 'C6911' THEN ${CLOSE_DT} ELSE TO_CHAR(TO_DATE(CLOSE_DT, 'YYYYMMDD') + TO_NUMBER(${CLOSE_DAY}), 'YYYYMMDD') END
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  PUBLISH_ID  = ${PUBLISH_ID}
+       AND  (${COUPON_CD} IS NULL OR COUPON_CD = ${COUPON_CD})
+]]></query>
+
+<query name='TAB06_CPN_DISTROY_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON
+       SET  COUPON_STATE    = ${COUPON_STATE}
+         ,  DESTROY_DT      = NVL(${DESTROY_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  PUBLISH_ID      = ${PUBLISH_ID}
+       AND  (${COUPON_CD} IS NULL OR COUPON_CD = ${COUPON_CD})
+]]></query>
+
+<query name='TAB06_CPN_LIST_E_Q'><![CDATA[
+    SELECT  *
+      FROM  (
+                SELECT  ROW_NUMBER() OVER(ORDER BY P.COUPON_CD DESC)    AS SEQ
+                     ,  P.COMP_CD
+                     ,  CP.PRMT_ID
+                     ,  P.PUBLISH_ID
+                     ,  P.COUPON_CD
+                     ,  P.START_DT
+                     ,  P.CLOSE_DT
+                     ,  P.CUST_ID
+                     ,  DECRYPT(C.MEMBER_NM)                            AS CUST_NM
+                     ,  FC_GET_FORMAT_HP_NO(DECRYPT(P.CUST_MOBILE))     AS MOBILE
+                     ,  P.COUPON_STATE
+                     ,  FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, 'P0300', P.COUPON_STATE, ${SCH_LANGUAGE_TP})      AS COUPON_STATE_NM
+                     ,  P.SALE_DT
+                     ,  P.STOR_CD
+                     ,  S.STOR_NM
+                     ,  P.POS_NO
+                     ,  P.BILL_NO
+                     ,  P.DESTROY_DT
+                     ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+                     ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+                  FROM  PROMOTION_COUPON_PUBLISH    CP
+                     ,  PROMOTION_COUPON            P
+                     ,  CS_MEMBER               C
+                     ,  STORE   S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  MAX(USER_NM)        AS USER_NM
+                              FROM  (
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  HQ_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                        UNION
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  STORE_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                    )
+                             GROUP  BY COMP_CD, USER_ID
+                        )       U
+                 WHERE  CP.COMP_CD      = P.COMP_CD
+                   AND  CP.PUBLISH_ID   = P.PUBLISH_ID
+                   AND  P.COMP_CD       = C.COMP_CD(+)
+                   AND  P.CUST_ID       = C.MEMBER_NO(+)
+                   AND  P.COMP_CD       = S.COMP_CD(+)
+                   AND  P.BRAND_CD      = S.BRAND_CD(+)
+                   AND  P.STOR_CD       = S.STOR_CD(+)
+                   AND  P.COMP_CD       = U.COMP_CD(+)
+                   AND  P.UPD_USER      = U.USER_ID(+)
+                   AND  P.COMP_CD       = ${SCH_COMP_CD} 
+                   AND  P.PUBLISH_ID    = ${SCH_PUBLISH_ID}
+                   AND  (${SCH_COUPON_CD} IS NULL OR P.COUPON_CD = ${SCH_COUPON_CD})
+                   AND  C.MEMBER_DIV(+) = '1'
+            )
+     WHERE  SEQ BETWEEN (TO_NUMBER(${PAGE}) - 1) * TO_NUMBER(${ROWS}) + 1 AND TO_NUMBER(${PAGE}) * TO_NUMBER(${ROWS})
+]]></query>
+
+<query name='PRMT_CONTENT_Q'><![CDATA[
+    SELECT  CP.COMP_CD
+         ,  CP.PRMT_ID
+         ,  CP.PUBLISH_ID
+         ,  DECRYPT(NVL(CP.SEND_MOBILE  , P.SEND_MOBILE))   AS SEND_MOBILE
+         ,  NVL(CP.CONTENT_SEQ  , P.CONTENT_SEQ)            AS CONTENT_SEQ
+         ,  NVL(CP.SUBJECT      , P.SUBJECT)                AS SUBJECT
+         ,  NVL(CP.CONTENT      , P.CONTENT)                AS CONTENT
+      FROM  PROMOTION_COUPON_PUBLISH    CP
+         ,  PROMOTION                   P
+     WHERE  CP.COMP_CD      = P.COMP_CD
+       AND  CP.PRMT_ID      = P.PRMT_ID
+       AND  CP.COMP_CD      = ${SCH_COMP_CD}
+       AND  CP.PRMT_ID      = ${SCH_PRMT_ID}
+       AND  CP.PUBLISH_ID   = ${SCH_PUBLISH_ID}
+]]></query>
+
+<query name='MMS_CONTENT_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  C.CONTENT_SEQ
+         ,  C.SUBJECT
+         ,  C.CONTENT
+      FROM  CS_CONTENT      C
+     WHERE  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CONTENT_FG    = '2'
+       AND  C.CONTENT_DIV1  = '25'
+       AND  C.USE_YN        = 'Y'
+]]></query>
+
+<query name='PROMOTION_COUPON_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  C.COUPON_CD
+         ,  C.CUST_ID
+         ,  DECRYPT(M.MEMBER_NM)        AS CUST_NM
+         ,  DECRYPT(C.CUST_MOBILE)      AS MOBILE
+      FROM  PROMOTION_COUPON    C
+         ,  CS_MEMBER           M
+     WHERE  C.COMP_CD       = M.COMP_CD(+)
+       AND  C.CUST_ID       = M.MEMBER_NO(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.PUBLISH_ID    = ${SCH_PUBLISH_ID}
+       AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN C.START_DT AND C.CLOSE_DT
+       AND  C.COUPON_STATE  = 'P0303'
+       @COUPON_CD_COND@
+]]></query>
+
+<query name='TAB06_CPN_LIST_M_Q'><![CDATA[
+    SELECT  *
+      FROM  (
+                SELECT  ROW_NUMBER() OVER(ORDER BY P.COUPON_CD DESC)    AS SEQ
+                     ,  P.COMP_CD
+                     ,  CP.PRMT_ID
+                     ,  P.PUBLISH_ID
+                     ,  P.COUPON_CD
+                     ,  P.START_DT
+                     ,  P.CLOSE_DT
+                     ,  P.CUST_ID
+                     ,  DECRYPT(C.MEMBER_NM)                            AS CUST_NM
+                     ,  DECRYPT(P.CUST_MOBILE)                          AS MOBILE
+                     ,  P.COUPON_STATE
+                     ,  FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, 'P0300', P.COUPON_STATE, ${SCH_LANGUAGE_TP})      AS COUPON_STATE_NM
+                     ,  P.SALE_DT
+                     ,  P.STOR_CD
+                     ,  S.STOR_NM
+                     ,  P.POS_NO
+                     ,  P.BILL_NO
+                     ,  P.DESTROY_DT
+                     ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+                     ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+                  FROM  PROMOTION_COUPON_PUBLISH    CP
+                     ,  PROMOTION_COUPON            P
+                     ,  CS_MEMBER               C
+                     ,  STORE   S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  MAX(USER_NM)        AS USER_NM
+                              FROM  (
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  HQ_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                        UNION
+                                        SELECT  COMP_CD
+                                             ,  USER_ID
+                                             ,  USER_NM
+                                          FROM  STORE_USER
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                    )
+                             GROUP  BY COMP_CD, USER_ID
+                        )       U
+                 WHERE  CP.COMP_CD      = P.COMP_CD
+                   AND  CP.PUBLISH_ID   = P.PUBLISH_ID
+                   AND  P.COMP_CD       = C.COMP_CD(+)
+                   AND  P.CUST_ID       = C.MEMBER_NO(+)
+                   AND  P.COMP_CD       = S.COMP_CD(+)
+                   AND  P.BRAND_CD      = S.BRAND_CD(+)
+                   AND  P.STOR_CD       = S.STOR_CD(+)
+                   AND  P.COMP_CD       = U.COMP_CD(+)
+                   AND  P.UPD_USER      = U.USER_ID(+)
+                   AND  P.COMP_CD       = ${SCH_COMP_CD} 
+                   AND  P.PUBLISH_ID    = ${SCH_PUBLISH_ID}
+                   AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN P.START_DT AND P.CLOSE_DT
+                   AND  P.COUPON_STATE  = 'P0303'
+                   AND  C.MEMBER_DIV(+) = '1'
+            )
+     WHERE  SEQ BETWEEN (TO_NUMBER(${PAGE}) - 1) * TO_NUMBER(${ROWS}) + 1 AND TO_NUMBER(${PAGE}) * TO_NUMBER(${ROWS})
+]]></query>
+
+<query name='PROMOTION_CONTENT_U'><![CDATA[
+    UPDATE  PROMOTION
+       SET  CONTENT_SEQ     = ${CONTENT_SEQ}
+         ,  SUBJECT         = ${SUBJECT}
+         ,  CONTENT         = ${CONTENT}
+         ,  SEND_MOBILE     = ENCRYPT(${SEND_MOBILE})
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  PRMT_ID         = ${PRMT_ID}
+]]></query>
+
+<query name='PROMOTION_COUPON_PUBLISH_CONTENT_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON_PUBLISH
+       SET  CONTENT_SEQ     = ${CONTENT_SEQ}
+         ,  SUBJECT         = ${SUBJECT}
+         ,  CONTENT         = ${CONTENT}
+         ,  SEND_MOBILE     = ENCRYPT(${SEND_MOBILE})
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  PRMT_ID         = ${PRMT_ID}
+       AND  PUBLISH_ID      = ${PUBLISH_ID}
+]]></query>
+
+</SQLResource>

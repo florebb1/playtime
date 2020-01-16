@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='WORDPACK_Q'><![CDATA[
+   SELECT   A.KEY_WORD_CD
+        ,   B.WORD_NM      AS WORD_NM
+        ,   B.USE_YN       AS USE_YN
+        ,   C.WORD_NM      AS WORD_NM_FL
+        ,   C.USE_YN       AS USE_YN_FL
+     FROM   (   
+               SELECT   KEY_WORD_CD 
+                 FROM   WORDPACK 
+                GROUP BY KEY_WORD_CD
+            ) A
+        ,   WORDPACK  B
+        ,   WORDPACK  C
+    WHERE   A.KEY_WORD_CD = B.KEY_WORD_CD(+)
+      AND   A.KEY_WORD_CD = C.KEY_WORD_CD(+)
+      AND   B.LANGUAGE_TP(+) = ${S_LANGUAGE}
+      AND   C.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+      AND   (${SCH_KEY_WORD_TXT} IS NULL OR A.KEY_WORD_CD LIKE '%'||${SCH_KEY_WORD_TXT}||'%' OR UPPER(B.WORD_NM) LIKE '%'||${SCH_KEY_WORD_TXT}||'%' OR UPPER(C.WORD_NM) LIKE '%'||${SCH_KEY_WORD_TXT}||'%' 
+             OR B.WORD_NM LIKE '%'||${ORI_KEY_WORD_TXT}||'%' OR C.WORD_NM LIKE '%'||${ORI_KEY_WORD_TXT}||'%'
+            )
+      AND   (${SCH_USE_YN} IS NULL OR B.USE_YN = ${SCH_USE_YN}  OR C.USE_YN = ${SCH_USE_YN})
+    ORDER BY A.KEY_WORD_CD
+]]></query>
+
+<query name='KEY_WORD_CD_DUP_CHECK_Q'><![CDATA[
+   SELECT   KEY_WORD_CD 
+     FROM   WORDPACK
+    WHERE   KEY_WORD_CD = ${SCH_KEY_WORD_CD}
+    GROUP BY KEY_WORD_CD
+      
+]]></query>
+
+<query name='WORDPACK_U'><![CDATA[
+    MERGE INTO WORDPACK
+    USING DUAL
+    ON (        KEY_WORD_CD = ${KEY_WORD_CD}
+          AND   LANGUAGE_TP = ${LANGUAGE_TP}
+       )
+    WHEN MATCHED THEN
+          UPDATE SET WORD_NM  = ${WORD_NM}
+                ,    UPD_DT   = SYSDATE
+                ,    USE_YN   = ${USE_YN}
+                ,    UPD_USER = ${USER_ID}
+    WHEN NOT MATCHED THEN
+          INSERT (   KEY_WORD_CD
+                  ,  LANGUAGE_TP
+                  ,  WORD_NM
+                  ,  USE_YN
+                  ,  INST_DT
+                  ,  INST_USER
+                  ,  UPD_DT
+                  ,  UPD_USER
+                 ) VALUES (
+                     ${KEY_WORD_CD}
+                  ,  ${LANGUAGE_TP}
+                  ,  ${WORD_NM}
+                  ,  ${USE_YN}
+                  ,  SYSDATE
+                  ,  ${USER_ID}
+                  ,  SYSDATE
+                  ,  ${USER_ID}
+                 )
+ ]]></query>
+
+</SQLResource>
+

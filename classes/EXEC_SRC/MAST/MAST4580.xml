@@ -1,0 +1,187 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='COMMON_MAIN_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  C.CODE_TP
+         ,  C.CODE_CD
+         ,  C.CODE_NM
+         ,  L.CODE_NM   AS LANG_NM
+         ,  C.BRAND_CD
+         ,  C.ACC_CD
+         ,  C.REMARKS
+         ,  C.POS_IF_YN
+         ,  C.USE_YN
+      FROM  COMMON      C
+         ,  LANG_COMMON L
+     WHERE  C.COMP_CD       = L.COMP_CD(+)
+       AND  C.CODE_TP       = L.CODE_TP(+)
+       AND  C.CODE_CD       = L.CODE_CD(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CODE_TP       = ${SCH_CODE_TP}
+       AND  (${SCH_CODE_TXT} IS NULL OR (C.CODE_CD LIKE '%'||${SCH_CODE_TXT}||'%' OR C.CODE_NM LIKE '%'||${SCH_CODE_TXT}||'%' OR L.CODE_NM LIKE '%'||${SCH_CODE_TXT}||'%'))
+       AND  (${SCH_USE_YN}   IS NULL OR C.USE_YN = ${SCH_USE_YN})
+       AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+       AND  L.USE_YN(+)     = 'Y'
+     ORDER  BY C.CODE_CD
+]]></query>
+
+<query name='COMMON_SUB_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  C.CODE_TP
+         ,  C.CODE_CD
+         ,  C.CODE_NM
+         ,  L.CODE_NM   AS LANG_NM
+         ,  C.BRAND_CD
+         ,  C.SORT_SEQ
+         ,  C.ACC_CD
+         ,  C.VAL_D1
+         ,  C.VAL_D2
+         ,  C.VAL_C1
+         ,  C.VAL_C2
+         ,  C.VAL_C3
+         ,  C.VAL_C4
+         ,  C.VAL_C5
+         ,  C.VAL_N1
+         ,  C.VAL_N2
+         ,  C.REMARKS
+         ,  C.USE_YN
+      FROM  COMMON      C
+         ,  LANG_COMMON L
+     WHERE  C.COMP_CD       = L.COMP_CD(+)
+       AND  C.CODE_TP       = L.CODE_TP(+)
+       AND  C.CODE_CD       = L.CODE_CD(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CODE_TP       = ${SCH_CODE_TP}
+       AND  (${SCH_USE_YN}   IS NULL OR C.USE_YN = ${SCH_USE_YN})
+       AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+       AND  L.USE_YN(+)     = 'Y'
+     ORDER  BY C.CODE_CD
+]]></query>
+
+<!-- 공통코드 타입 수정 -->
+<query name='COMMON_U'><![CDATA[
+    MERGE INTO COMMON
+    USING DUAL
+    ON 
+    (
+                COMP_CD     = ${COMP_CD}
+           AND  CODE_TP     = ${CODE_TP}
+           AND  CODE_CD     = ${CODE_CD}
+    )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  CODE_NM     = ${CODE_NM}
+             ,  BRAND_CD    = ${BRAND_CD}
+             ,  SORT_SEQ    = ${SORT_SEQ}
+             ,  ACC_CD      = ${ACC_CD}
+             ,  VAL_D1      = ${VAL_D1}
+             ,  VAL_D2      = ${VAL_D2}
+             ,  VAL_C1      = ${VAL_C1}
+             ,  VAL_C2      = ${VAL_C2}
+             ,  VAL_C3      = ${VAL_C3}
+             ,  VAL_C4      = ${VAL_C4}
+             ,  VAL_C5      = ${VAL_C5}
+             ,  VAL_N1      = ${VAL_N1}
+             ,  VAL_N2      = ${VAL_N2}
+             ,  REMARKS     = ${REMARKS}
+             ,  POS_IF_YN   = ${POS_IF_YN}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (       COMP_CD
+             ,  CODE_TP
+             ,  CODE_CD
+             ,  CODE_NM
+             ,  BRAND_CD
+             ,  SORT_SEQ
+             ,  ACC_CD
+             ,  VAL_D1
+             ,  VAL_D2
+             ,  VAL_C1
+             ,  VAL_C2
+             ,  VAL_C3
+             ,  VAL_C4
+             ,  VAL_C5
+             ,  VAL_N1
+             ,  VAL_N2
+             ,  REMARKS
+             ,  POS_IF_YN
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+      ) VALUES (   
+                ${COMP_CD}
+             ,  ${CODE_TP}
+             ,  ${CODE_CD}
+             ,  ${CODE_NM}
+             ,  ${BRAND_CD}
+             ,  ${SORT_SEQ}
+             ,  ${ACC_CD}
+             ,  ${VAL_D1}
+             ,  ${VAL_D2}
+             ,  ${VAL_C1}
+             ,  ${VAL_C2}
+             ,  ${VAL_C3}
+             ,  ${VAL_C4}
+             ,  ${VAL_C5}
+             ,  ${VAL_N1}
+             ,  ${VAL_N2}
+             ,  ${REMARKS}
+             ,  ${POS_IF_YN}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+      )
+]]></query> 
+
+<query name='LANG_COMMON_U'><![CDATA[
+    MERGE INTO LANG_COMMON
+    USING DUAL
+    ON
+    (
+                COMP_CD     = ${COMP_CD}
+           AND  CODE_TP     = ${CODE_TP}
+           AND  CODE_CD     = ${CODE_CD}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+    )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  CODE_NM     = ${CODE_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (       COMP_CD
+             ,  CODE_TP
+             ,  CODE_CD
+             ,  LANGUAGE_TP
+             ,  CODE_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (   
+                ${COMP_CD}
+             ,  ${CODE_TP}
+             ,  ${CODE_CD}
+             ,  ${LANGUAGE_TP}
+             ,  ${CODE_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query> 
+
+</SQLResource>
+

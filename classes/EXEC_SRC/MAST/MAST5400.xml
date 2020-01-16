@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+   <query name='Search'><![CDATA[ 
+      SELECT '' AS CHK_YN
+           , NVL(L.CODE_CD, C.CODE_CD) AS CODE_CD
+           , NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+        FROM COMMON C
+           , LANG_COMMON L
+       WHERE C.CODE_TP = '30000'
+         AND C.CODE_TP = L.CODE_TP(+)
+         AND C.CODE_CD = L.CODE_CD(+)
+         AND C.USE_YN = 'Y'
+         AND L.LANGUAGE_TP(+) = ${LANGUAGE}
+         AND L.USE_YN     (+) = 'Y'
+       ORDER BY CODE_CD
+   ]]></query>
+</SQLResource>

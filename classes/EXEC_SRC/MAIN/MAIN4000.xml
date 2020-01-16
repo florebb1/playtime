@@ -1,0 +1,841 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='BOARD_LIST_Q'><![CDATA[
+
+SELECT   DECODE(F1.INDEX_SQ, 0, '※', F1.ROW_CNT - F1.ROW_SQ + 1 ) AS ROW_NO
+   ,     F1.*
+FROM     (
+            SELECT   E1.COMP_CD
+               ,     E1.ROW_SQ
+               ,     E1.INDEX_SQ
+               ,     E1.BOARD_LST_SQ
+               ,     E1.BOARD_TXT_SQ
+               ,     E1.BOARD_REP_SQ
+               ,     E1.BOARD_CTG_SQ
+               ,     DECODE(E1.BOARD_REP_SQ, 0, TO_CHAR(E1.BOARD_SEQ_NO), ' ') AS BOARD_SEQ_NO
+               ,     E1.SUBJECT
+               ,     E1.READ_CT
+               ,     E1.RECOMMEND_CT
+               ,     E1.ATT_CT
+               ,     E1.RCV_CT
+               ,     E1.OPN_CT
+               ,     E1.NOTICE_YN
+               ,     E1.PUBLIC_YN
+               ,     E1.SEND_BRAND_CD
+               ,     E1.SEND_STOR_CD
+               ,     E1.SEND_USER_ID
+               ,     E1.SEND_TM
+               ,     E1.RECV_BRAND_CD
+               ,     E1.RECV_STOR_CD
+               ,     E1.RECV_READ_YN
+               ,     E1.EMPHASIS_YN
+               ,     E2.BOARD_LST_NM AS BOARD_LST_NM
+               ,     DECODE(E1.BOARD_REP_SQ, 0, (DECODE( E1.INDEX_SQ , 0, '' || DECODE (${S_LANGUAGE}, 'kor', '공지', 'NOTICE') || '', E3.BOARD_CTG_NM)), ' ')  AS BOARD_CTG_NM
+               ,     E4.STOR_NM || ' [' || DECODE (E5.USER_ID, NULL, E6.USER_NM, E5.USER_NM) || ']' AS SENDER
+               ,     NVL(DECODE(E5.TEAM_CD_NM, NULL, DECODE(E5.DEPT_CD_NM, NULL , '' , E5.DEPT_CD_NM), E5.TEAM_CD_NM), DECODE(${AUTH_CD},'90','',E4.STOR_NM) ) AS SEND_STOR_NM
+               ,     DECODE (EMP_NM , NULL , NVL(E5.USER_NM,  E6.USER_NM), EMP_NM )                                                                            AS SEND_USER_NM
+               ,     (
+                        SELECT   /*+ INDEX (A2 PK_W_BOARD_RCV) */
+                                 COUNT(A1.BOARD_TXT_SQ)
+                        FROM     W_BOARD_TXT A1
+                           ,     W_BOARD_RCV A2
+                           ,     W_BOARD_RDH A3
+                        WHERE    ((NVL(LENGTH(${BOARD_LST_SQ}),0)=0 AND A1.BOARD_LST_SQ>0 AND A1.BOARD_LST_SQ<90 AND (A1.BOARD_LST_SQ <> 11 )) OR (NVL(LENGTH(${BOARD_LST_SQ}),0)>0 AND A1.BOARD_LST_SQ = ${BOARD_LST_SQ}))
+                          AND    A1.COMP_CD         = ${SCH_COMP_CD}
+                          AND    A1.NOTICE_YN       = 'N'
+                          AND    A1.USE_YN          = 'Y'
+                          AND    TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A1.ACTIVE_ST_DT AND A1.ACTIVE_ED_DT
+                          AND    ( NVL(LENGTH(${BOARD_CTG_SQ}),0)=0 OR (NVL(LENGTH(${BOARD_CTG_SQ} ),0)>0 AND (A1.BOARD_CTG_SQ = ${BOARD_CTG_SQ})))
+                          AND    ( NVL(LENGTH(${EMPHASIS_YN} ),0)=0 OR (NVL(LENGTH(${EMPHASIS_YN}  ),0)>0 AND (A1.EMPHASIS_YN  = ${EMPHASIS_YN} )))
+                          AND    A2.COMP_CD      (+)= A1.COMP_CD
+                          AND    A2.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                          AND    A2.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                          AND    A2.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                          AND    A2.COMP_CD      (+)= ${SCH_COMP_CD}
+                          AND    A2.BRAND_CD     (+)= ${BRAND_CD}
+                          AND    A2.STOR_CD      (+)= ${STOR_CD}
+                          AND    A3.COMP_CD      (+)= A1.COMP_CD
+                          AND    A3.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                          AND    A3.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                          AND    A3.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                          AND    A3.COMP_CD      (+)= ${SCH_COMP_CD}
+                          AND    A3.USER_ID      (+)= ${USER_ID}
+                          AND    A3.READ_SQ      (+)= 1
+                          AND    A1.BOARD_TXT_SQ IN (
+                              SELECT   /*+ INDEX (A2 PK_W_BOARD_RCV) */
+                                       A1.BOARD_TXT_SQ                   AS BOARD_TXT_SQ
+                              FROM     W_BOARD_TXT A1
+                                 ,     W_BOARD_RCV A2
+                                 ,     W_BOARD_RDH A3
+                              WHERE    ((NVL(LENGTH(${BOARD_LST_SQ}),0)=0 AND A1.BOARD_LST_SQ>0 AND A1.BOARD_LST_SQ<90 ) OR (NVL(LENGTH(${BOARD_LST_SQ}),0)>0 AND A1.BOARD_LST_SQ = ${BOARD_LST_SQ}))
+                                AND    A1.COMP_CD         = ${SCH_COMP_CD}
+                                AND    A1.NOTICE_YN       = 'N'
+                                AND    TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A1.ACTIVE_ST_DT AND A1.ACTIVE_ED_DT
+                                AND    ( NVL(LENGTH(${BOARD_CTG_SQ}),0)=0 OR (NVL(LENGTH(${BOARD_CTG_SQ} ),0)>0 AND (A1.BOARD_CTG_SQ = ${BOARD_CTG_SQ})))
+                                AND    ( NVL(${IS_TERM_CK},'N')='N' OR (NVL(${IS_TERM_CK}, 'N')='Y' AND (A1.INST_DT BETWEEN TO_DATE(${SCH_GFR_DATE}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(${SCH_GTO_DATE}||'235959', 'YYYYMMDDHH24MISS') )))
+                                AND    ( NVL(LENGTH(${SCH_ITEM}    ),0)=0 
+                                          @B_SEARCH_ITEM@
+                                       )
+                                AND    ( ${FRAME}='WPOS' AND ( (A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} ) ) OR
+                                         ${FRAME}='POS'  AND ( (A1.PUBLIC_YN = 'Y' AND ( A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} )) OR
+                                                             (  A1.PUBLIC_YN = 'N' AND ( A1.BRAND_CD = ${BRAND_CD} AND A1.STOR_CD = ${STOR_CD} OR
+                                                                A2.BRAND_CD = ${BRAND_CD} AND A2.STOR_CD = ${STOR_CD} ))))
+                                AND    A2.COMP_CD      (+)= A1.COMP_CD
+                                AND    A2.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                                AND    A2.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                                AND    A2.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                                AND    A2.COMP_CD      (+)= ${SCH_COMP_CD}
+                                AND    A2.BRAND_CD     (+)= ${BRAND_CD}
+                                AND    A2.STOR_CD      (+)= ${STOR_CD}
+                                AND    A3.COMP_CD      (+)= A1.COMP_CD
+                                AND    A3.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                                AND    A3.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                                AND    A3.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                                AND    A3.COMP_CD      (+)= ${SCH_COMP_CD}
+                                AND    A3.USER_ID      (+)= ${USER_ID}
+                                AND    A3.READ_SQ      (+)= 1
+                          )
+                     )  AS ROW_CNT
+            FROM     (  -- NOTICE
+                  -- E1
+                        SELECT   A1.COMP_CD
+                           ,     0                                                                               AS ROW_SQ
+                           ,     0                                            AS INDEX_SQ                            
+                           ,     A1.BOARD_LST_SQ                                                                    AS BOARD_LST_SQ
+                           ,     A1.BOARD_TXT_SQ                                                                    AS BOARD_TXT_SQ
+                           ,     A1.BOARD_REP_SQ                                                                    AS BOARD_REP_SQ
+                           ,     A1.BOARD_CTG_SQ                                                                    AS BOARD_CTG_SQ
+                           ,     A1.BOARD_SEQ_NO                     
+                           ,     '' || A1.SUBJECT || ''                                                      AS SUBJECT            
+                           ,     A1.READ_CT                                                                         AS READ_CT     
+                           ,     A1.RECOMMEND_CT                                                                    AS RECOMMEND_CT
+                           ,     A1.ATT_CT                                                                          AS ATT_CT      
+                           ,     A1.RCV_CT                                                                          AS RCV_CT      
+                           ,     A1.OPN_CT                                                                          AS OPN_CT      
+                           ,     A1.NOTICE_YN                                                                       AS NOTICE_YN   
+                           ,     A1.PUBLIC_YN                                                                       AS PUBLIC_YN   
+                           ,     A1.BRAND_CD                                                                        AS SEND_BRAND_CD                                                                                                            
+                           ,     A1.STOR_CD                                                                         AS SEND_STOR_CD
+                           ,     A1.USER_ID                                                                         AS SEND_USER_ID
+                           ,     TO_CHAR (A1.INST_DT, 'YYYY-MM-DD')                                                  AS SEND_TM    
+                           ,     A1.BRAND_CD                                                                        AS RECV_BRAND_CD                                                                                                            
+                           ,     A1.STOR_CD                                                                         AS RECV_STOR_CD
+                           ,     DECODE(A2.READ_YN, 'Y', 'Y', DECODE(A3.READ_SQ, 1, 'Y', 'N'))                      AS RECV_READ_YN
+                           ,     A1.EMPHASIS_YN
+                           ,     A1.EMP_NM
+                           ,     A1.EMP_TEL
+                        FROM     W_BOARD_LST A4
+                           ,     W_BOARD_TXT A1                      
+                           ,     W_BOARD_RCV A2                      
+                           ,     W_BOARD_RDH A3                      
+                        WHERE    A1.COMP_CD = ${SCH_COMP_CD}
+                          AND    ((NVL(LENGTH(${BOARD_LST_SQ}),0)=0 AND A1.BOARD_LST_SQ>0 AND A1.BOARD_LST_SQ<90) OR (NVL(LENGTH(${BOARD_LST_SQ}),0)>0 AND A1.BOARD_LST_SQ = ${BOARD_LST_SQ}))                                                                                   
+                          AND    (A1.NOTICE_YN = 'Y')                
+                          AND    (A1.USE_YN = 'Y')                   
+                          AND    (TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN ACTIVE_ST_DT AND ACTIVE_ED_DT)                
+                          AND    (A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} )
+                          AND    A1.COMP_CD         = A4.COMP_CD
+                          AND    A1.BOARD_LST_SQ    = A4.BOARD_LST_SQ
+                          AND    A2.COMP_CD      (+)= A1.COMP_CD
+                          AND    A2.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                          AND    A2.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                          AND    A2.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                          AND    A2.COMP_CD      (+)= ${SCH_COMP_CD}
+                          AND    A2.BRAND_CD     (+)= ${BRAND_CD}       
+                          AND    A2.STOR_CD      (+)= ${STOR_CD}      
+                          AND    A3.COMP_CD      (+)= A1.COMP_CD
+                          AND    A3.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                          AND    A3.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                          AND    A3.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                          AND    A3.COMP_CD      (+)= ${SCH_COMP_CD}
+                          AND    A3.USER_ID      (+)= ${USER_ID}   
+                          AND    A3.READ_SQ      (+)= 1
+                          AND    A4.COMP_CD         = ${SCH_COMP_CD}
+                          AND    A1.APPROVAL_YN     = 'Y'
+                          AND    A4.USE_YN          = 'Y'
+                          AND    ( NVL(LENGTH(${SCH_ITEM}    ),0)=0 
+                                    @B_SEARCH_ITEM@
+                                 )
+                     UNION ALL
+                        SELECT   COMP_CD
+                           ,     ROW_SQ
+                           ,     1                AS INDEX_SQ
+                           ,     E1.BOARD_LST_SQ
+                           ,     E1.BOARD_TXT_SQ
+                           ,     E1.BOARD_REP_SQ
+                           ,     E1.BOARD_CTG_SQ
+                           ,     BOARD_SEQ_NO
+                           ,     E1.SUBJECT
+                           ,     E1.READ_CT
+                           ,     E1.RECOMMEND_CT
+                           ,     E1.ATT_CT
+                           ,     E1.RCV_CT
+                           ,     E1.OPN_CT
+                           ,     E1.NOTICE_YN
+                           ,     E1.PUBLIC_YN
+                           ,     E1.SEND_BRAND_CD
+                           ,     E1.SEND_STOR_CD
+                           ,     E1.SEND_USER_ID
+                           ,     E1.SEND_TM
+                           ,     E1.RECV_BRAND_CD
+                           ,     E1.RECV_STOR_CD
+                           ,     E1.RECV_READ_YN
+                           ,     E1.EMPHASIS_YN
+                           ,     E1.EMP_NM
+                           ,     E1.EMP_TEL
+                        FROM     (
+                                    SELECT   COMP_CD
+                                       ,     ROWNUM AS ROW_SQ
+                                       ,     BOARD_LST_SQ
+                                       ,     BOARD_TXT_SQ
+                                       ,     BOARD_REP_SQ
+                                       ,     BOARD_CTG_SQ
+                                       ,     BOARD_SEQ_NO
+                                       ,     SUBJECT
+                                       ,     READ_CT
+                                       ,     RECOMMEND_CT
+                                       ,     ATT_CT
+                                       ,     RCV_CT
+                                       ,     OPN_CT
+                                       ,     NOTICE_YN
+                                       ,     PUBLIC_YN
+                                       ,     SEND_BRAND_CD
+                                       ,     SEND_STOR_CD
+                                       ,     SEND_USER_ID
+                                       ,     SEND_TM
+                                       ,     RECV_BRAND_CD
+                                       ,     RECV_STOR_CD
+                                       ,     RECV_READ_YN
+                                       ,     EMPHASIS_YN
+                                       ,     EMP_NM
+                                       ,     EMP_TEL
+                                    FROM     (
+                                               SELECT   /*+ INDEX (A2 PK_W_BOARD_RCV) */
+                                                         A1.COMP_CD
+                                                   ,     A1.BOARD_LST_SQ                   AS BOARD_LST_SQ
+                                                   ,     A1.BOARD_TXT_SQ                   AS BOARD_TXT_SQ
+                                                   ,     A1.BOARD_REP_SQ                   AS BOARD_REP_SQ
+                                                   ,     A1.BOARD_CTG_SQ                   AS BOARD_CTG_SQ
+                                                   ,     A1.BOARD_SEQ_NO
+                                                   ,     A1.SUBJECT                        AS SUBJECT
+                                                   ,     A1.READ_CT                        AS READ_CT
+                                                   ,     A1.RECOMMEND_CT                   AS RECOMMEND_CT
+                                                   ,     A1.ATT_CT                         AS ATT_CT
+                                                   ,     A1.RCV_CT                         AS RCV_CT
+                                                   ,     A1.OPN_CT                         AS OPN_CT
+                                                   ,     A1.NOTICE_YN                      AS NOTICE_YN
+                                                   ,     A1.PUBLIC_YN                      AS PUBLIC_YN
+                                                   ,     A1.BRAND_CD                       AS SEND_BRAND_CD
+                                                   ,     NVL(A1.STOR_CD, '99999')          AS SEND_STOR_CD
+                                                   ,     A1.USER_ID                        AS SEND_USER_ID
+                                                   ,     TO_CHAR (A1.INST_DT, 'YYYY-MM-DD') AS SEND_TM
+                                                   ,     NVL(A2.BRAND_CD, A1.RCV_BRAND_CD) AS RECV_BRAND_CD
+                                                   ,     NVL(A2.STOR_CD, '99999')          AS RECV_STOR_CD
+                                                   ,     DECODE(A2.READ_YN, 'Y', 'Y', DECODE(A3.READ_SQ, 1, 'Y', 'N')) AS RECV_READ_YN
+                                                   ,     A1.EMPHASIS_YN
+                                                   ,     A1.EMP_NM
+                                                   ,     A1.EMP_TEL
+                                                FROM     W_BOARD_TXT A1
+                                                   ,     W_BOARD_RCV A2
+                                                   ,     W_BOARD_RDH A3
+                                                WHERE    ((NVL(LENGTH(${BOARD_LST_SQ}),0)=0 AND A1.BOARD_LST_SQ>0 AND A1.BOARD_LST_SQ<90 AND (A1.BOARD_LST_SQ <> 11 )) OR (NVL(LENGTH(${BOARD_LST_SQ}),0)>0 AND A1.BOARD_LST_SQ = ${BOARD_LST_SQ}))
+                                                  AND    A1.COMP_CD         = ${SCH_COMP_CD}
+                                                  AND    A1.NOTICE_YN       = 'N'
+                                                  AND    A1.USE_YN          = 'Y'
+                                                  AND    TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A1.ACTIVE_ST_DT AND A1.ACTIVE_ED_DT
+                                                  AND    ( NVL(LENGTH(${BOARD_CTG_SQ}),0)=0 OR (NVL(LENGTH(${BOARD_CTG_SQ} ),0)>0 AND (A1.BOARD_CTG_SQ = ${BOARD_CTG_SQ})))
+                                                  AND    ( NVL(LENGTH(${EMPHASIS_YN} ),0)=0 OR (NVL(LENGTH(${EMPHASIS_YN}  ),0)>0 AND (A1.EMPHASIS_YN  = ${EMPHASIS_YN} )))
+                                                  AND    A2.COMP_CD      (+)= A1.COMP_CD
+                                                  AND    A2.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                                                  AND    A2.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                                                  AND    A2.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                                                  AND    A2.COMP_CD      (+)= ${SCH_COMP_CD}
+                                                  AND    A2.BRAND_CD     (+)= ${BRAND_CD}
+                                                  AND    A2.STOR_CD      (+)= ${STOR_CD}
+                                                  AND    A3.COMP_CD      (+)= A1.COMP_CD
+                                                  AND    A3.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                                                  AND    A3.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                                                  AND    A3.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                                                  AND    A3.COMP_CD      (+)= ${SCH_COMP_CD}
+                                                  AND    A3.USER_ID      (+)= ${USER_ID}
+                                                  AND    A3.READ_SQ      (+)= 1
+                                                  AND    A1.BOARD_TXT_SQ IN (
+                                                      SELECT   /*+ INDEX (A2 PK_W_BOARD_RCV) */
+                                                               A1.BOARD_TXT_SQ                   AS BOARD_TXT_SQ
+                                                      FROM     W_BOARD_TXT A1
+                                                         ,     W_BOARD_RCV A2
+                                                         ,     W_BOARD_RDH A3
+                                                      WHERE    ((NVL(LENGTH(${BOARD_LST_SQ}),0)=0 AND A1.BOARD_LST_SQ>0 AND A1.BOARD_LST_SQ<90 ) OR (NVL(LENGTH(${BOARD_LST_SQ}),0)>0 AND A1.BOARD_LST_SQ = ${BOARD_LST_SQ}))
+                                                        AND    A1.COMP_CD         = ${SCH_COMP_CD}
+                                                        AND    A1.NOTICE_YN       = 'N'
+                                                        AND    TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A1.ACTIVE_ST_DT AND A1.ACTIVE_ED_DT
+                                                        AND    ( NVL(LENGTH(${BOARD_CTG_SQ}),0)=0 OR (NVL(LENGTH(${BOARD_CTG_SQ} ),0)>0 AND (A1.BOARD_CTG_SQ = ${BOARD_CTG_SQ})))
+                                                        AND    ( NVL(${IS_TERM_CK},'N')='N' OR (NVL(${IS_TERM_CK}, 'N')='Y' AND (A1.INST_DT BETWEEN TO_DATE(${SCH_GFR_DATE}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(${SCH_GTO_DATE}||'235959', 'YYYYMMDDHH24MISS') )))
+                                                        AND    ( NVL(LENGTH(${SCH_ITEM}    ),0)=0 
+                                                                  @B_SEARCH_ITEM@
+                                                               )
+                                                        AND    ( ${FRAME}='WPOS' AND ( (A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} ) ) OR
+                                                                 ${FRAME}='POS'  AND ( (A1.PUBLIC_YN = 'Y' AND ( A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} )) OR
+                                                                                     (  A1.PUBLIC_YN = 'N' AND ( A1.BRAND_CD = ${BRAND_CD} AND A1.STOR_CD = ${STOR_CD} OR
+                                                                                        A2.BRAND_CD = ${BRAND_CD} AND A2.STOR_CD = ${STOR_CD} ))))
+                                                        AND    A2.COMP_CD      (+)= A1.COMP_CD
+                                                        AND    A2.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                                                        AND    A2.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                                                        AND    A2.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                                                        AND    A2.COMP_CD      (+)= ${SCH_COMP_CD}
+                                                        AND    A2.BRAND_CD     (+)= ${BRAND_CD}
+                                                        AND    A2.STOR_CD      (+)= ${STOR_CD}
+                                                        AND    A3.COMP_CD      (+)= A1.COMP_CD
+                                                        AND    A3.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                                                        AND    A3.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                                                        AND    A3.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                                                        AND    A3.COMP_CD      (+)= ${SCH_COMP_CD}
+                                                        AND    A3.USER_ID      (+)= ${USER_ID}
+                                                        AND    A3.READ_SQ      (+)= 1
+                                                  )
+                                                ORDER BY A1.BOARD_TXT_SQ DESC
+                                                   ,     A1.BOARD_REP_SQ
+                                             )  D1
+                                    WHERE    ROWNUM <= (${PAGE} * ${PAGESIZE})
+                                 )  E1
+                        WHERE    E1.ROW_SQ > (${PAGE} - 1) * ${PAGESIZE}
+                     )           E1
+               ,     W_BOARD_LST E2
+               ,     W_BOARD_CTG E3
+               ,     STORE       E4
+               ,     (
+                        SELECT   A1.COMP_CD
+                           ,     A1.USER_ID
+                           ,     A1.USER_NM
+                           ,     A1.DEPT_CD
+                           ,     A2.CODE_NM   DEPT_CD_NM
+                           ,     A1.TEAM_CD
+                           ,     A3.CODE_NM   TEAM_CD_NM
+                        --   ,     A4.STOR_NM    STOR_CD_NM  <- 이게 대체 뭔 의미인지...
+                        FROM     HQ_USER A1
+                           ,     COMMON A2
+                           ,     COMMON A3
+                         --  ,     (SELECT * FROM STORE WHERE ROWNUM = 1)  A4
+                        WHERE    A1.COMP_CD     = ${SCH_COMP_CD}
+                          AND    A2.COMP_CD  (+)= ${SCH_COMP_CD}
+                          AND    A2.CODE_TP  (+)= '00600'
+                          AND    A2.COMP_CD  (+)= A1.COMP_CD
+                          AND    A2.CODE_CD  (+)= A1.DEPT_CD
+                          AND    A3.COMP_CD  (+)= ${SCH_COMP_CD}
+                          AND    A3.CODE_TP  (+)= '00605'
+                          AND    A3.COMP_CD  (+)= A1.COMP_CD
+                          AND    A3.CODE_CD  (+)= A1.TEAM_CD
+                          --AND    A4.STOR_CD  (+)= '99999'
+                     )           E5
+               ,     (
+                        SELECT  SU.COMP_CD
+                             ,  SU.BRAND_CD
+                             ,  SU.STOR_CD
+                             ,  SU.USER_ID
+                             ,  SU.USER_NM
+                             ,  S.DEPT_CD
+                             ,  C1.CODE_NM      AS DEPT_CD_NM
+                             ,  S.TEAM_CD
+                             ,  C2.CODE_NM      AS TEAM_CD_NM
+                          FROM  STORE_USER  SU
+                             ,  STORE       S
+                             ,  COMMON      C1
+                             ,  COMMON      C2
+                         WHERE  SU.COMP_CD  = S.COMP_CD
+                           AND  SU.BRAND_CD = S.BRAND_CD
+                           AND  SU.STOR_CD  = S.STOR_CD
+                           AND  S.COMP_CD   = C1.COMP_CD(+)
+                           AND  S.DEPT_CD   = C1.CODE_CD(+)
+                           AND  S.COMP_CD   = C2.COMP_CD(+)
+                           AND  S.TEAM_CD   = C2.CODE_CD(+)
+                           AND  SU.COMP_CD  = ${SCH_COMP_CD}
+                           AND  SU.BRAND_CD = ${BRAND_CD}
+                           AND  C1.CODE_TP(+)= '00600'
+                           AND  C2.CODE_TP(+)= '00605'
+                    )           E6
+            WHERE    E2.COMP_CD      (+)= E1.COMP_CD
+              AND    E2.BOARD_LST_SQ (+)= E1.BOARD_LST_SQ
+              AND    E3.COMP_CD      (+)= E1.COMP_CD
+              AND    E3.BOARD_LST_SQ (+)= E1.BOARD_LST_SQ
+              AND    E3.BOARD_CTG_SQ (+)= E1.BOARD_CTG_SQ
+              AND    E4.COMP_CD      (+)= E1.COMP_CD
+              AND    E4.BRAND_CD     (+)= E1.SEND_BRAND_CD
+              AND    E4.STOR_CD      (+)= E1.SEND_STOR_CD
+              AND    E5.COMP_CD      (+)= E1.COMP_CD
+              AND    E5.USER_ID      (+)= E1.SEND_USER_ID
+              AND    E6.COMP_CD      (+)= E1.COMP_CD
+              AND    E6.USER_ID      (+)= E1.SEND_USER_ID
+              AND    E2.COMP_CD      (+)= ${SCH_COMP_CD}
+              AND    E3.COMP_CD      (+)= ${SCH_COMP_CD}
+              AND    E6.COMP_CD      (+)= ${SCH_COMP_CD}
+              AND    (
+                        ${SCH_DEPT_CD} IS NULL
+                        OR
+                        (
+                            E5.USER_ID IS NOT NULL
+                            AND
+                            E5.DEPT_CD = ${SCH_DEPT_CD}
+                        )
+                        OR
+                        (
+                            E6.USER_ID IS NOT NULL
+                            AND
+                            E6.DEPT_CD = ${SCH_DEPT_CD}
+                        )
+                     )
+              AND    (
+                        ${SCH_TEAM_CD} IS NULL
+                        OR
+                        (
+                            E5.USER_ID IS NOT NULL
+                            AND
+                            E5.TEAM_CD = ${SCH_TEAM_CD}
+                        )
+                        OR
+                        (
+                            E6.USER_ID IS NOT NULL
+                            AND
+                            E6.TEAM_CD = ${SCH_TEAM_CD}
+                        )
+                     )
+         ) F1
+ORDER BY F1.INDEX_SQ
+   ,     F1.BOARD_TXT_SQ DESC
+   ,     F1.BOARD_REP_SQ
+    
+]]></query>
+
+
+
+<query name='BOARD_STORE_LIST_Q'><![CDATA[
+
+SELECT   DECODE(F1.INDEX_SQ, 0, '※', F1.ROW_CNT - F1.ROW_SQ + 1 ) AS ROW_NO
+   ,     F1.*
+FROM     (
+            SELECT   E1.ROW_SQ
+               ,     E1.INDEX_SQ
+               ,     E1.BOARD_LST_SQ
+               ,     E1.BOARD_TXT_SQ
+               ,     E1.BOARD_REP_SQ
+               ,     E1.BOARD_CTG_SQ
+               ,     DECODE(E1.BOARD_REP_SQ, 0, TO_CHAR(E1.BOARD_SEQ_NO), ' ') AS BOARD_SEQ_NO
+               ,     E1.SUBJECT
+               ,     E1.READ_CT
+               ,     E1.RECOMMEND_CT
+               ,     E1.ATT_CT
+               ,     E1.RCV_CT
+               ,     E1.OPN_CT
+               ,     E1.NOTICE_YN
+               ,     E1.PUBLIC_YN
+               ,     E1.SEND_BRAND_CD
+               ,     E1.SEND_STOR_CD
+               ,     E1.SEND_USER_ID
+               ,     E1.SEND_TM
+               ,     E1.RECV_BRAND_CD
+               ,     E1.RECV_STOR_CD
+               ,     E1.RECV_READ_YN
+               ,     E1.EMPHASIS_YN
+               ,     E2.BOARD_LST_NM AS BOARD_LST_NM
+               ,     DECODE(E1.BOARD_REP_SQ, 0, (DECODE( E1.INDEX_SQ , 0, '' || DECODE (${SCH_LANGUAGE_TP}, 'kor', '공지', 'NOTICE') || '', E3.BOARD_CTG_NM)), ' ')  AS BOARD_CTG_NM
+               ,     E4.STOR_NM || ' [' || DECODE (E5.USER_ID, NULL, E6.USER_NM, E5.USER_NM) || ']' AS SENDER
+               ,     DECODE(E5.TEAM_CD_NM, NULL, DECODE(E5.DEPT_CD_NM, NULL ,DECODE(E5.STOR_CD_NM, NULL, E4.STOR_NM, E5.STOR_CD_NM), E5.DEPT_CD_NM), E5.TEAM_CD_NM) AS SEND_STOR_NM
+               ,     DECODE (E5.USER_ID, NULL, E6.USER_NM, E5.USER_NM)                                                                        AS SEND_USER_NM
+               ,     (
+                        SELECT   /*+ INDEX (A2 PK_W_BOARD_RCV) */
+                                 COUNT(A1.BOARD_TXT_SQ)
+                        FROM     W_STORE_TXT A1
+                           ,     W_STORE_RCV A2
+                        WHERE    A2.COMP_CD      (+)= A1.COMP_CD
+                          AND    A2.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                          AND    A2.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                          AND    A2.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                          AND    ((NVL(LENGTH(${SCH_BOARD_LST_SQ}),0)=0 AND A1.BOARD_LST_SQ>0 AND A1.BOARD_LST_SQ<90)  OR (NVL(LENGTH(${SCH_BOARD_LST_SQ}),0)>0 AND A1.BOARD_LST_SQ = ${SCH_BOARD_LST_SQ}))
+                          AND    A1.NOTICE_YN       = 'N'
+                          AND    A1.COMP_CD         = ${SCH_COMP_CD}
+                          AND    TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A1.ACTIVE_ST_DT AND A1.ACTIVE_ED_DT
+                          AND    ( NVL(LENGTH(${SCH_BOARD_CTG_SQ}),0)=0 OR (NVL(LENGTH(${SCH_BOARD_CTG_SQ} ),0)>0 AND (A1.BOARD_CTG_SQ = ${SCH_BOARD_CTG_SQ})))
+                          AND    ( NVL(LENGTH(${SCH_EMPHASIS_YN} ),0)=0 OR (NVL(LENGTH(${SCH_EMPHASIS_YN}  ),0)>0 AND (A1.EMPHASIS_YN  = ${SCH_EMPHASIS_YN} )))
+                          -- AND    ( NVL(LENGTH(${IS_TERM_CK}  ),0)=0 OR (NVL(LENGTH(${IS_TERM_CK}   ),0)>0 AND (A1.INST_DT BETWEEN TO_DATE(${SCH_GFR_DATE}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(${SCH_GTO_DATE}||'235959', 'YYYYMMDDHH24MISS') )))
+                          AND    ( NVL(LENGTH(${SCH_ITEM}    ),0)=0 OR (NVL(LENGTH(${SCH_SUBJECT}  ),0)>0 AND A1.SUBJECT  LIKE '%' || ${SCH_SUBJECT}  || '%' ) OR
+                                                                     (NVL(LENGTH(${SCH_CONTENT}  ),0)>0 AND DBMS_LOB.INSTR(A1.SENTENCE, ${SCH_CONTENT})>0  ) OR
+                                                                     (NVL(LENGTH(${SCH_STOR_NM}  ),0)>0 AND A1.STOR_CD     IN ( SELECT STOR_CD
+                                                                                                                              FROM   STORE
+                                                                                                                              WHERE  STOR_NM LIKE '%' || ${SCH_STOR_NM} || '%')) OR
+                                                                     (NVL(LENGTH(${SCH_USER_NM}  ),0)>0 AND A1.INST_USER IN ( SELECT USER_ID
+                                                                                                                              FROM   HQ_USER
+                                                                                                                              WHERE  USER_NM LIKE '%' || ${SCH_USER_NM} || '%')) OR
+                                                                     (NVL(LENGTH(${SCH_USER_NM}  ),0)>0 AND A1.INST_USER IN ( SELECT USER_ID
+                                                                                                                              FROM   STORE_USER
+                                                                                                                              WHERE  USER_NM LIKE '%' || ${SCH_USER_NM} || '%')))
+                          AND    ( ${FRAME}='WPOS' AND ( (A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} ) ) OR
+                                   ${FRAME}='POS'  AND ( (A1.PUBLIC_YN = 'Y' AND ( A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} )) OR
+                                                       (A1.PUBLIC_YN = 'N' AND ( A1.BRAND_CD = ${BRAND_CD} AND A1.STOR_CD = ${STOR_CD} OR
+                                                                                 A2.BRAND_CD = ${BRAND_CD} AND A2.STOR_CD = ${STOR_CD} ))))
+                          AND    A2.BRAND_CD (+)= ${BRAND_CD}
+                          AND    A2.STOR_CD  (+)= ${STOR_CD}
+                     )  AS ROW_CNT
+            FROM     (  -- NOTICE
+                  -- E1
+                   SELECT   0                                                                               AS ROW_SQ
+                           ,     0                                            AS INDEX_SQ
+                           ,     A1.BOARD_LST_SQ                                                                    AS BOARD_LST_SQ
+                           ,     A1.BOARD_TXT_SQ                                                                    AS BOARD_TXT_SQ
+                           ,     A1.BOARD_REP_SQ                                                                    AS BOARD_REP_SQ
+                           ,     A1.BOARD_CTG_SQ                                                                    AS BOARD_CTG_SQ
+                           ,     A1.BOARD_SEQ_NO
+                           ,     '' || A1.SUBJECT || ''                                                      AS SUBJECT
+                           ,     A1.READ_CT                                                                         AS READ_CT
+                           ,     A1.RECOMMEND_CT                                                                    AS RECOMMEND_CT
+                           ,     A1.ATT_CT                                                                          AS ATT_CT
+                           ,     A1.RCV_CT                                                                          AS RCV_CT
+                           ,     A1.OPN_CT                                                                          AS OPN_CT
+                           ,     A1.NOTICE_YN                                                                       AS NOTICE_YN
+                           ,     A1.PUBLIC_YN                                                                       AS PUBLIC_YN
+                           ,     A1.BRAND_CD                                                                        AS SEND_BRAND_CD
+                           ,     A1.STOR_CD                                                                         AS SEND_STOR_CD
+                           ,     A1.INST_USER                                                                    AS SEND_USER_ID
+                           ,     TO_CHAR (A1.INST_DT, 'YYYY-MM-DD')                                                  AS SEND_TM
+                           ,     A1.BRAND_CD                                                                        AS RECV_BRAND_CD
+                           ,     A1.STOR_CD                                                                         AS RECV_STOR_CD
+                           ,     DECODE(A2.READ_YN, 'Y', 'Y', DECODE(A3.READ_SQ, 1, 'Y', 'N'))                      AS RECV_READ_YN
+                           ,     A1.EMPHASIS_YN
+                        FROM     W_STORE_TXT A1
+                           ,     W_STORE_RCV A2
+                           ,     W_STORE_RDH A3
+                        WHERE    ((NVL(LENGTH(${SCH_BOARD_LST_SQ}),0)=0 AND A1.BOARD_LST_SQ>0 AND A1.BOARD_LST_SQ<90) OR (NVL(LENGTH(${SCH_BOARD_LST_SQ}),0)>0 AND A1.BOARD_LST_SQ = ${SCH_BOARD_LST_SQ}))
+                          AND    (A1.NOTICE_YN = 'Y')
+                          AND    (A1.USE_YN    = 'Y')
+                          AND    (A1.COMP_CD   = ${SCH_COMP_CD})
+                          AND    (TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN ACTIVE_ST_DT AND ACTIVE_ED_DT)
+                          AND    (A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD})
+                          AND    A2.COMP_CD      (+)= A1.COMP_CD
+                          AND    A2.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                          AND    A2.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                          AND    A2.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                          AND    A2.BRAND_CD     (+)= ${BRAND_CD}
+                          AND    A2.STOR_CD      (+)= ${STOR_CD}
+                          AND    A3.COMP_CD      (+)= A1.COMP_CD
+                          AND    A3.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                          AND    A3.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                          AND    A3.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                          AND    A3.USER_ID      (+)= ${USER_ID}
+                          AND    A3.READ_SQ      (+)= 1
+                     UNION ALL
+                        SELECT   ROW_SQ
+                           ,     1                AS INDEX_SQ
+                           ,     E1.BOARD_LST_SQ
+                           ,     E1.BOARD_TXT_SQ
+                           ,     E1.BOARD_REP_SQ
+                           ,     E1.BOARD_CTG_SQ
+                           ,     BOARD_SEQ_NO
+                           ,     E1.SUBJECT
+                           ,     E1.READ_CT
+                           ,     E1.RECOMMEND_CT
+                           ,     E1.ATT_CT
+                           ,     E1.RCV_CT
+                           ,     E1.OPN_CT
+                           ,     E1.NOTICE_YN
+                           ,     E1.PUBLIC_YN
+                           ,     E1.SEND_BRAND_CD
+                           ,     E1.SEND_STOR_CD
+                           ,     E1.SEND_USER_ID
+                           ,     E1.SEND_TM
+                           ,     E1.RECV_BRAND_CD
+                           ,     E1.RECV_STOR_CD
+                           ,     E1.RECV_READ_YN
+                           ,     E1.EMPHASIS_YN
+                        FROM     (
+                                    SELECT   ROWNUM AS ROW_SQ
+                                       ,     BOARD_LST_SQ
+                                       ,     BOARD_TXT_SQ
+                                       ,     BOARD_REP_SQ
+                                       ,     BOARD_CTG_SQ
+                                       ,     BOARD_SEQ_NO
+                                       ,     SUBJECT
+                                       ,     READ_CT
+                                       ,     RECOMMEND_CT
+                                       ,     ATT_CT
+                                       ,     RCV_CT
+                                       ,     OPN_CT
+                                       ,     NOTICE_YN
+                                       ,     PUBLIC_YN
+                                       ,     SEND_BRAND_CD
+                                       ,     SEND_STOR_CD
+                                       ,     SEND_USER_ID
+                                       ,     SEND_TM
+                                       ,     RECV_BRAND_CD
+                                       ,     RECV_STOR_CD
+                                       ,     RECV_READ_YN
+                                       ,     EMPHASIS_YN
+                                    FROM     (
+                                     SELECT   /*+ INDEX (A2 PK_W_BOARD_RCV) */
+                                                         A1.BOARD_LST_SQ                   AS BOARD_LST_SQ
+                                                   ,     A1.BOARD_TXT_SQ                   AS BOARD_TXT_SQ
+                                                   ,     A1.BOARD_REP_SQ                   AS BOARD_REP_SQ
+                                                   ,     A1.BOARD_CTG_SQ                   AS BOARD_CTG_SQ
+                                                   ,     A1.BOARD_SEQ_NO
+                                                   ,     A1.SUBJECT                        AS SUBJECT
+                                                   ,     A1.READ_CT                        AS READ_CT
+                                                   ,     A1.RECOMMEND_CT                   AS RECOMMEND_CT
+                                                   ,     A1.ATT_CT                         AS ATT_CT
+                                                   ,     A1.RCV_CT                         AS RCV_CT
+                                                   ,     A1.OPN_CT                         AS OPN_CT
+                                                   ,     A1.NOTICE_YN                      AS NOTICE_YN
+                                                   ,     A1.PUBLIC_YN                      AS PUBLIC_YN
+                                                   ,     A1.BRAND_CD                       AS SEND_BRAND_CD
+                                                   ,     NVL(A1.STOR_CD, '99999')          AS SEND_STOR_CD
+                                                   ,     A1.INST_USER                    AS SEND_USER_ID
+                                                   ,     TO_CHAR (A1.INST_DT, 'YYYY-MM-DD') AS SEND_TM
+                                                   ,     NVL(A2.BRAND_CD, A1.RCV_BRAND_CD) AS RECV_BRAND_CD
+                                                   ,     NVL(A2.STOR_CD, '99999')          AS RECV_STOR_CD
+                                                   ,     DECODE(A2.READ_YN, 'Y', 'Y', DECODE(A3.READ_SQ, 1, 'Y', 'N')) AS RECV_READ_YN
+                                                   ,     A1.EMPHASIS_YN
+                                                FROM     W_STORE_TXT A1
+                                                   ,     W_STORE_RCV A2
+                                                   ,     W_STORE_RDH A3
+                                                WHERE    ((NVL(LENGTH(${SCH_BOARD_LST_SQ}),0)=0 AND A1.BOARD_LST_SQ>0 AND A1.BOARD_LST_SQ<90 AND (A1.BOARD_LST_SQ <> 11 )) OR (NVL(LENGTH(${SCH_BOARD_LST_SQ}),0)>0 AND A1.BOARD_LST_SQ = ${SCH_BOARD_LST_SQ}))
+                                                  AND    A1.NOTICE_YN       = 'N'
+                                                  AND    A1.COMP_CD         = ${SCH_COMP_CD}
+                                                  AND    TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A1.ACTIVE_ST_DT AND A1.ACTIVE_ED_DT
+                                                  AND    ( NVL(LENGTH(${SCH_BOARD_CTG_SQ}),0)=0 OR (NVL(LENGTH(${SCH_BOARD_CTG_SQ} ),0)>0 AND (A1.BOARD_CTG_SQ = ${SCH_BOARD_CTG_SQ})))
+                                                  AND    ( NVL(LENGTH(${SCH_EMPHASIS_YN} ),0)=0 OR (NVL(LENGTH(${SCH_EMPHASIS_YN}  ),0)>0 AND (A1.EMPHASIS_YN  = ${SCH_EMPHASIS_YN} )))
+                                                  -- AND    ( NVL(LENGTH(${IS_TERM_CK}  ),0)=0 OR (NVL(LENGTH(${IS_TERM_CK}  ),0)>0 AND (A1.INST_DT BETWEEN TO_DATE(${SCH_GFR_DATE}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(${SCH_GTO_DATE}||'235959', 'YYYYMMDDHH24MISS') )))
+                                                  AND    ( NVL(LENGTH(${SCH_ITEM}    ),0)=0 OR (NVL(LENGTH(${SCH_SUBJECT}  ),0)>0 AND A1.SUBJECT  LIKE '%' || ${SCH_SUBJECT}  || '%' ) OR
+                                                                                             (NVL(LENGTH(${SCH_CONTENT}  ),0)>0 AND DBMS_LOB.INSTR(A1.SENTENCE, ${SCH_CONTENT})>0  ) OR
+                                                                                             (NVL(LENGTH(${SCH_STOR_NM}  ),0)>0 AND A1.STOR_CD     IN ( SELECT STOR_CD
+                                                                                                                                                      FROM   STORE
+                                                                                                                                                      WHERE  STOR_NM LIKE '%' || ${SCH_STOR_NM} || '%')) OR
+                                                                                             (NVL(LENGTH(${SCH_USER_NM}  ),0)>0 AND A1.INST_USER IN ( SELECT USER_ID
+                                                                                                                                                      FROM   HQ_USER
+                                                                                                                                                      WHERE  USER_NM LIKE '%' || ${SCH_USER_NM} || '%')) OR
+                                                                                             (NVL(LENGTH(${SCH_USER_NM}  ),0)>0 AND A1.INST_USER IN ( SELECT USER_ID
+                                                                                                                                                      FROM   STORE_USER
+                                                                                                                                                      WHERE  USER_NM LIKE '%' || ${SCH_USER_NM} || '%')))
+                                                  AND    ( ${FRAME}='WPOS' AND ( (A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} ) ) OR
+                                                           ${FRAME}='POS'  AND ( (A1.PUBLIC_YN = 'Y' AND ( A1.RCV_BRAND_CD = '9999' OR A1.RCV_BRAND_CD = ${BRAND_CD} )) OR
+                                                                               (  A1.PUBLIC_YN = 'N' AND ( A1.BRAND_CD = ${BRAND_CD} AND A1.STOR_CD = ${STOR_CD} OR
+                                                                                                           A2.BRAND_CD = ${BRAND_CD} AND A2.STOR_CD = ${STOR_CD} ))))
+                                                  AND    A2.COMP_CD      (+)= A1.COMP_CD
+                                                  AND    A2.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                                                  AND    A2.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                                                  AND    A2.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                                                  AND    A2.BRAND_CD     (+)= ${BRAND_CD}
+                                                  AND    A2.STOR_CD      (+)= ${STOR_CD}
+                                                  AND    A3.COMP_CD      (+)= A1.COMP_CD
+                                                  AND    A3.BOARD_LST_SQ (+)= A1.BOARD_LST_SQ
+                                                  AND    A3.BOARD_TXT_SQ (+)= A1.BOARD_TXT_SQ
+                                                  AND    A3.BOARD_REP_SQ (+)= A1.BOARD_REP_SQ
+                                                  AND    A3.USER_ID      (+)= ${USER_ID}
+                                                  AND    A3.READ_SQ      (+)= 1
+                                                ORDER BY A1.BOARD_TXT_SQ DESC
+                                                   ,     A1.BOARD_REP_SQ
+                                             )  D1
+                                 )  E1
+                        WHERE    E1.ROW_SQ < 100
+                     )           E1
+               ,     W_BOARD_LST E2
+               ,     W_BOARD_CTG E3
+               ,     STORE       E4
+               ,     (
+                        SELECT   A1.USER_ID
+                           ,     A1.USER_NM
+                           ,     A2.CODE_NM   DEPT_CD_NM
+                           ,     A3.CODE_NM   TEAM_CD_NM
+                     ,     A4.STOR_NM    STOR_CD_NM
+                        FROM     HQ_USER A1
+                           ,     COMMON A2
+                           ,     COMMON A3
+                     ,     STORE  A4
+                        WHERE    A2.CODE_TP  (+)= '00600'
+                          AND    A2.CODE_CD  (+)= A1.DEPT_CD
+                          AND    A2.COMP_CD  (+)= A1.COMP_CD
+                          AND    A3.CODE_TP  (+)= '00605'
+                          AND    A3.CODE_CD  (+)= A1.TEAM_CD
+                          AND    A3.COMP_CD  (+)= A1.COMP_CD
+                          AND    A1.COMP_CD     = ${SCH_COMP_CD}
+                          AND    A4.STOR_CD  (+)= '99999'
+                     )           E5
+               ,     STORE_USER      E6
+            WHERE    E2.BOARD_LST_SQ (+)= E1.BOARD_LST_SQ
+              AND    E2.COMP_CD      (+)= ${SCH_COMP_CD}
+              AND    E3.BOARD_LST_SQ (+)= E1.BOARD_LST_SQ
+              AND    E3.BOARD_CTG_SQ (+)= E1.BOARD_CTG_SQ
+              AND    E3.COMP_CD      (+)= ${SCH_COMP_CD}
+              AND    E4.BRAND_CD     (+)= E1.SEND_BRAND_CD
+              AND    E4.STOR_CD      (+)= E1.SEND_STOR_CD
+              AND    E4.COMP_CD      (+)= ${SCH_COMP_CD}
+              AND    E5.USER_ID      (+)= E1.SEND_USER_ID
+              AND    E6.USER_ID      (+)= E1.SEND_USER_ID
+              AND    E6.COMP_CD      (+)= ${SCH_COMP_CD}
+              AND    E6.USE_YN       (+)= 'Y'
+         ) F1
+ORDER BY F1.INDEX_SQ
+   ,     F1.BOARD_TXT_SQ DESC
+   ,     F1.BOARD_REP_SQ
+    
+]]></query>
+
+
+<!-- 수신점포 조회내역 -->
+<query name='POP_RCV_STOR_VIEW_Q'><![CDATA[
+
+SELECT   ROWNUM         AS NO
+  ,      A2.*
+  ,      A2.STOR_NM    AS STOR_NM
+  ,      A3.BRAND_NM   AS BRAND_NM
+  ,      A4.CODE_NM    AS STOR_TP_NM
+  ,      A6.CODE_NM    AS SIDO_CD_NM
+  ,      A7.USER_NM    AS SV_NM
+FROM     W_BOARD_RCV A1
+  ,      STORE       A2
+  ,      (
+        select A.brand_cd  
+            , NVL(b.lang_nm, a.brand_nm) as brand_nm
+        from brand        A
+           , ( SELECT * 
+                 FROM LANG_TABLE
+                WHERE TABLE_NM    = 'BRAND'
+                  AND COL_NM      = 'BRAND_NM'
+                  AND COMP_CD     = ${SCH_COMP_CD}
+                  AND LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                  AND USE_YN      = 'Y'
+              ) B
+       WHERE A.BRAND_CD = B.PK_COL(+)
+         AND A.COMP_CD  = ${SCH_COMP_CD} 
+         ) A3
+  ,      COMMON      A4
+  ,      (
+            SELECT  R.COMP_CD
+                 ,  R.NATION_CD
+                 ,  R.CITY_CD
+                 ,  R.REGION_CD
+                 ,  NVL(L.LANG_NM, R.REGION_NM)     AS REGION_NM
+              FROM  REGION      R
+                 ,  LANG_TABLE  L
+             WHERE  L.COMP_CD(+)    = R.COMP_CD
+               AND  L.PK_COL(+)     = LPAD(R.NATION_CD, 3, ' ')||LPAD(R.CITY_CD, 3, ' ')||LPAD(R.REGION_CD, 6, ' ')
+               AND  R.COMP_CD       = ${SCH_COMP_CD}
+               AND  R.CITY_CD       = '000'
+               AND  R.USE_YN        = 'Y'
+               AND  L.TABLE_NM(+)   = 'REGION'
+               AND  L.COL_NM(+)     = 'REGION_NM'
+               AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+               AND  L.USE_YN(+)     = 'Y'
+         )           A6
+  ,      hq_user     A7
+WHERE    A1.COMP_CD      = ${SCH_COMP_CD}
+  AND    A1.BOARD_LST_SQ = ${SCH_BOARD_LST_SQ}
+  AND    A1.BOARD_TXT_SQ = ${SCH_BOARD_TXT_SQ}
+  AND    A1.BOARD_REP_SQ = ${SCH_BOARD_REP_SQ}
+  AND    A2.COMP_CD      = A1.COMP_CD
+  AND    A2.BRAND_CD     = A1.BRAND_CD
+  AND    A2.STOR_CD      = A1.STOR_CD
+  AND    A3.BRAND_CD  (+)= A2.BRAND_CD
+  AND    A3.COMP_CD   (+)= ${SCH_COMP_CD}
+  AND    A4.CODE_TP   (+)= '00565'
+  AND    A4.COMP_CD   (+)= ${SCH_COMP_CD}
+  AND    A4.CODE_CD   (+)= A2.STOR_TP
+  AND    A6.COMP_CD   (+)= A2.COMP_CD
+  AND    A6.NATION_CD (+)= A2.NATION_CD
+  AND    A6.CODE_CD   (+)= A2.SIDO_CD
+  AND    A7.USER_ID   (+)= A2.SV_USER_ID
+  AND    A7.COMP_CD   (+)= ${SCH_COMP_CD}
+ORDER BY A2.BRAND_CD
+   ,     A2.STOR_NM
+   
+]]></query> 
+
+<query name='POP_RCV_HISTORY_Q'><![CDATA[
+
+SELECT   A1.BRAND_CD                    AS BRAND_CD
+  ,      A5.BRAND_NM                    AS BRAND_NM
+  ,      A1.STOR_CD                     AS STOR_CD
+  ,      A2.STOR_NM                     AS STOR_NM
+  ,      A1.USER_ID                     AS USER_ID
+  ,      NVL(A3.USER_NM, A4.USER_NM) AS USER_NM
+  ,      NVL(A1.READ_CT, 0)             AS READ_CT
+FROM     (
+            SELECT   COMP_CD
+              ,      BOARD_LST_SQ
+              ,      BOARD_TXT_SQ
+              ,      BOARD_REP_SQ
+              ,      BRAND_CD
+              ,      STOR_CD
+              ,      USER_ID
+              ,      COUNT(USER_ID) AS READ_CT
+            FROM     W_BOARD_RDH
+            WHERE    COMP_CD      = ${SCH_COMP_CD}
+              AND    BOARD_LST_SQ = ${SCH_BOARD_LST_SQ}
+              AND    BOARD_TXT_SQ = ${SCH_BOARD_TXT_SQ}
+              AND    BOARD_REP_SQ = ${SCH_BOARD_REP_SQ}
+            GROUP BY COMP_CD
+              ,      BOARD_LST_SQ
+              ,      BOARD_TXT_SQ
+              ,      BOARD_REP_SQ
+              ,      BRAND_CD
+              ,      STOR_CD
+              ,      USER_ID
+         )      A1
+  ,      STORE  A2
+  ,      STORE_USER A3
+  ,      HQ_USER    A4
+  ,      (
+         select A.brand_cd  
+              , NVL(b.lang_nm, a.brand_nm) as brand_nm
+           from brand        A
+              , ( SELECT * 
+                    FROM LANG_TABLE
+                   WHERE TABLE_NM    = 'BRAND'
+                     AND COL_NM      = 'BRAND_NM'
+                     AND LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                     AND COMP_CD     = ${SCH_COMP_CD}
+                     AND USE_YN      = 'Y'
+                 ) B
+          WHERE A.BRAND_CD = B.PK_COL(+)
+            AND A.COMP_CD  = ${SCH_COMP_CD} 
+         ) A5
+WHERE    A2.COMP_CD    = A1.COMP_CD
+  AND    A2.STOR_CD    = A1.STOR_CD
+  AND    A3.COMP_CD (+)= A1.COMP_CD
+  AND    A3.USER_ID (+)= A1.USER_ID
+  AND    A4.COMP_CD (+)= A1.COMP_CD
+  AND    A4.USER_ID (+)= A1.USER_ID
+  AND    A5.BRAND_CD(+)= A2.BRAND_CD
+  AND    A2.COMP_CD    = ${SCH_COMP_CD}
+ORDER BY A1.BRAND_CD
+  ,      A2.STOR_NM
+  ,      A1.USER_ID
+  
+]]></query> 
+
+<query name='STORE_USER_HE_Q'><![CDATA[
+    SELECT  SU.COMP_CD
+         ,  SU.BRAND_CD
+         ,  SU.STOR_CD
+         ,  SU.USER_ID
+         ,  NVL(L.LANG_NM, SU.USER_NM)      AS USER_NM
+         ,  SU.HYGIENE_EXPRIE_DT
+         ,  CEIL(TO_DATE(SU.HYGIENE_EXPRIE_DT, 'YYYYMMDD') - SYSDATE)       AS PASS_DT
+      FROM  STORE_USER      SU
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'STORE_USER'
+                   AND  COL_NM      = 'USER_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = SU.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(SU.BRAND_CD, 4, ' ')||LPAD(SU.STOR_CD, 10, ' ')||LPAD(SU.USER_ID, 15, ' ')
+       AND  SU.COMP_CD      = ${SCH_COMP_CD}
+       AND  SU.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  SU.STOR_CD      = ${SCH_STOR_CD}
+       AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(SU.HYGIENE_EXPRIE_DT, 'YYYYMMDD'), -1), 'YYYYMMDD') AND SU.HYGIENE_EXPRIE_DT
+     ORDER  BY SU.HYGIENE_EXPRIE_DT
+]]></query>
+
+</SQLResource>

@@ -1,0 +1,1497 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='CUST_ETC_Q'><![CDATA[
+    SELECT  C1.MEMBER_NO
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN DECRYPT(C3.CUST_NM)
+                 ELSE DECRYPT(C1.MEMBER_NM)
+            END                                         AS MEMBER_NM
+         ,  C1.CUST_YN
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN FC_GET_FORMAT_HP_NO(DECRYPT(C3.MOBILE))
+                 ELSE FC_GET_FORMAT_HP_NO(DECRYPT(C1.MOBILE))
+            END                                                             AS MOBILE
+         ,  C3.JOIN_DT
+         ,  C3.CUST_STAT
+         ,  C3.LVL_CD
+         ,  NVL(C3.SAV_PT, 0)                                               AS SAV_PT
+         ,  NVL(C3.USE_PT, 0)                                               AS USE_PT
+         ,  NVL(C3.LOS_PT, 0)                                               AS LOS_PT
+         ,  NVL(C3.SAV_PT, 0) - NVL(C3.USE_PT, 0) - NVL(C3.LOS_PT, 0)       AS RES_PT
+         ,  NVL(C3.SAV_MLG, 0)                                              AS SAV_MLG
+         ,  NVL(C3.USE_MLG, 0)                                              AS USE_MLG
+         ,  NVL(C3.LOS_MLG, 0)                                              AS LOS_MLG
+         ,  NVL(C3.SAV_MLG, 0) - NVL(C3.USE_MLG, 0) - NVL(C3.LOS_MLG, 0)    AS RES_MLG
+      FROM  CS_MEMBER       C1
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CUST_ID
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.CUST_NM  ELSE C.CUST_NM  END     AS CUST_NM
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.MOBILE   ELSE C.MOBILE   END     AS MOBILE
+                     ,  C.CUST_STAT
+                     ,  C.LVL_CD
+                     ,  C.SAV_PT
+                     ,  C.USE_PT
+                     ,  C.LOS_PT
+                     ,  C.SAV_MLG
+                     ,  C.USE_MLG
+                     ,  C.LOS_MLG
+                     ,  C.JOIN_DT
+                  FROM  C_CUST          C
+                     ,  C_CUST_REST     R
+                 WHERE  C.COMP_CD   = R.COMP_CD(+)
+                   AND  C.CUST_ID   = R.CUST_ID(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CUST_ID   = ${SCH_MEMBER_NO}
+            )   C3
+     WHERE  C1.COMP_CD      = C3.COMP_CD(+)
+       AND  C1.MEMBER_NO    = C3.CUST_ID(+)
+       AND  C1.COMP_CD      = ${SCH_COMP_CD}
+       AND  C1.MEMBER_DIV   = '1'
+       AND  C1.MEMBER_NO    = ${SCH_MEMBER_NO}
+     ORDER  BY C1.MEMBER_NO
+]]></query>
+ 
+<query name='TAB01_Q'><![CDATA[
+    SELECT  C1.COMP_CD
+         ,  C1.MEMBER_NO
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN DECRYPT(C3.CUST_NM)
+                 ELSE DECRYPT(C1.MEMBER_NM)
+            END                                         AS MEMBER_NM
+         ,  C3.CUST_WEB_ID
+         ,  C3.APP_INST_DT
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN FC_GET_FORMAT_HP_NO(DECRYPT(C3.MOBILE))
+                 ELSE FC_GET_FORMAT_HP_NO(DECRYPT(C1.MOBILE))
+            END                                         AS MOBILE
+         ,  C3.JOIN_DT
+         ,  CASE WHEN C3.STOR_CD IS NOT NULL THEN '['||C3.STOR_CD||']'||C3.STOR_NM ELSE '' END      AS JOIN_STOR_NM
+         ,  C3.LEAVE_DT
+         ,  C3.SEX_DIV
+         ,  C3.BIRTH_DT
+         ,  C3.CHILD_CNT
+         ,  C3.CHILD_REL_CD
+         ,  C3.CHILD_REL_NM
+         ,  C1.CUST_YN
+         ,  C3.CUST_STAT
+         ,  C3.LVL_CD
+         ,  CASE WHEN NVL(C3.SAV_PT, 0) - NVL(C3.USE_PT, 0) - NVL(C3.LOS_PT, 0) > 0 THEN 'Y' ELSE 'N' END   AS POINT_YN
+         ,  NVL(C3.SAV_MLG, 0) - NVL(C3.USE_MLG, 0) - NVL(C3.LOS_MLG, 0)                                    AS STAMP_CNT
+         ,  CASE WHEN PC.CUST_ID IS NOT NULL THEN 'Y' ELSE 'N' END                                          AS COUPON_YN
+         ,  C3.CASH_USE_DT                                                                                  AS LAST_VISIT_DT
+         ,  NVL(VC.VISIT_CNT, 0)                                                                            AS VISIT_CNT
+         ,  C3.SMS_RCV_YN
+         ,  C3.EMAIL_RCV_YN
+         ,  C3.PUSH_RCV_YN
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN C3.ADDR1 || C3.ADDR2
+                 ELSE C1.ADDR1 || C1.ADDR2
+            END                                         AS ADDR
+         ,  NVL(C3.SAV_PT, 0)                                               AS SAV_PT
+         ,  NVL(C3.USE_PT, 0)                                               AS USE_PT
+         ,  NVL(C3.LOS_PT, 0)                                               AS LOS_PT
+         ,  NVL(C3.SAV_PT, 0) - NVL(C3.USE_PT, 0) - NVL(C3.LOS_PT, 0)       AS RES_PT
+         ,  NVL(C3.SAV_MLG, 0)                                              AS SAV_MLG
+         ,  NVL(C3.USE_MLG, 0)                                              AS USE_MLG
+         ,  NVL(C3.LOS_MLG, 0)                                              AS LOS_MLG
+         ,  NVL(C3.SAV_MLG, 0) - NVL(C3.USE_MLG, 0) - NVL(C3.LOS_MLG, 0)    AS RES_MLG
+      FROM  CS_MEMBER       C1
+         ,  (
+                SELECT  COMP_CD
+                     ,  MEMBER_NO
+                  FROM  CS_MEMBER_STORE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                   AND  (${SCH_STOR_CD}  IS NULL OR STOR_CD  = ${SCH_STOR_CD})
+                 GROUP  BY COMP_CD, MEMBER_NO
+            )               C2
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CUST_ID
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.CUST_NM  ELSE C.CUST_NM  END     AS CUST_NM
+                     ,  C.CUST_WEB_ID
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.MOBILE   ELSE C.MOBILE   END     AS MOBILE
+                     ,  C.LEAVE_DT
+                     ,  C.SEX_DIV
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.BIRTH_DT ELSE C.BIRTH_DT END     AS BIRTH_DT
+                     ,  C.CHILD_CNT
+                     ,  C.CHILD_REL_CD
+                     ,  C.CHILD_REL_NM
+                     ,  C.CUST_STAT
+                     ,  C.LVL_CD
+                     ,  C.SAV_PT
+                     ,  C.USE_PT
+                     ,  C.LOS_PT
+                     ,  C.SAV_MLG
+                     ,  C.USE_MLG
+                     ,  C.LOS_MLG
+                     ,  C.CASH_USE_DT
+                     ,  C.SMS_RCV_YN
+                     ,  C.EMAIL_RCV_YN
+                     ,  C.PUSH_RCV_YN
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.ADDR1 ELSE C.ADDR1 END       AS ADDR1
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.ADDR2 ELSE C.ADDR2 END       AS ADDR2
+                     ,  TO_CHAR(CD.INST_DT, 'YYYYMMDD')                                 AS APP_INST_DT
+                     ,  C.JOIN_DT
+                     ,  C.STOR_CD
+                     ,  S.STOR_NM
+                  FROM  C_CUST          C
+                     ,  C_CUST_REST     R
+                     ,  C_CUST_DEVICE   CD
+                     ,  (
+                            SELECT  S.COMP_CD
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_CD
+                                 ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                              FROM  STORE       S
+                                 ,  LANG_STORE  L
+                             WHERE  S.COMP_CD   = L.COMP_CD(+)
+                               AND  S.BRAND_CD  = L.BRAND_CD(+)
+                               AND  S.STOR_CD   = L.STOR_CD(+)
+                               AND  S.COMP_CD   = ${SCH_COMP_CD}
+                               AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+                               AND  L.USE_YN(+) = 'Y'
+                        )               S
+                 WHERE  C.COMP_CD   = CD.COMP_CD(+)
+                   AND  C.CUST_ID   = CD.CUST_ID(+)
+                   AND  C.COMP_CD   = R.COMP_CD(+)
+                   AND  C.CUST_ID   = R.CUST_ID(+)
+                   AND  C.COMP_CD   = S.COMP_CD(+)
+                   AND  C.BRAND_CD  = S.BRAND_CD(+)
+                   AND  C.STOR_CD   = S.STOR_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+            )   C3
+         ,  (
+                SELECT  COMP_CD, CUST_ID
+                  FROM  PROMOTION_COUPON
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN START_DT AND CLOSE_DT
+                   AND  COUPON_STATE IN ('P0302', 'P0303')
+                   AND  CUST_ID IS NOT NULL
+                 GROUP  BY COMP_CD, CUST_ID
+            )   PC
+         ,  (
+                SELECT  COMP_CD
+                     ,  MEMBER_NO                       AS CUST_ID
+                     ,  SUM(ENTRY_CNT - GDN_ENTRY_CNT)  AS VISIT_CNT
+                  FROM  CS_ENTRY_HD
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  USE_YN      = 'Y'
+                 GROUP  BY COMP_CD, MEMBER_NO 
+            )   VC
+     WHERE  C1.COMP_CD      = C2.COMP_CD
+       AND  C1.MEMBER_NO    = C2.MEMBER_NO
+       AND  C1.COMP_CD      = C3.COMP_CD(+)
+       AND  C1.MEMBER_NO    = C3.CUST_ID(+)
+       AND  C1.COMP_CD      = PC.COMP_CD(+)
+       AND  C1.MEMBER_NO    = PC.CUST_ID(+)
+       AND  C1.COMP_CD      = VC.COMP_CD(+)
+       AND  C1.MEMBER_NO    = VC.CUST_ID(+)
+       AND  C1.COMP_CD      = ${SCH_COMP_CD}
+       AND  C1.MEMBER_DIV   = '1'
+       AND  (${SCH_MEMBER_NO} IS NULL OR C1.MEMBER_NO = ${SCH_MEMBER_NO})
+       AND  (
+                (${SCH_MOBILE}    IS NULL OR C1.MOBILE    = ENCRYPT(${SCH_MOBILE}))
+                OR
+                (${SCH_MOBILE}    IS NULL OR C1.MOBILE_N3 = ${SCH_MOBILE})
+            )
+       AND  (${SCH_JOIN_DT}       IS NULL OR C1.JOIN_DT   = ${SCH_JOIN_DT})
+       AND  (${SCH_CUST_STAT}     IS NULL OR C3.CUST_STAT = ${SCH_CUST_STAT})
+       AND  (${SCH_LVL_CD}        IS NULL OR C3.LVL_CD    = ${SCH_LVL_CD})
+     ORDER  BY C1.MEMBER_NO
+]]></query>
+
+<query name='TAB02_CUST_Q'><![CDATA[
+    SELECT  C1.COMP_CD
+         ,  C1.MEMBER_NO
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN DECRYPT(C3.CUST_NM)
+                 ELSE DECRYPT(C1.MEMBER_NM)
+            END                                         AS MEMBER_NM
+         ,  C3.LOGIN_FAIL_DT
+         ,  NVL(C3.LOGIN_LOCK_YN, 'N')                              AS LOGIN_LOCK_YN
+         ,  C3.CUST_WEB_ID
+         ,  C3.APP_INST_DT
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN FC_GET_FORMAT_HP_NO(DECRYPT(C3.MOBILE))
+                 ELSE FC_GET_FORMAT_HP_NO(DECRYPT(C1.MOBILE))
+            END                                         AS MOBILE
+         ,  C3.JOIN_DT
+         ,  CASE WHEN C3.STOR_CD IS NOT NULL THEN '['||C3.STOR_CD||']'||C3.STOR_NM ELSE '' END      AS JOIN_STOR_NM
+         ,  C3.SEX_DIV
+         ,  C3.BIRTH_DT
+         ,  C3.CHILD_CNT
+         ,  C1.CUST_YN
+         ,  C3.CUST_STAT
+         ,  C3.CUST_STAT                                            AS ORG_CUST_STAT
+         ,  C3.CHILD_REL_CD
+         ,  C3.CHILD_REL_NM
+         ,  C3.EMAIL
+         ,  C3.EMAIL_RCV_YN
+         ,  C3.SMS_RCV_YN
+         ,  C3.PUSH_RCV_YN
+         ,  C3.ZIP_CD
+         ,  NVL(C3.ADDR1, C1.ADDR1)                                 AS ADDR1
+         ,  NVL(C3.ADDR2, C1.ADDR2)                                 AS ADDR2
+         ,  C3.SIDO_CD
+         ,  C3.REGION_CD
+         ,  NVL(C3.OWN_CERTI_DIV, 'N')                              AS OWN_CERTI_DIV
+         ,  C1.AGREE_DT
+         ,  C1.JOIN_ROUTE
+         ,  C3.LVL_CD
+         ,  C3.LVL_START_DT
+         ,  C3.LVL_CLOSE_DT
+         ,  C3.LEAVE_DT
+         ,  C3.CASH_USE_DT                                          AS LAST_VISIT_DT
+         ,  C3.LAST_LOGIN_DT
+         ,  C3.LEAVE_RMK
+      FROM  CS_MEMBER       C1
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CUST_ID
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.CUST_NM  ELSE C.CUST_NM  END     AS CUST_NM
+                     ,  C.LOGIN_FAIL_DT
+                     ,  C.LOGIN_LOCK_YN
+                     ,  C.CUST_WEB_ID
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.MOBILE   ELSE C.MOBILE   END     AS MOBILE
+                     ,  TO_CHAR(CD.INST_DT, 'YYYYMMDD')             AS APP_INST_DT
+                     ,  C.JOIN_DT
+                     ,  C.STOR_CD
+                     ,  S.STOR_NM
+                     ,  C.SEX_DIV
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.BIRTH_DT ELSE C.BIRTH_DT END     AS BIRTH_DT
+                     ,  C.CHILD_CNT
+                     ,  C.CUST_STAT
+                     ,  C.CHILD_REL_CD
+                     ,  C.CHILD_REL_NM
+                     ,  C.EMAIL
+                     ,  C.EMAIL_RCV_YN
+                     ,  C.SMS_RCV_YN
+                     ,  C.PUSH_RCV_YN
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.ZIP_CD ELSE C.ZIP_CD END     AS ZIP_CD
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.ADDR1 ELSE C.ADDR1 END       AS ADDR1
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.ADDR2 ELSE C.ADDR2 END       AS ADDR2
+                     ,  C.SIDO_CD
+                     ,  C.REGION_CD
+                     ,  C.OWN_CERTI_DIV
+                     ,  C.JOIN_ROUTE
+                     ,  C.LVL_CD
+                     ,  C.LVL_START_DT
+                     ,  C.LVL_CLOSE_DT
+                     ,  C.LEAVE_DT
+                     ,  C.CASH_USE_DT
+                     ,  C.LAST_LOGIN_DT
+                     ,  C.LEAVE_RMK
+                  FROM  C_CUST          C
+                     ,  C_CUST_REST     R
+                     ,  C_CUST_DEVICE   CD
+                     ,  (
+                            SELECT  S.COMP_CD
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_CD
+                                 ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                              FROM  STORE       S
+                                 ,  LANG_STORE  L
+                             WHERE  S.COMP_CD   = L.COMP_CD(+)
+                               AND  S.BRAND_CD  = L.BRAND_CD(+)
+                               AND  S.STOR_CD   = L.STOR_CD(+)
+                               AND  S.COMP_CD   = ${SCH_COMP_CD}
+                               AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+                               AND  L.USE_YN(+) = 'Y'
+                        )               S
+                 WHERE  C.COMP_CD   = CD.COMP_CD(+)
+                   AND  C.CUST_ID   = CD.CUST_ID(+)
+                   AND  C.COMP_CD   = R.COMP_CD(+)
+                   AND  C.CUST_ID   = R.CUST_ID(+)
+                   AND  C.COMP_CD   = S.COMP_CD(+)
+                   AND  C.BRAND_CD  = S.BRAND_CD(+)
+                   AND  C.STOR_CD   = S.STOR_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CUST_ID   = ${SCH_MEMBER_NO}
+            )   C3
+     WHERE  C1.COMP_CD      = C3.COMP_CD(+)
+       AND  C1.MEMBER_NO    = C3.CUST_ID(+)
+       AND  C1.COMP_CD      = ${SCH_COMP_CD}
+       AND  C1.MEMBER_NO    = ${SCH_MEMBER_NO}
+]]></query>
+
+<query name='TAB02_CHILD_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  MEMBER_NO
+         ,  CHILD_NO
+         ,  DECRYPT(CHILD_NM)       AS CHILD_NM
+         ,  SEX_DIV
+         ,  BIRTH_DT
+         ,  JOIN_DT
+      FROM  CS_MEMBER_CHILD
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  MEMBER_NO   = ${SCH_MEMBER_NO}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='TAB02_HIS_Q'><![CDATA[
+    SELECT  H.COMP_CD
+         ,  H.CUST_ID
+         ,  H.CHG_DT
+         ,  H.CHG_SEQ
+         ,  H.CHG_DIV
+         ,  CASE WHEN H.CHG_DIV IN ('01', '05') THEN DECRYPT(H.CHG_FR)
+                 WHEN H.CHG_DIV = '02' THEN FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, '00315', H.CHG_FR, ${SCH_LANGUAGE_TP})
+                 WHEN H.CHG_DIV = '03' THEN FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01730', H.CHG_FR, ${SCH_LANGUAGE_TP})
+                 WHEN H.CHG_DIV IN ('04', '15', '16') THEN TO_CHAR(TO_DATE(H.CHG_FR, 'YYYYMMDD'), 'YYYY-MM-DD')
+                 WHEN H.CHG_DIV = '05' THEN DECRYPT(H.CHG_FR)
+                 WHEN H.CHG_DIV = '09' THEN FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01710', H.CHG_FR, ${SCH_LANGUAGE_TP})
+                 WHEN H.CHG_DIV = '13' THEN FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01720', H.CHG_FR, ${SCH_LANGUAGE_TP})
+                 WHEN H.CHG_DIV = '14' THEN (SELECT LVL_NM FROM C_CUST_LVL WHERE COMP_CD = H.COMP_CD AND LVL_CD = H.CHG_FR AND USE_YN = 'Y')
+                 WHEN H.CHG_DIV = '20' THEN (SELECT REGION_NM FROM REGION WHERE COMP_CD = H.COMP_CD AND NATION_CD = 'KOR' AND CITY_CD = '0000' AND REGION_CD = H.CHG_FR AND USE_YN = 'Y')
+                 WHEN H.CHG_DIV = '21' THEN (SELECT REGION_NM FROM REGION WHERE COMP_CD = H.COMP_CD AND NATION_CD = 'KOR' AND REGION_CD = H.CHG_FR AND USE_YN = 'Y' AND ROWNUM = 1)
+                 ELSE H.CHG_FR
+            END                                                 AS CHG_FR
+         ,  CASE WHEN H.CHG_DIV IN ('01', '05') THEN DECRYPT(H.CHG_TO)
+                 WHEN H.CHG_DIV = '02' THEN FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, '00315', H.CHG_TO, ${SCH_LANGUAGE_TP})
+                 WHEN H.CHG_DIV = '03' THEN FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01730', H.CHG_TO, ${SCH_LANGUAGE_TP})
+                 WHEN H.CHG_DIV IN ('04', '15', '16') THEN TO_CHAR(TO_DATE(H.CHG_TO, 'YYYYMMDD'), 'YYYY-MM-DD')
+                 WHEN H.CHG_DIV = '09' THEN FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01710', H.CHG_TO, ${SCH_LANGUAGE_TP})
+                 WHEN H.CHG_DIV = '13' THEN FC_GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01720', H.CHG_TO, ${SCH_LANGUAGE_TP})
+                 WHEN H.CHG_DIV = '14' THEN (SELECT LVL_NM FROM C_CUST_LVL WHERE COMP_CD = H.COMP_CD AND LVL_CD = H.CHG_TO AND USE_YN = 'Y')
+                 WHEN H.CHG_DIV = '20' THEN (SELECT REGION_NM FROM REGION WHERE COMP_CD = H.COMP_CD AND NATION_CD = 'KOR' AND CITY_CD = '0000' AND REGION_CD = H.CHG_TO AND USE_YN = 'Y')
+                 WHEN H.CHG_DIV = '21' THEN (SELECT REGION_NM FROM REGION WHERE COMP_CD = H.COMP_CD AND NATION_CD = 'KOR' AND REGION_CD = H.CHG_TO AND USE_YN = 'Y' AND ROWNUM = 1)
+                 ELSE H.CHG_TO
+            END                                                 AS CHG_TO
+      FROM  C_CUST_HIS  H
+     WHERE  H.COMP_CD   = ${SCH_COMP_CD}
+       AND  H.CUST_ID   = ${SCH_MEMBER_NO}
+       AND  H.USE_YN    = 'Y'
+     ORDER  BY H.CHG_DT DESC, H.CHG_SEQ DESC
+]]></query>
+
+<query name='CS_MEMBER_U'><![CDATA[
+    UPDATE  CS_MEMBER
+       SET  ADDR1           = ${ADDR1}
+         ,  ADDR2           = ${ADDR2}
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  MEMBER_NO       = ${MEMBER_NO}
+]]></query>
+
+<query name='C_CUST_U'><![CDATA[
+    UPDATE  C_CUST
+       SET  CUST_NM         = ENCRYPT(CASE WHEN ${CUST_STAT} IN ('8', '9') THEN '***' ELSE DECRYPT(CUST_NM) END)
+         ,  SEX_DIV         = CASE WHEN ${CUST_STAT} IN ('8', '9') THEN '' ELSE ${SEX_DIV}  END
+         ,  BIRTH_DT        = CASE WHEN ${CUST_STAT} IN ('8', '9') THEN '' ELSE ${BIRTH_DT} END
+         ,  MOBILE          = CASE WHEN ${CUST_STAT} IN ('8', '9') THEN '' ELSE MOBILE      END
+         ,  CHILD_CNT       = ${CHILD_CNT}
+         ,  EMAIL           = CASE WHEN ${CUST_STAT} IN ('8', '9') THEN '' ELSE ${EMAIL}    END
+         ,  EMAIL_RCV_YN    = ${EMAIL_RCV_YN}
+         ,  SMS_RCV_YN      = ${SMS_RCV_YN}
+         ,  PUSH_RCV_YN     = ${PUSH_RCV_YN}
+         ,  ZIP_CD          = CASE WHEN ${CUST_STAT} IN ('8', '9') THEN '' ELSE ${ZIP_CD}   END
+         ,  ADDR1           = CASE WHEN ${CUST_STAT} IN ('8', '9') THEN '' ELSE ${ADDR1}    END
+         ,  ADDR2           = CASE WHEN ${CUST_STAT} IN ('8', '9') THEN '' ELSE ${ADDR2}    END
+         ,  SIDO_CD         = ${SIDO_CD}
+         ,  REGION_CD       = ${REGION_CD}
+         ,  CHILD_REL_CD    = ${CHILD_REL_CD}
+         ,  CHILD_REL_NM    = ${CHILD_REL_NM}
+         ,  LVL_CD          = ${LVL_CD}
+         ,  LVL_START_DT    = ${LVL_START_DT}
+         ,  LVL_CLOSE_DT    = ${LVL_CLOSE_DT}
+         ,  CUST_STAT       = ${CUST_STAT}
+         ,  REST_DT         = CASE WHEN ${CUST_STAT} = '8' THEN TO_CHAR(SYSDATE, 'YYYYMMDD') ELSE REST_DT   END
+         ,  LEAVE_DT        = CASE WHEN ${CUST_STAT} = '9' THEN TO_CHAR(SYSDATE, 'YYYYMMDD') ELSE LEAVE_DT  END
+         ,  LEAVE_RMK       = CASE WHEN ${CUST_STAT} = '9' THEN '본사담당자 이탈처리'               ELSE LEAVE_RMK END
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  CUST_ID         = ${CUST_ID}
+]]></query>
+
+<query name='C_CUST_REST_U'><![CDATA[
+    MERGE   INTO C_CUST     TT
+    USING   (
+                    SELECT  COMP_CD,            CUST_ID,            BRAND_CD,           STOR_CD,            CUST_WEB_ID,            CUST_NM,            CUST_PW
+                         ,  PW_DIV,             SEX_DIV,            LUNAR_DIV,          BIRTH_DT,           MOBILE,                 MOBILE_N3,          PUSH_RCV_YN
+                         ,  SMS_RCV_YN,         EMAIL,              EMAIL_RCV_YN,       ADDR_DIV,           ZIP_CD,                 ADDR1,              ADDR2
+                         ,  SIDO_CD,            REGION_CD,          CHILD_CNT,          CHILD_REL_CD,       CHILD_REL_NM,           '101' LVL_CD,       TO_CHAR(SYSDATE, 'YYYYMMDD') LVL_START_DT
+                         ,  TO_CHAR(ADD_MONTHS(SYSDATE, 6)-1, 'YYYYMMDD') LVL_CLOSE_DT, SAV_MLG,            USE_MLG,                LOS_MLG,            MLG_DIV,                MLG_SAV_DT,         SAV_PT
+                         ,  USE_PT,             LOS_PT,             PT_SAV_DT,          PT_USE_DT,          SAV_CASH,               USE_CASH,           CASH_USE_DT
+                         ,  '2' AS CUST_STAT,   REMARKS,            JOIN_DT,            REST_DT,            LEAVE_DT,               LEAVE_RMK,          DEVICE_TOKEN
+                         ,  OSKIND,             MOBILE_KIND,        RCMD_CUST_ID,       RCMD_DT,            BAD_CUST_YN,            BAD_CUST_COMPLAIN,  LAST_LOGIN_DT
+                         ,  OWN_CERTI_DIV,      LAST_CHG_PWD,       NEGATIVE_USER_YN,   DI_STR,             LOGIN_DIV,              LOGIN_IP,           LVL_CHG_DT
+                         ,  DEGRADE_YN,         LVL_CHG_DT_BACK,    JOIN_ROUTE,         LOGIN_FAIL_COUNT,   LOGIN_FAIL_DT,          LOGIN_LOCK_YN,      INST_DT
+                         ,  INST_USER,          SYSDATE,            'SYSTEM'
+                      FROM  C_CUST_REST
+                     WHERE  COMP_CD     = ${COMP_CD}
+                       AND  CUST_ID     = ${CUST_ID}
+            )   ST
+    ON (
+                ST.COMP_CD  = TT.COMP_CD
+           AND  ST.CUST_ID  = TT.CUST_ID
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  TT.CUST_NM      = ST.CUST_NM
+             ,  TT.SEX_DIV      = ST.SEX_DIV
+             ,  TT.BIRTH_DT     = ST.BIRTH_DT
+             ,  TT.MOBILE       = ST.MOBILE
+             ,  TT.EMAIL        = ST.EMAIL
+             ,  TT.ZIP_CD       = ST.ZIP_CD
+             ,  TT.ADDR1        = ST.ADDR1
+             ,  TT.ADDR2        = ST.ADDR2
+             ,  TT.LVL_CD       = ST.LVL_CD
+             ,  TT.LVL_START_DT = ST.LVL_START_DT
+             ,  TT.LVL_CLOSE_DT = ST.LVL_CLOSE_DT
+             ,  TT.CUST_STAT    = ST.CUST_STAT
+             ,  TT.REMARKS      = ST.REMARKS
+             ,  TT.REST_DT      = ''
+             ,  TT.LVL_CHG_DT   = ST.LVL_START_DT
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+]]></query>
+
+<query name='C_CUST_REST_D'><![CDATA[
+    DELETE FROM C_CUST_REST
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${CUST_ID}
+]]></query>
+
+<query name='TAB03_Q'><![CDATA[ 
+    SELECT  /*+ LEADING(EHD) INDEX(MEM PK_CS_MEMBER) */
+            EHD.COMP_CD
+         ,  EHD.ENTRY_DT
+         ,  EHD.BRAND_CD
+         ,  BRN.BRAND_NM
+         ,  EHD.STOR_CD
+         ,  STO.STOR_NM
+         ,  EHD.MEMBER_NO
+         ,  DECRYPT(EHD.MEMBER_NM)                      AS MEMBER_NM
+         ,  FN_GET_FORMAT_HP_NO(DECRYPT(EHD.MOBILE))    AS MOBILE
+         ,  EHD.ENTRY_NO
+         ,  EHD.ENTRY_CNT
+         ,  EHD.GRD_AMT
+         ,  EHD.UNPAID_AMT
+         ,  CASE WHEN EHD.ENTRY_CNT = 0 THEN 0 ELSE ROUND(EHD.GRD_AMT / EHD.ENTRY_CNT) END AS CUST_AMT
+         ,  CHD.CHILD_NO
+         ,  DECRYPT(NVL(CHD.CHILD_NM, EDT.ENTRY_NM)) AS CHILD_NM
+         ,  CHD.SEX_DIV
+         ,  GET_COMMON_CODE_NM(${SCH_COMP_CD}, '00315', CHD.SEX_DIV, ${SCH_LANGUAGE_TP}) AS SEX_DIV_NM
+         ,  CHD.AGES
+         ,  EDT.ENTRY_DIV
+         ,  GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01885', EDT.ENTRY_DIV, ${SCH_LANGUAGE_TP}) AS ENTRY_DIV_NM
+         ,  EPG.PROGRAM_ID
+         ,  PGM.PROGRAM_NM||'['||ITM.ITEM_NM||']' AS PROGRAM_NM
+         ,  EPG.MATL_ITEM_CD
+         ,  SUBSTR(EDT.ENTRY_FTM, 1, 4) AS ENTRY_FTM
+         ,  SUBSTR(EDT.ENTRY_TTM, 1, 4) AS ENTRY_TTM
+         ,  FN_GET_FROMAT_HHMM(EPG.USE_TM)  AS USE_TM
+         ,  FN_GET_FROMAT_HHMM(EPG.IDLE_TM) AS IDLE_TM
+         ,  FN_GET_FROMAT_HHMM(EPG.ADD_TM)  AS ADD_TM
+         ,  EPG.USE_AMT
+         ,  EPG.ADD_AMT
+         ,  EPG.MBS_NO
+         ,  MBS.MBS_NM
+         ,  CASE WHEN MSL.CERT_NO IS NULL THEN NULL
+                 ELSE SUBSTR(MSL.CERT_NO, 1, 8)||'****'||SUBSTR(MSL.CERT_NO, 14, 2) 
+            END AS CERT_NO
+         ,  MBS.MBS_DIV
+         ,  GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01850', MBS.MBS_DIV, ${SCH_LANGUAGE_TP}) AS MBS_DIV_NM
+         ,  MBS.CHARGE_YN
+         ,  GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01860', MBS.CHARGE_YN, ${SCH_LANGUAGE_TP}) AS CHARGE_YN_NM
+         ,  MSL.USE_TM   AS MBS_USE_TM
+         ,  MSL.USE_CNT  AS MBS_USE_CNT
+         ,  MSL.USE_AMT  AS MBS_USE_AMT
+         ,  MSL.USE_MCNT AS MBS_USE_MCNT
+      FROM  CS_ENTRY_HD             EHD
+         ,  CS_ENTRY_DT             EDT
+         ,  CS_ENTRY_PROGRAM        EPG
+         ,  (
+                SELECT  /*+ NO_MERGE */
+                        P.COMP_CD
+                     ,  P.PROGRAM_ID
+                     ,  NVL(L.LANG_NM, P.PROGRAM_NM)    AS PROGRAM_NM
+                     ,  P.BASE_USE_TM
+                  FROM  CS_PROGRAM      P
+                     ,  LANG_TABLE      L
+                 WHERE  L.COMP_CD(+)    = P.COMP_CD     
+                   AND  L.PK_COL(+)     = LPAD(P.PROGRAM_ID, 30, ' ')
+                   AND  P.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.TABLE_NM(+)   = 'CS_PROGRAM'
+                   AND  L.COL_NM(+)     = 'PROGRAM_NM'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )   PGM
+         ,  CS_MEMBER               MEM
+         ,  CS_MEMBER_CHILD         CHD
+         ,  CS_MEMBERSHIP           MBS
+         ,  ITEM                    ITM
+         ,  BRAND                   BRN
+         ,  STORE                   STO
+         ,  (
+                SELECT  /*+ LEADING(MSL) INDEX(SDT IDX01_SALE_DT) */
+                        MSL.COMP_CD
+                     ,  SDT.ENTRY_NO
+                     ,  SDT.ENTRY_SEQ
+                     ,  SDT.PROGRAM_SEQ
+                     ,  SDT.MBS_NO
+                     ,  SDT.CERT_NO
+                     ,  SUM(MSL.USE_TM )  AS USE_TM
+                     ,  SUM(MSL.USE_CNT)  AS USE_CNT
+                     ,  SUM(MSL.USE_AMT)  AS USE_AMT
+                     ,  SUM(MSL.USE_MCNT) AS USE_MCNT
+                  FROM  CS_MEMBERSHIP_SALE_HIS  MSL
+                     ,  SALE_DT                 SDT
+                 WHERE  SDT.SALE_DT  = MSL.APPR_DT
+                   AND  SDT.BRAND_CD = MSL.SALE_BRAND_CD
+                   AND  SDT.STOR_CD  = MSL.SALE_STOR_CD
+                   AND  SDT.POS_NO   = MSL.SALE_POS_NO
+                   AND  SDT.BILL_NO  = MSL.SALE_BILL_NO
+                   AND  SDT.SEQ      = MSL.SALE_SEQ
+                   AND  MSL.COMP_CD    = ${SCH_COMP_CD}
+                   AND  MSL.MEMBER_NO  = ${SCH_MEMBER_NO}
+                 GROUP  BY MSL.COMP_CD
+                     ,  SDT.ENTRY_NO
+                     ,  SDT.ENTRY_SEQ
+                     ,  SDT.PROGRAM_SEQ
+                     ,  SDT.MBS_NO
+                     ,  SDT.CERT_NO
+            )   MSL
+     WHERE  EHD.COMP_CD     = EDT.COMP_CD
+       AND  EHD.ENTRY_NO    = EDT.ENTRY_NO
+       AND  EDT.COMP_CD     = EPG.COMP_CD
+       AND  EDT.ENTRY_NO    = EPG.ENTRY_NO
+       AND  EDT.ENTRY_SEQ   = EPG.ENTRY_SEQ
+       AND  EPG.COMP_CD     = PGM.COMP_CD
+       AND  EPG.PROGRAM_ID  = PGM.PROGRAM_ID
+       AND  EDT.COMP_CD     = CHD.COMP_CD   (+)
+       AND  EDT.MEMBER_NO   = CHD.MEMBER_NO (+)
+       AND  EDT.CHILD_NO    = CHD.CHILD_NO  (+)
+       AND  EHD.COMP_CD     = MEM.COMP_CD
+       AND  EHD.MEMBER_NO   = MEM.MEMBER_NO
+       AND  EPG.COMP_CD     = MBS.COMP_CD   (+)
+       AND  EPG.PROGRAM_ID  = MBS.PROGRAM_ID(+)
+       AND  EPG.MBS_NO      = MBS.MBS_NO    (+)
+       AND  EPG.COMP_CD     = MSL.COMP_CD   (+)
+       AND  EPG.ENTRY_NO    = MSL.ENTRY_NO  (+)
+       AND  EPG.ENTRY_SEQ   = MSL.ENTRY_SEQ (+)
+       AND  EPG.PROGRAM_SEQ = MSL.PROGRAM_SEQ(+)
+       AND  EPG.MBS_NO      = MSL.MBS_NO    (+)
+       AND  EPG.CERT_NO     = MSL.CERT_NO   (+)
+       AND  EPG.COMP_CD     = ITM.COMP_CD (+)
+       AND  EPG.MATL_ITEM_CD= ITM.ITEM_CD (+)
+       AND  EHD.COMP_CD     = BRN.COMP_CD
+       AND  EHD.BRAND_CD    = BRN.BRAND_CD
+       AND  EHD.COMP_CD     = STO.COMP_CD
+       AND  EHD.BRAND_CD    = STO.BRAND_CD
+       AND  EHD.STOR_CD     = STO.STOR_CD
+       AND  EHD.COMP_CD     = ${SCH_COMP_CD}
+       AND  EHD.MEMBER_NO   = ${SCH_MEMBER_NO}
+       AND  EHD.ENTRY_DT    BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  (${SCH_BRAND_CD} IS NULL OR EHD.BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_TP}  IS NULL OR STO.STOR_TP  = ${SCH_STOR_TP})
+       AND  (${SCH_STOR_CD}  IS NULL OR EHD.STOR_CD  = ${SCH_STOR_CD})
+       AND  EDT.USE_YN      = 'Y'
+     ORDER  BY EHD.ENTRY_DT DESC
+         ,  EDT.ENTRY_FTM DESC
+         ,  CHD.CHILD_NO
+]]></query>
+
+<query name='TAB04_Q'><![CDATA[ 
+    SELECT  C.COMP_CD
+         ,  C.COUPON_STATE
+         ,  C.COUPON_STATE                                  AS ORG_COUPON_STATE
+         ,  C.COUPON_CD
+         ,  P.PRMT_NM                                       AS COUPON_NM
+         ,  TO_CHAR(C.INST_DT, 'YYYYMMDD')                  AS INST_DT
+         ,  C.START_DT
+         ,  C.CLOSE_DT
+         ,  C.CLOSE_DT                                      AS ORG_CLOSE_DT
+         ,  CASE WHEN C.COUPON_STATE = 'P0301' THEN 'Y'
+                 ELSE 'N'
+            END                                             AS COUPON_USE_YN
+         ,  C.SALE_DT
+         ,  C.SALE_DT                                       AS ORG_SALE_DT
+         ,  C.BRAND_CD
+         ,  C.BRAND_CD                                      AS ORG_BRAND_CD
+         ,  C.STOR_CD
+         ,  C.STOR_CD                                       AS ORG_STOR_CD
+         ,  S.STOR_NM
+         ,  S.STOR_NM                                       AS ORG_STOR_NM
+         ,  C.POS_NO
+         ,  C.POS_NO                                        AS ORG_POS_NO
+         ,  C.BILL_NO
+         ,  C.BILL_NO                                       AS ORG_BILL_NO
+         ,  C.ITEM_CD
+         ,  C.ITEM_CD                                       AS ORG_ITEM_CD
+         ,  I.ITEM_NM
+         ,  I.ITEM_NM                                       AS ORG_ITEM_NM
+         ,  C.REMARKS
+         ,  NVL(U.USER_NM, C.UPD_USER)                      AS UPD_USER
+         ,  TO_CHAR(C.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+      FROM  PROMOTION_COUPON            C
+         ,  PROMOTION_COUPON_PUBLISH    CP
+         ,  PROMOTION                   P
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_TP
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )       TS
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_TP
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )       S
+         ,  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_NM, I.ITEM_NM)   AS ITEM_NM
+                  FROM  ITEM        I
+                     ,  LANG_ITEM   L
+                 WHERE  I.COMP_CD       = L.COMP_CD(+)
+                   AND  I.ITEM_CD       = L.ITEM_CD(+)
+                   AND  I.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )       I
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  C.COMP_CD       = CP.COMP_CD
+       AND  C.PUBLISH_ID    = CP.PUBLISH_ID
+       AND  CP.COMP_CD      = P.COMP_CD
+       AND  CP.PRMT_ID      = P.PRMT_ID
+       AND  C.COMP_CD       = TS.COMP_CD(+)
+       AND  C.BRAND_CD      = TS.BRAND_CD(+)
+       AND  C.STOR_CD       = TS.STOR_CD(+)
+       AND  C.COMP_CD       = S.COMP_CD(+)
+       AND  C.BRAND_CD      = S.BRAND_CD(+)
+       AND  C.STOR_CD       = S.STOR_CD(+)
+       AND  C.COMP_CD       = I.COMP_CD(+)
+       AND  C.ITEM_CD       = I.ITEM_CD(+)
+       AND  C.COMP_CD       = U.COMP_CD(+)
+       AND  C.UPD_USER      = U.USER_ID(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CUST_ID       = ${SCH_MEMBER_NO}
+       AND  TO_CHAR(C.INST_DT, 'YYYYMMDD') BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  (${SCH_BRAND_CD} IS NULL OR C.TG_BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_CD}  IS NULL OR C.TG_STOR_CD  = ${SCH_STOR_CD})
+     ORDER  BY C.TG_SALE_DT DESC, C.TG_BRAND_CD, C.TG_STOR_CD, C.COUPON_CD
+]]></query>
+
+<query name='PROMOTION_COUPON_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON
+       SET  CLOSE_DT        = ${CLOSE_DT}
+         ,  COUPON_STATE    = ${COUPON_STATE}
+         ,  REMARKS         = ${REMARKS}
+         ,  BRAND_CD        = ${BRAND_CD}
+         ,  STOR_CD         = ${STOR_CD}
+         ,  SALE_DT         = ${SALE_DT}
+         ,  POS_NO          = ${POS_NO}
+         ,  BILL_NO         = ${BILL_NO}
+         ,  ITEM_CD         = ${ITEM_CD}
+         ,  DESTROY_DT      = CASE WHEN ${COUPON_STATE} = 'P0309' THEN TO_CHAR(SYSDATE, 'YYYYMMDD') ELSE '' END
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  COUPON_CD       = ${COUPON_CD}
+]]></query>
+
+<query name='PROMOTION_COUPON_HIS_I'><![CDATA[
+    INSERT  INTO PROMOTION_COUPON_HIS
+    SELECT  COMP_CD
+         ,  COUPON_CD
+         ,  (
+                SELECT  NVL(MAX(TO_NUMBER(SEQ)),0) + 1  AS SEQ
+                  FROM  PROMOTION_COUPON_HIS
+                 WHERE  COMP_CD         = ${COMP_CD}
+                   AND  COUPON_CD       = ${COUPON_CD}
+            )
+         ,  PUBLISH_ID
+         ,  CUST_ID
+         ,  CUST_LVL_CD
+         ,  CUST_MOBILE
+         ,  CARD_ID
+         ,  TG_BRAND_CD
+         ,  TG_STOR_CD
+         ,  TG_SALE_DT
+         ,  TG_POS_NO
+         ,  TG_BILL_NO
+         ,  START_DT
+         ,  CLOSE_DT
+         ,  COUPON_STATE
+         ,  REMARKS
+         ,  BRAND_CD
+         ,  STOR_CD
+         ,  SALE_DT
+         ,  POS_NO
+         ,  BILL_NO
+         ,  POS_SEQ
+         ,  ITEM_CD
+         ,  DESTROY_DT
+         ,  SYSDATE
+         ,  ${UPD_USER}
+      FROM  PROMOTION_COUPON
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  COUPON_CD       = ${COUPON_CD}
+]]></query>
+
+<query name='TAB05_Q'><![CDATA[ 
+    SELECT  P.COMP_CD
+         ,  P.BRAND_CD
+         ,  S.STOR_TP
+         ,  P.STOR_CD
+         ,  S.STOR_NM
+         ,  P.PRC_DT
+         ,  P.POS_NO
+         ,  P.BILL_NO
+         ,  P.SAV_USE_DIV
+         ,  SH.SALE_QTY
+         ,  SH.SALE_AMT
+         ,  SH.ENR_AMT + SH.DC_AMT                          AS DC_AMT
+         ,  SH.GRD_I_AMT + SH.GRD_O_AMT                     AS GRD_AMT
+         ,  P.SAV_PT
+         ,  P.USE_PT
+         ,  P.LOS_PT
+         ,  P.LOS_PT_DT
+         ,  P.REMARKS
+         ,  NVL(U.USER_NM, P.UPD_USER)                      AS UPD_USER
+         ,  TO_CHAR(P.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+      FROM  C_CARD_SAV_USE_PT           P
+         ,  SALE_HD                     SH
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_TP
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )       S
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  P.COMP_CD       = SH.COMP_CD(+)
+       AND  P.PRC_DT        = SH.SALE_DT(+)
+       AND  P.BRAND_CD      = SH.BRAND_CD(+)
+       AND  P.STOR_CD       = SH.STOR_CD(+)
+       AND  P.POS_NO        = SH.POS_NO(+)
+       AND  P.BILL_NO       = SH.BILL_NO(+)
+       AND  P.COMP_CD       = S.COMP_CD(+)
+       AND  P.BRAND_CD      = S.BRAND_CD(+)
+       AND  P.STOR_CD       = S.STOR_CD(+)
+       AND  P.COMP_CD       = U.COMP_CD(+)
+       AND  P.UPD_USER      = U.USER_ID(+)
+       AND  P.COMP_CD       = ${SCH_COMP_CD}
+       AND  P.CARD_ID       = ENCRYPT(${SCH_MEMBER_NO})
+       AND  P.PRC_DT        BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  (${SCH_SAV_USE_DIV} IS NULL OR P.SAV_USE_DIV = ${SCH_SAV_USE_DIV})
+       AND  (${SCH_BRAND_CD} IS NULL OR P.BRAND_CD  = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_TP}  IS NULL OR S.STOR_TP   = ${SCH_STOR_TP})
+       AND  (${SCH_STOR_CD}  IS NULL OR P.STOR_CD   = ${SCH_STOR_CD})
+     ORDER  BY P.PRC_DT DESC, P.PRC_SEQ DESC
+]]></query>
+
+<query name='C_CARD_SAV_USE_PT_I'><![CDATA[
+    INSERT  INTO C_CARD_SAV_USE_PT
+    SELECT  ${COMP_CD}                                                      AS COMP_CD
+         ,  ENCRYPT(${CARD_ID})                                             AS CARD_ID
+         ,  ${PRC_DT}                                                       AS PRC_DT
+         ,  SQ_PCRM_SEQ.NEXTVAL                                             AS PRC_SEQ
+         ,  ${SAV_USE_FG}                                                   AS SAV_USE_FG
+         ,  ${SAV_USE_DIV}                                                  AS SAV_USE_DIV
+         ,  ${BRAND_CD}                                                     AS BRAND_CD
+         ,  ${STOR_CD}                                                      AS STOR_CD
+         ,  NULL                                                            AS POS_NO
+         ,  NULL                                                            AS BILL_NO
+         ,  CASE WHEN ${SAV_USE_FG} = '1' THEN TO_NUMBER(${ADJ_PT}) ELSE 0 END       AS SAV_PT
+         ,  ''                                                              AS PRMT_ID
+         ,  CASE WHEN ${SAV_USE_FG} = '2' THEN TO_NUMBER(${ADJ_PT}) ELSE 0 END       AS USE_PT
+         ,  0                                                               AS LOS_PT
+         ,  'N'                                                             AS LOS_PT_YN
+         ,  TO_CHAR(SYSDATE + 364, 'YYYYMMDD')                              AS LOS_PT_DT
+         ,  ${REMARKS}                                                      AS REMARKS
+         ,  '1'                                                             AS MEMB_DIV
+         ,  'Y'                                                             AS USE_YN
+         ,  SYSDATE                                                         AS INST_DT
+         ,  ${UPD_USER}                                                     AS INST_USER
+         ,  SYSDATE                                                         AS UPD_DT
+         ,  ${UPD_USER}                                                     AS UPD_USER
+      FROM  DUAL
+]]></query>
+
+<query name='TAB06_Q'><![CDATA[ 
+    SELECT  SH.COMP_CD
+         ,  SH.BRAND_CD
+         ,  MAX(S.STOR_TP)                          AS STOR_TP
+         ,  SH.STOR_CD
+         ,  MAX(S.STOR_NM)                          AS STOR_NM
+         ,  SH.SALE_DT
+         ,  SH.POS_NO
+         ,  SH.BILL_NO
+         ,  MAX(SH.SALE_QTY)                        AS SALE_QTY
+         ,  MAX(SH.SALE_AMT)                        AS SALE_AMT
+         ,  MAX(SH.ENR_AMT + SH.DC_AMT)             AS DC_AMT
+         ,  MAX(SH.GRD_I_AMT + SH.GRD_O_AMT)        AS GRD_AMT
+         ,  SUM(NVL(M.SAV_MLG, 0))                  AS SAV_MLG
+         ,  SUM(NVL(M.USE_MLG, 0))                  AS USE_MLG
+         ,  SUM(NVL(M.LOS_MLG, 0))                  AS LOS_MLG
+         ,  SUM(NVL(M.VOID_MLG, 0))                 AS VOID_MLG
+      FROM  SALE_HD                     SH
+         ,  C_CARD_SAV_USE_MLG          M
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_TP
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )       S
+     WHERE  SH.COMP_CD      = M.COMP_CD(+)
+       AND  SH.SALE_DT      = M.SALE_DT(+)
+       AND  SH.BRAND_CD     = M.BRAND_CD(+)
+       AND  SH.STOR_CD      = M.STOR_CD(+)
+       AND  SH.POS_NO       = M.POS_NO(+)
+       AND  SH.BILL_NO      = M.BILL_NO(+)
+       AND  SH.COMP_CD      = S.COMP_CD(+)
+       AND  SH.BRAND_CD     = S.BRAND_CD(+)
+       AND  SH.STOR_CD      = S.STOR_CD(+)
+       AND  SH.COMP_CD      = ${SCH_COMP_CD}
+       AND  SH.CUST_ID      = ${SCH_MEMBER_NO}
+       AND  SH.SALE_DT      BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  (${SCH_BRAND_CD} IS NULL OR SH.BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_TP}  IS NULL OR S.STOR_TP   = ${SCH_STOR_TP})
+       AND  (${SCH_STOR_CD}  IS NULL OR SH.STOR_CD  = ${SCH_STOR_CD})
+     GROUP  BY SH.COMP_CD, SH.SALE_DT, SH.BRAND_CD, SH.STOR_CD, SH.POS_NO, SH.BILL_NO
+     ORDER  BY SH.COMP_CD, SH.SALE_DT, SH.BRAND_CD, SH.STOR_CD, SH.POS_NO, SH.BILL_NO
+]]></query>
+
+<query name='TAB06_HIS_Q'><![CDATA[ 
+    SELECT  M.PRC_SEQ
+         ,  M.SAV_USE_FG
+         ,  M.SAV_MLG
+         ,  M.USE_MLG
+         ,  M.COUPON_CD
+         ,  M.COUPON_DT
+         ,  M.LOS_MLG
+         ,  M.LOS_MLG_DT
+         ,  M.VOID_MLG
+         ,  M.VOID_DT
+         ,  M.REMARKS
+         ,  TO_CHAR(M.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')      AS UPD_DT
+         ,  NVL(U.USER_NM, M.UPD_USER)                      AS UPD_USER
+      FROM  C_CARD_SAV_USE_MLG  M
+         ,  C_CARD              CA
+         ,  C_CUST              CU
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  M.COMP_CD       = CA.COMP_CD
+       AND  M.CARD_ID       = CA.CARD_ID
+       AND  CA.COMP_CD      = CU.COMP_CD
+       AND  CA.CUST_ID      = CU.CUST_ID
+       AND  M.COMP_CD       = U.COMP_CD(+)
+       AND  M.UPD_USER      = U.USER_ID(+) 
+       AND  M.COMP_CD       = ${SCH_COMP_CD}
+       AND  M.SALE_DT       = ${SCH_SALE_DT}
+       AND  M.BRAND_CD      = ${SCH_BRAND_CD}
+       AND  M.STOR_CD       = ${SCH_STOR_CD}
+       AND  M.POS_NO        = ${SCH_POS_NO}
+       AND  M.BILL_NO       = ${SCH_BILL_NO}
+       AND  CU.CUST_ID      = ${SCH_CUST_ID}
+     ORDER  BY M.PRC_SEQ
+]]></query>
+
+<query name='TAB07_MAIN_Q'><![CDATA[ 
+    SELECT  MS.COMP_CD
+         ,  MS.PROGRAM_ID
+         ,  MS.MBS_NO
+         ,  M.MBS_NM
+         ,  MS.CERT_NO
+         ,  SUBSTR(MS.CERT_NO, 1, 8)||'*****'||SUBSTR(MS.CERT_NO, 14, 2)        AS CERT_NO_DISP
+         ,  MS.MEMBER_NO
+         ,  MS.MBS_DIV
+         ,  MS.MBS_STAT
+         ,  MS.CHARGE_YN
+         ,  MS.CERT_FDT
+         ,  MS.CERT_TDT
+      FROM  CS_MEMBERSHIP_SALE   MS
+         ,  CS_MEMBERSHIP        M
+     WHERE  MS.COMP_CD      = M.COMP_CD(+)
+       AND  MS.PROGRAM_ID   = M.PROGRAM_ID(+)
+       AND  MS.MBS_NO       = M.MBS_NO(+)
+       AND  MS.COMP_CD      = ${SCH_COMP_CD}
+       AND  MS.MEMBER_NO    = ${SCH_MEMBER_NO}
+       AND  MS.USE_YN       = 'Y'
+       AND  (${SCH_BRAND_CD} IS NULL OR MS.SALE_BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_CD}  IS NULL OR MS.SALE_STOR_CD  = ${SCH_STOR_CD})
+     ORDER  BY MS.CERT_TDT  DESC
+         ,  MS.CERT_NO      DESC
+]]></query>
+
+<query name='TAB07_MBS_Q'><![CDATA[ 
+    SELECT  MS.COMP_CD
+         ,  MS.PROGRAM_ID
+         ,  P.PROGRAM_NM
+         ,  MS.MBS_NO
+         ,  M.MBS_NM
+         ,  MS.CERT_NO
+         ,  SUBSTR(MS.CERT_NO, 1, 8)||'*****'||SUBSTR(MS.CERT_NO, 14, 2)        AS CERT_NO_DISP
+         ,  MS.MEMBER_NO
+         ,  FN_GET_FORMAT_HP_NO(MS.MOBILE)                                      AS MOBILE
+         ,  MS.MBS_DIV
+         ,  MS.MBS_STAT
+         ,  MS.CHARGE_YN
+         ,  MS.CERT_FDT
+         ,  MS.CERT_TDT
+         ,  MS.SALE_DIV
+         ,  P.BASE_USE_TM
+         ,  MS.ENTR_PRC
+         ,  MS.SALE_AMT
+         ,  MS.DC_AMT
+         ,  MS.GRD_AMT
+         ,  MS.SALE_BRAND_CD
+         ,  MS.SALE_STOR_CD
+         ,  S.STOR_NM               AS SALE_STOR_NM
+         ,  MS.USE_DIV
+         ,  MS.OFFER_TM
+         ,  MS.USE_TM
+         ,  MS.OFFER_CNT
+         ,  MS.USE_CNT
+         ,  MS.OFFER_AMT
+         ,  MS.USE_AMT
+         ,  MS.OFFER_MCNT
+         ,  MS.USE_MCNT
+         ,  MS.REFUND_YN
+         ,  TO_CHAR(TO_DATE(MS.REFUND_REQ_DT , 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')    AS REFUND_REQ_DT
+         ,  TO_CHAR(TO_DATE(MS.REFUND_APPR_DT, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')    AS REFUND_APPR_DT
+         ,  MS.REFUND_USER
+         ,  NVL(U.USER_NM, MS.REFUND_USER)                                                      AS REFUND_USER_NM
+         ,  TO_CHAR(TO_DATE(MS.REFUND_DT     , 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')    AS REFUND_DT
+         ,  CASE WHEN MS.MBS_STAT= '92' THEN     -- 환불완료금액
+                      MS.REFUND_AMT             
+                 WHEN MS.MBS_DIV = '1' THEN      -- 시간권의 환불금액 계산
+                      CASE WHEN TRUNC(MS.GRD_AMT - (MS.ENTR_PRC * (MS.USE_TM / P.BASE_USE_TM)), -2) <= 0 THEN 0     -- 사용시간금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(MS.GRD_AMT - (MS.ENTR_PRC * (MS.USE_TM / P.BASE_USE_TM)), -2)                 -- 환불금액 10원단위 절삭
+                      END 
+                 WHEN MS.MBS_DIV = '2' THEN           -- 횟수권의 환불금액 계산
+                      CASE WHEN TRUNC(MS.GRD_AMT - (MS.ENTR_PRC * MS.USE_CNT), -2) <= 0 THEN 0                      -- 사용횟수금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(MS.GRD_AMT - (MS.ENTR_PRC * MS.USE_CNT), -2)                                  -- 환불금액 10원단위 절삭
+                      END 
+                 WHEN MS.MBS_DIV = '3' THEN           -- 금액권의 환불금액 계산
+                      CASE WHEN TRUNC(MS.GRD_AMT - MS.USE_AMT, -2) <= 0 THEN 0                                      -- 사용금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(MS.GRD_AMT - MS.USE_AMT, -2)                                                  -- 환불금액 10원단위 절삭
+                      END 
+                 ELSE 0                         
+            END                                                                                 AS REFUND_AMT       -- 환불금액
+      FROM  CS_MEMBERSHIP_SALE   MS
+         ,  CS_MEMBERSHIP        M
+         ,  (
+                SELECT  P.COMP_CD
+                     ,  P.PROGRAM_ID
+                     ,  NVL(L.LANG_NM, P.PROGRAM_NM)    AS PROGRAM_NM
+                     ,  P.BASE_USE_TM
+                  FROM  CS_PROGRAM      P
+                     ,  LANG_TABLE      L
+                 WHERE  L.COMP_CD(+)    = P.COMP_CD     
+                   AND  L.PK_COL(+)     = LPAD(P.PROGRAM_ID, 30, ' ')
+                   AND  P.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.TABLE_NM(+)   = 'CS_PROGRAM'
+                   AND  L.COL_NM(+)     = 'PROGRAM_NM'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )   P
+        ,   (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)       AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )   S
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  MAX(USER_NM)        AS USER_NM
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  HQ_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                            UNION
+                            SELECT  COMP_CD
+                                 ,  USER_ID
+                                 ,  USER_NM
+                              FROM  STORE_USER
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                        )
+                 GROUP  BY COMP_CD, USER_ID
+            )       U
+     WHERE  MS.COMP_CD      = M.COMP_CD(+)
+       AND  MS.PROGRAM_ID   = M.PROGRAM_ID(+)
+       AND  MS.MBS_NO       = M.MBS_NO(+)
+       AND  MS.COMP_CD      = P.COMP_CD(+)
+       AND  MS.PROGRAM_ID   = P.PROGRAM_ID(+)
+       AND  MS.COMP_CD      = S.COMP_CD(+)
+       AND  MS.SALE_BRAND_CD= S.BRAND_CD(+)
+       AND  MS.SALE_STOR_CD = S.STOR_CD(+)
+       AND  MS.COMP_CD      = U.COMP_CD(+)
+       AND  MS.REFUND_USER  = U.USER_ID(+)
+       AND  MS.COMP_CD      = ${SCH_COMP_CD}
+       AND  MS.PROGRAM_ID   = ${SCH_PROGRAM_ID}
+       AND  MS.MBS_NO       = ${SCH_MBS_NO}
+       AND  MS.CERT_NO      = ${SCH_CERT_NO}
+]]></query>
+
+<query name='TAB07_HIS_Q'><![CDATA[ 
+    SELECT  HIS.COMP_CD
+         ,  HIS.SALE_BRAND_CD
+         ,  HIS.SALE_STOR_CD
+         ,  S.STOR_NM                                   AS SALE_STOR_NM
+         ,  NVL(EDT.ENTRY_DT, HIS.APPR_DT)              AS ENTRY_DT
+         ,  SUBSTR(EDT.ENTRY_FTM, 1, 4)                 AS ENTRY_FTM
+         ,  SUBSTR(EDT.ENTRY_TTM, 1, 4)                 AS ENTRY_TTM
+         ,  EDT.USE_TM + EDT.ADD_TM                     AS ENTRY_USE_TM
+         ,  HIS.PROGRAM_ID
+         ,  HIS.MBS_NO
+         ,  HIS.CERT_NO
+         ,  HIS.APPR_SEQ
+         ,  HIS.APPR_DT
+         ,  HIS.APPR_TM
+         ,  HIS.SALE_USE_DIV
+         ,  HIS.SALE_DIV
+         ,  HIS.CHILD_NO
+         ,  DECRYPT(NVL(EDT.ENTRY_NM, HIS.CHILD_NM))    AS CHILD_NM
+         ,  HIS.SEX_DIV
+         ,  HIS.AGES
+         ,  HIS.USE_TM
+         ,  HIS.USE_CNT
+         ,  HIS.USE_AMT
+         ,  HIS.USE_MCNT
+         ,  HIS.GRD_AMT
+         ,  HIS.REMARKS
+         ,  NVL(HU.USER_NM, HIS.UPD_USER)               AS UPD_USER
+      FROM  (
+                SELECT  HIS.COMP_CD
+                     ,  HIS.SALE_BRAND_CD
+                     ,  HIS.SALE_STOR_CD
+                     ,  HIS.PROGRAM_ID
+                     ,  HIS.MBS_NO
+                     ,  SUBSTR(HIS.CERT_NO, 1, 8)||'****'||SUBSTR(HIS.CERT_NO, 14, 2) AS CERT_NO
+                     ,  HIS.APPR_SEQ
+                     ,  HIS.APPR_DT
+                     ,  HIS.APPR_TM
+                     ,  HIS.SALE_USE_DIV
+                     ,  HIS.SALE_DIV
+                     ,  HIS.CHILD_NO
+                     ,  CHD.CHILD_NM
+                     ,  CHD.SEX_DIV
+                     ,  CHD.AGES
+                     ,  HIS.USE_TM
+                     ,  HIS.USE_CNT
+                     ,  HIS.USE_AMT
+                     ,  HIS.USE_MCNT
+                     ,  HIS.GRD_AMT
+                     ,  SDT.ENTRY_NO
+                     ,  SDT.ENTRY_SEQ
+                     ,  HIS.REMARKS
+                     ,  HIS.UPD_USER
+                  FROM  CS_MEMBERSHIP_SALE_HIS HIS
+                     ,  CS_MEMBER_CHILD        CHD
+                     ,  SALE_DT                SDT
+                 WHERE  HIS.COMP_CD      = CHD.COMP_CD  (+)
+                   AND  HIS.MEMBER_NO    = CHD.MEMBER_NO(+)
+                   AND  HIS.CHILD_NO     = CHD.CHILD_NO (+)
+                   AND  HIS.COMP_CD      = SDT.COMP_CD  (+)
+                   AND  HIS.APPR_DT      = SDT.SALE_DT  (+)
+                   AND  HIS.SALE_BRAND_CD= SDT.BRAND_CD (+) 
+                   AND  HIS.SALE_STOR_CD = SDT.STOR_CD  (+)
+                   AND  HIS.SALE_POS_NO  = SDT.POS_NO   (+)
+                   AND  HIS.SALE_BILL_NO = SDT.BILL_NO  (+)
+                   AND  HIS.SALE_SEQ     = SDT.SEQ      (+)
+                   AND  HIS.COMP_CD      = ${SCH_COMP_CD}
+                   AND  HIS.PROGRAM_ID   = ${SCH_PROGRAM_ID}
+                   AND  HIS.MBS_NO       = ${SCH_MBS_NO}
+                   AND  HIS.CERT_NO      = ${SCH_CERT_NO}
+            ) HIS
+         ,  CS_ENTRY_DT            EDT
+         ,  HQ_USER                HU
+         ,  STORE                   S
+     WHERE  HIS.COMP_CD      = EDT.COMP_CD  (+)
+       AND  HIS.ENTRY_NO     = EDT.ENTRY_NO (+)
+       AND  HIS.ENTRY_SEQ    = EDT.ENTRY_SEQ(+)
+       AND  HIS.COMP_CD      = HU.COMP_CD   (+)
+       AND  HIS.UPD_USER     = HU.USER_ID   (+)
+       AND  HIS.COMP_CD      = S.COMP_CD    (+)
+       AND  HIS.SALE_BRAND_CD= S.BRAND_CD   (+)
+       AND  HIS.SALE_STOR_CD = S.STOR_CD    (+)
+       AND  'Y'              = EDT.USE_YN   (+)
+     ORDER  BY HIS.APPR_DT
+         ,  HIS.APPR_TM
+         ,  EDT.ENTRY_NO
+         ,  EDT.ENTRY_SEQ
+]]></query>
+
+<query name='CS_MEMBERSHIP_SALE_U'><![CDATA[
+    UPDATE  CS_MEMBERSHIP_SALE 
+       SET  MBS_STAT    = ${MBS_STAT}
+         ,  CERT_TDT    = ${CERT_TDT}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  PROGRAM_ID  = ${PROGRAM_ID}
+       AND  MBS_NO      = ${MBS_NO}
+       AND  CERT_NO     = ${CERT_NO}
+]]></query>
+
+<query name='TAB08_MAIN_Q'><![CDATA[
+    SELECT  TO_CHAR(TO_DATE(LOG_DT, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')       AS LOG_DT
+         ,  PROC_NO
+         ,  LOG_TFV
+         ,  LOG_MSG
+      FROM  STAT_LOG
+     WHERE  PROC_NM     = 'MOVE_CUST'
+     ORDER  BY LOG_DT DESC
+]]></query>
+
+<query name='C_CARD_STORE_PT_Q'><![CDATA[
+    SELECT  P.BRAND_CD
+         ,  P.STOR_CD
+         ,  S.STOR_NM
+         ,  P.SAV_PT - P.USE_PT - P.LOS_PT      AS REST_PT
+      FROM  C_CARD_STORE_PT     P
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)       AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )   S
+     WHERE  P.COMP_CD       = S.COMP_CD
+       AND  P.BRAND_CD      = S.BRAND_CD
+       AND  P.STOR_CD       = S.STOR_CD
+       AND  P.COMP_CD       = ${SCH_COMP_CD}
+       AND  P.CUST_ID       = ${SCH_MEMBER_NO}
+     ORDER  BY P.BRAND_CD, P.STOR_CD
+]]></query>
+
+<query name='PROMOTION_COUPON_Q'><![CDATA[
+    SELECT  C.COUPON_STATE
+         ,  C.COUPON_CD
+         ,  P.PRMT_NM
+         ,  C.TG_SALE_DT
+         ,  C.START_DT
+         ,  C.CLOSE_DT
+         ,  CASE WHEN C.COUPON_STATE = 'P0301' THEN 'Y'
+                 ELSE 'N'
+            END                                             AS COUPON_USE_YN
+      FROM  PROMOTION_COUPON            C
+         ,  PROMOTION_COUPON_PUBLISH    CP
+         ,  PROMOTION                   P
+     WHERE  C.COMP_CD       = CP.COMP_CD
+       AND  C.PUBLISH_ID    = CP.PUBLISH_ID
+       AND  CP.COMP_CD      = P.COMP_CD
+       AND  CP.PRMT_ID      = P.PRMT_ID
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CUST_ID       = ${SCH_MEMBER_NO}
+     ORDER  BY C.COUPON_CD
+]]></query>
+
+<query name='TAB08_CUST_U'><![CDATA[
+    UPDATE  C_CUST
+       SET  CUST_ID     = ${TGT_MEMBER_NO}
+         ,  REMARKS     = '멤버십회원이관'||'['||TO_CHAR(SYSDATE, 'YYYY-MM-DD')||']'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_CUST_HIS_U'><![CDATA[
+    UPDATE  C_CUST_HIS
+       SET  CUST_ID     = ${TGT_MEMBER_NO}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_CARD_U'><![CDATA[
+    UPDATE  C_CARD
+       SET  CARD_ID     = ENCRYPT(${TGT_MEMBER_NO})
+         ,  CUST_ID     = ${TGT_MEMBER_NO}
+         ,  REMARKS     = '멤버십회원이관'||'['||TO_CHAR(SYSDATE, 'YYYY-MM-DD')||']'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_CUST_DEVICE_U'><![CDATA[
+    UPDATE  C_CUST_DEVICE
+       SET  CUST_ID     = ${TGT_MEMBER_NO}
+         ,  UPD_DT      = SYSDATE
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_CUST_REST_U'><![CDATA[
+    UPDATE  C_CUST_REST
+       SET  CUST_ID     = ${TGT_MEMBER_NO}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_CUST_ENTRY_CNTER_U'><![CDATA[
+    UPDATE  C_CUST_ENTRY_CNTER
+       SET  CUST_ID     = ${TGT_MEMBER_NO}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_CARD_SAV_USE_PT_U'><![CDATA[
+    UPDATE  C_CARD_SAV_USE_PT
+       SET  CARD_ID     = ENCRYPT(${TGT_MEMBER_NO})
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CARD_ID     = ENCRYPT(${SRC_CUST_ID})
+]]></query>
+
+<query name='TAB08_CARD_STORE_PT_D'><![CDATA[
+    DELETE  C_CARD_STORE_PT
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_CARD_SAV_USE_MLG_U'><![CDATA[
+    UPDATE  C_CARD_SAV_USE_MLG
+       SET  CARD_ID     = ENCRYPT(${TGT_MEMBER_NO})
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CARD_ID     = ENCRYPT(${SRC_CUST_ID})
+]]></query>
+
+<query name='TAB08_PROMOTION_COUPON_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON
+       SET  CUST_ID     = ${TGT_MEMBER_NO}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_PROMOTION_COUPON_HIS_U'><![CDATA[
+    UPDATE  PROMOTION_COUPON_HIS
+       SET  CUST_ID     = ${TGT_MEMBER_NO}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  CUST_ID     = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_MEMBER_U'><![CDATA[
+    MERGE  INTO CS_MEMBER      TT
+    USING  (
+                SELECT  COMP_CD     AS COMP_CD
+                     ,  CUST_ID     AS MEMBER_NO
+                     ,  CUST_NM     AS MEMBER_NM
+                     ,  MOBILE      AS MOBILE
+                     ,  MOBILE_N3   AS MOBILE_N3
+                     ,  ADDR1       AS ADDR1
+                     ,  ADDR2       AS ADDR2
+                     ,  'Y'         AS CUST_YN
+                  FROM  C_CUST
+                 WHERE  COMP_CD     = ${COMP_CD}
+                   AND  CUST_ID     = ${TGT_MEMBER_NO}
+            )   ST
+    ON (
+                TT.COMP_CD          = ST.COMP_CD
+           AND  TT.MEMBER_NO        = ST.MEMBER_NO
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  TT.MEMBER_NM        = ST.MEMBER_NM
+             ,  TT.MOBILE           = ST.MOBILE
+             ,  TT.MOBILE_N3        = ST.MOBILE_N3
+             ,  TT.ADDR1            = ST.ADDR1
+             ,  TT.ADDR2            = ST.ADDR2
+             ,  TT.CUST_YN          = ST.CUST_YN
+             ,  TT.REMARKS          = '멤버십회원이관'||'['||TO_CHAR(SYSDATE, 'YYYY-MM-DD')||']'
+             ,  TT.UPD_DT           = SYSDATE
+             ,  TT.UPD_USER         = ${UPD_USER}
+]]></query>
+
+<query name='TAB08_MEMBER_EXT_U'><![CDATA[
+    MERGE  INTO CS_MEMBER_EXT   TT
+    USING  (
+                SELECT  COMP_CD     AS COMP_CD
+                     ,  CUST_ID     AS MEMBER_NO
+                     ,  SEX_DIV     AS SEX_DIV
+                     ,  SMS_RCV_YN  AS SMS_RCV_YN
+                  FROM  C_CUST
+                 WHERE  COMP_CD     = ${COMP_CD}
+                   AND  CUST_ID     = ${TGT_MEMBER_NO}
+            )   ST
+    ON (
+                TT.COMP_CD          = ST.COMP_CD
+           AND  TT.MEMBER_NO        = ST.MEMBER_NO
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  TT.SEX_DIV          = ST.SEX_DIV
+             ,  TT.SMS_RCV_YN       = ST.SMS_RCV_YN
+]]></query>
+
+<query name='TAB08_MEMBER_D'><![CDATA[
+    UPDATE  CS_MEMBER
+       SET  CUST_YN     = 'N'
+         ,  REMARKS     = '멤버십이관으로 인한 삭제'||'['||TO_CHAR(SYSDATE, 'YYYY-MM-DD')||']'
+         ,  USE_YN      = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  MEMBER_NO   = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_MEMBER_CHILD_D'><![CDATA[
+    UPDATE  CS_MEMBER_CHILD
+       SET  REMARKS     = '멤버십이관으로 인한 삭제'||'['||TO_CHAR(SYSDATE, 'YYYY-MM-DD')||']'
+         ,  USE_YN      = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  MEMBER_NO   = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_MEMBER_EXT_D'><![CDATA[
+    UPDATE  CS_MEMBER_EXT
+       SET  SEX_DIV     = ''
+         ,  SMS_RCV_YN  = 'N'
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  MEMBER_NO   = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_MEMBER_STORE_D'><![CDATA[
+    UPDATE  CS_MEMBER_STORE
+       SET  REMARKS     = '멤버십이관으로 인한 삭제'||'['||TO_CHAR(SYSDATE, 'YYYY-MM-DD')||']'
+         ,  USE_YN      = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  MEMBER_NO   = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_MEMBER_TEL_D'><![CDATA[
+    UPDATE  CS_MEMBER_TEL
+       SET  REMARKS     = '멤버십이관으로 인한 삭제'||'['||TO_CHAR(SYSDATE, 'YYYY-MM-DD')||']'
+         ,  USE_YN      = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  MEMBER_NO   = ${SRC_CUST_ID}
+]]></query>
+
+<query name='TAB08_STAT_LOG_I'><![CDATA[
+    INSERT  INTO STAT_LOG
+    ( LOG_DT, LOG_SEQ, PROC_NM, PROC_NO, LOG_MSG, LOG_TFV )     --1, 2, 3, 4, 5, 6
+    SELECT  TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')                 --1
+         ,  NVL(MAX(LOG_SEQ),0)+1                               --2
+         ,  'MOVE_CUST'                                         --3
+         ,  '멤버십이관'||' From:['||${SRC_CUST_ID}||']'||${SRC_CUST_NM}||' => '||'To:['||${TGT_MEMBER_NO}||']'||${TGT_MEMBER_NM}     --4
+         ,  ${RET_MSG}                                          --5
+         ,  ${RET_CD}                                           --6
+      FROM  STAT_LOG
+     WHERE  LOG_DT = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+]]></query>
+
+</SQLResource>

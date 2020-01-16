@@ -1,0 +1,211 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='RECIPE_ITEM_Q'><![CDATA[
+    SELECT  ITEM_CD
+         ,  ITEM_NM
+         ,  RCP_DIV
+         ,  SALE_PRC
+         ,  DO_YN
+         ,  DO_UNIT
+         ,  PROD_QTY
+      FROM  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  I.ITEM_NM
+                     ,  I.RCP_DIV
+                     ,  I.SALE_PRC
+                     ,  R.DO_YN
+                     ,  I.DO_UNIT
+                     ,  I.PROD_QTY
+                     ,  DECODE(R.ITEM_CD, NULL, 'N', 'Y')       AS INPUT_YN 
+                  FROM  (
+                            SELECT  I.COMP_CD
+                                 ,  I.ITEM_CD
+                                 ,  NVL(LI.ITEM_NM, I.ITEM_NM)  AS ITEM_NM
+                                 ,  I.SALE_PRC
+                                 ,  I.RECIPE_DIV                AS RCP_DIV
+                                 ,  I.DO_UNIT
+                                 ,  I.PROD_QTY
+                              FROM  ITEM    I
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  ITEM_CD
+                                             ,  ITEM_NM
+                                          FROM  LANG_ITEM
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )       LI
+                             WHERE  I.COMP_CD   = LI.COMP_CD(+)
+                               AND  I.ITEM_CD   = LI.ITEM_CD(+)
+                               AND  I.COMP_CD   = ${SCH_COMP_CD}
+                               AND  I.RECIPE_DIV IN ('1', '3')
+                               AND  I.USE_YN      = 'Y'
+                               AND  (${SCH_RCP_DIV} IS NULL OR I.RECIPE_DIV = ${SCH_RCP_DIV})
+                        ) I
+                     ,  ( 
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  C_ITEM_CD   AS ITEM_CD
+                                 ,  DO_YN
+                              FROM  RECIPE_BRAND_FOOD
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  BRAND_CD    = ${SCH_BRAND_CD}
+                               AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN START_DT AND CLOSE_DT
+                               AND  (${SCH_USE_YN} IS NULL  OR USE_YN  = ${SCH_USE_YN} )
+                               AND  P_ITEM_CD = ' '
+                        )  R
+                     ,  ( 
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  P_ITEM_CD
+                                 ,  C_ITEM_CD
+                              FROM  (
+                                        SELECT  COMP_CD
+                                             ,  BRAND_CD
+                                             ,  P_ITEM_CD
+                                             ,  C_ITEM_CD
+                                          FROM  RECIPE_BRAND_FOOD
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  BRAND_CD    = ${SCH_BRAND_CD}
+                                           AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN START_DT AND CLOSE_DT
+                                           AND  (${SCH_USE_YN} IS NULL  OR USE_YN  = ${SCH_USE_YN} )
+                                    ) R
+                           CONNECT  BY    PRIOR R.P_ITEM_CD = R.C_ITEM_CD
+                             START  WITH  R.C_ITEM_CD   = ${SCH_REV_C_ITEM_CD}
+                                     AND  R.P_ITEM_CD  <> ' '
+                        )  RR
+                 WHERE  I.COMP_CD   = R.COMP_CD(+)
+                   AND  I.ITEM_CD   = R.ITEM_CD(+)
+                   AND  I.COMP_CD   = RR.COMP_CD(+)
+                   AND  I.ITEM_CD   = RR.C_ITEM_CD(+)
+                   AND  (${SCH_REV_C_ITEM_CD} IS NULL OR RR.P_ITEM_CD = ' ')
+            ) I
+     WHERE  INPUT_YN = 'Y'
+       AND  ( ${SCH_ITEM_TXT} IS NULL OR (ITEM_NM LIKE '%' || ${SCH_ITEM_TXT} || '%' OR ITEM_CD LIKE '%' || ${SCH_ITEM_TXT} || '%') )
+     ORDER  BY ITEM_CD
+]]></query>
+
+<query name='RECIPE_BOM_Q'><![CDATA[
+    SELECT  V01.ITEM_TXT
+         ,  V01.START_DT
+         ,  V01.MENU_LVL
+         ,  V01.COMP_CD
+         ,  V01.BRAND_CD
+         ,  V01.P_ITEM_CD
+         ,  V01.C_ITEM_CD
+      FROM  (
+                SELECT  '[ ' || R.C_ITEM_CD || ' ]' || ' ' || R.C_ITEM_NM       AS ITEM_TXT
+                     ,  R.START_DT
+                     ,  LEVEL           AS MENU_LVL
+                     ,  R.COMP_CD
+                     ,  R.BRAND_CD
+                     ,  R.P_ITEM_CD
+                     ,  R.C_ITEM_CD
+                     ,  R.C_ITEM_NM
+                     ,  R.SORT_SEQ
+                     ,  ROWNUM R_NUM
+                  FROM  (
+                            SELECT  R.COMP_CD
+                                 ,  R.BRAND_CD
+                                 ,  R.P_ITEM_CD
+                                 ,  R.C_ITEM_CD
+                                 ,  I.ITEM_NM                   AS C_ITEM_NM
+                                 ,  R.START_DT
+                                 ,  R.SORT_SEQ
+                              FROM  (
+                                        SELECT  *
+                                          FROM  RECIPE_BRAND_FOOD   R
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  BRAND_CD    IN ('0000', ${SCH_BRAND_CD})
+                                           AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN START_DT AND CLOSE_DT
+                                    )   R
+                                 ,  (
+                                        SELECT  I.COMP_CD
+                                             ,  I.ITEM_CD
+                                             ,  NVL(L.ITEM_NM, I.ITEM_NM)   AS ITEM_NM
+                                             ,  I.RECIPE_DIV                AS RCP_DIV
+                                             ,  I.DO_UNIT
+                                             ,  I.PROD_QTY
+                                          FROM  ITEM    I
+                                             ,  (
+                                                    SELECT  COMP_CD
+                                                         ,  ITEM_CD
+                                                         ,  ITEM_NM
+                                                      FROM  LANG_ITEM
+                                                     WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                                       AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                                       AND  USE_YN      = 'Y'
+                                                )       L
+                                         WHERE  I.COMP_CD   = L.COMP_CD(+)
+                                           AND  I.ITEM_CD   = L.ITEM_CD(+)
+                                           AND  I.COMP_CD   = ${SCH_COMP_CD}
+                                    )   I
+                             WHERE  R.COMP_CD   = I.COMP_CD
+                               AND  R.C_ITEM_CD = I.ITEM_CD
+                               AND  R.COMP_CD   = ${SCH_COMP_CD}
+                               AND  R.USE_YN    = 'Y'
+                        )   R
+                  CONNECT  BY    R.P_ITEM_CD   = PRIOR R.C_ITEM_CD  
+                    START  WITH  R.C_ITEM_CD   = ${SCH_C_ITEM_CD}
+                            AND  R.P_ITEM_CD   = ' '
+                    ORDER  SIBLINGS BY R.SORT_SEQ, R.C_ITEM_CD
+            ) V01
+     ORDER  BY V01.R_NUM
+]]></query>
+
+<query name='ITEM_PRT_MULTI_Q'><![CDATA[
+    SELECT  IP.COMP_CD
+         ,  IP.BRAND_CD
+         ,  IP.PRT_NO
+         ,  NVL(IP.ITEM_CD, ${SCH_ITEM_CD}) AS ITEM_CD
+         ,  NVL(IP.USE_YN, 'N')             AS USE_YN
+      FROM  ITEM_PRT_MULTI  IP
+     WHERE  IP.COMP_CD  = ${SCH_COMP_CD}
+       AND  IP.BRAND_CD = ${SCH_BRAND_CD}
+       AND  IP.ITEM_CD  = ${SCH_ITEM_CD}
+       AND  IP.USE_YN   = 'Y'
+     ORDER  BY IP.PRT_NO
+]]></query>
+
+<query name='ITEM_PRT_MULTI_U'><![CDATA[
+    MERGE   INTO ITEM_PRT_MULTI
+    USING   DUAL
+    ON  (
+                COMP_CD             = ${COMP_CD}
+            AND BRAND_CD            = ${BRAND_CD}
+            AND ITEM_CD             = ${ITEM_CD}
+            AND PRT_NO              = ${PRT_NO}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${USER_ID}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+            ,   BRAND_CD
+            ,   ITEM_CD
+            ,   PRT_NO
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER
+            ,   UPD_DT
+            ,   UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+            ,   ${BRAND_CD}
+            ,   ${ITEM_CD}
+            ,   ${PRT_NO}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+        )  
+]]></query>
+
+</SQLResource>

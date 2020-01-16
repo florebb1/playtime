@@ -1,0 +1,132 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- 회원 조회 -->
+<query name='COUPON_LIST_Q'><![CDATA[ 
+    WITH V1_CC AS
+    (
+        SELECT  /*+ NO_MERGE INDEX(CST PK_C_COUPON_CUST) */
+                MST.COMP_CD
+             ,  MST.BRAND_CD
+             ,  MST.COUPON_CD
+             ,  CST.CUST_ID
+             ,  CST.USE_STAT
+             ,  CST.USE_DT AS SALE_DT
+             ,  CST.STOR_CD
+             ,  CST.POS_NO
+             ,  CST.BILL_NO
+             ,  SUM(1)                                               OVER(PARTITION BY MST.COUPON_CD) AS TOT_PRT_CNT
+             ,  SUM(CASE WHEN CST.USE_STAT = '10' THEN 1 ELSE 0 END) OVER(PARTITION BY MST.COUPON_CD) AS TOT_HIT_CNT
+          FROM  C_COUPON_MST  MST
+             ,  C_COUPON_CUST CST
+         WHERE  MST.COMP_CD   = CST.COMP_CD
+           AND  MST.BRAND_CD  = CST.BRAND_CD
+           AND  MST.COUPON_CD = CST.COUPON_CD
+           AND  MST.COMP_CD   = ${SCH_COMP_CD}
+           AND  MST.BRAND_CD  = ${SCH_BRAND_CD}
+           AND  (${SCH_COUPON_CD} IS NULL OR MST.COUPON_CD = ${SCH_COUPON_CD})
+           AND  CST.CERT_FDT BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+           AND  CST.USE_STAT != '32'  -- 폐기제외
+           AND  CST.USE_YN    = 'Y'
+    )
+    SELECT  CM.COMP_CD
+         ,  CM.BRAND_CD
+         ,  B.BRAND_NM 
+         ,  CM.COUPON_CD
+         ,  CM.COUPON_NM
+         ,  CM.ISSUE_DT
+         ,  CM.START_DT
+         ,  CM.CLOSE_DT
+         ,  NVL(V01.TOT_PRT_CNT, 0)                                                                 AS TOT_PRT_CNT
+         ,  NVL(V02.VISIT_CNT, 0)                                                                   AS VISIT_CNT
+         ,  CASE WHEN V01.TOT_PRT_CNT = 0 THEN 0 ELSE V02.VISIT_CNT / V01.TOT_PRT_CNT * 100 END     AS VISIT_RATE
+         ,  V02.GRD_AMT                                                                             AS RES_GRD_AMT
+         ,  CASE WHEN V02.VISIT_CNT   = 0 THEN 0 ELSE V02.GRD_AMT   / V02.VISIT_CNT         END     AS VISIT_COST
+         ,  V02.SALE_CNT
+         ,  V01.TOT_HIT_CNT
+         ,  CASE WHEN V01.TOT_PRT_CNT = 0 THEN 0 ELSE V01.TOT_HIT_CNT / V01.TOT_PRT_CNT * 100 END   AS HIT_RATE
+         ,  V01.GRD_AMT                                                                             AS HIT_GRD_AMT
+         ,  CASE WHEN V01.TOT_USE_CNT = 0 THEN 0 ELSE V01.GRD_AMT     / V01.TOT_USE_CNT       END   AS HIT_COST
+         ,  TOT_USE_CNT
+         ,  CASE WHEN SUBSTR(CM.CLOSE_DT, 1, 4) IN ('2099','9999') THEN 0
+                 ELSE (SELECT SUM(GRD_I_AMT + GRD_O_AMT) FROM SALE_HD WHERE COMP_CD = CM.COMP_CD AND SALE_DT BETWEEN CM.START_DT AND CM.CLOSE_DT)
+            END                                                                                     AS TOT_GRD_AMT
+      FROM  C_COUPON_MST    CM
+         ,  (
+                SELECT  /*+ INDEX(HD PK_SALE_HD) */
+                        CC.COMP_CD
+                     ,  CC.BRAND_CD
+                     ,  CC.COUPON_CD
+                     ,  MIN(TOT_PRT_CNT) AS TOT_PRT_CNT
+                     ,  MIN(TOT_HIT_CNT) AS TOT_HIT_CNT
+                     ,  COUNT(*)         AS TOT_USE_CNT
+                     ,  SUM(HD.GRD_I_AMT + HD.GRD_O_AMT) AS GRD_AMT
+                  FROM  SALE_HD   HD
+                     ,  V1_CC     CC
+                 WHERE  HD.COMP_CD  = CC.COMP_CD
+                   AND  HD.SALE_DT  = CC.SALE_DT
+                   AND  HD.BRAND_CD = CC.BRAND_CD
+                   AND  HD.STOR_CD  = CC.STOR_CD
+                   AND  HD.POS_NO   = CC.POS_NO
+                   AND  HD.BILL_NO  = CC.BILL_NO
+                   AND  HD.COMP_CD  = ${SCH_COMP_CD}
+                   AND  HD.BRAND_CD = ${SCH_BRAND_CD}
+                   AND  CC.USE_STAT = '10'
+                 GROUP  BY CC.COMP_CD
+                     ,  CC.BRAND_CD
+                     ,  CC.COUPON_CD
+            )   V01
+         ,  (
+                SELECT  COMP_CD
+                     ,  COUPON_CD
+                     ,  VISIT_CNT
+                     ,  SALE_CNT
+                     ,  GRD_AMT
+                  FROM  TABLE(FN_GET_COUPON_VIST_RSLT(${SCH_COMP_CD}, ${SCH_LANGUAGE_TP}, ${SCH_BRAND_CD}, ${SCH_COUPON_CD}, ${SCH_GFR_DATE}, ${SCH_GTO_DATE}))
+            )   V02
+         ,  (
+                SELECT  B.COMP_CD
+                     ,  B.BRAND_CD
+                     ,  NVL(L.BRAND_NM, B.BRAND_NM)     AS BRAND_NM
+                  FROM  BRAND B
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL   AS BRAND_CD
+                                 ,  LANG_NM  AS BRAND_NM 
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'BRAND'
+                               AND  COL_NM      = 'BRAND_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  B.COMP_CD   = L.COMP_CD(+)
+                   AND  B.BRAND_CD  = L.BRAND_CD(+)
+                   AND  B.COMP_CD   = ${SCH_COMP_CD}
+                   AND  B.BRAND_CD  = ${SCH_BRAND_CD}
+                   AND  B.USE_YN    = 'Y'
+            )   B
+     WHERE  CM.COMP_CD      = V01.COMP_CD(+)
+       AND  CM.COUPON_CD    = V01.COUPON_CD(+)
+       AND  CM.COMP_CD      = V02.COMP_CD(+)
+       AND  CM.COUPON_CD    = V02.COUPON_CD(+)
+       AND  CM.COMP_CD      = B.COMP_CD(+)
+       AND  CM.BRAND_CD     = B.BRAND_CD(+)
+       AND  CM.COMP_CD      = ${SCH_COMP_CD}
+       AND  CM.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  (${SCH_COUPON_CD} IS NULL OR CM.COUPON_CD = ${SCH_COUPON_CD})
+       AND  CM.USE_YN    = 'Y'
+       AND  EXISTS (
+                        SELECT  1
+                          FROM  C_COUPON_CUST CST
+                         WHERE  CST.COMP_CD   = CM.COMP_CD
+                           AND  CST.COUPON_CD = CM.COUPON_CD
+                           AND  CST.CERT_FDT BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+                           AND  CST.USE_YN   = 'Y'
+                   )
+     ORDER  BY CM.COMP_CD
+         ,  CM.BRAND_CD
+         ,  CM.COUPON_CD
+]]></query>
+ 
+</SQLResource>

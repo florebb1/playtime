@@ -1,0 +1,416 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!-- 매장별 매출목표 데이터 조회 -->
+<query name='SALE_GOAL_DAY_Q'><![CDATA[  
+    SELECT  S.COMP_CD
+         ,  S.BRAND_CD
+         ,  S.STOR_CD
+         ,  ${SCH_YM}               AS GOAL_YM
+         ,  S.STOR_NM
+         ,  NVL(G.GOAL_MON, 0)      AS GOAL_MON
+         ,  NVL(G.GOAL_D01, 0)      AS GOAL_D01
+         ,  NVL(H.HOLI_D01, 0)      AS HOLI_D01
+         ,  NVL(G.GOAL_D02, 0)      AS GOAL_D02
+         ,  NVL(H.HOLI_D02, 0)      AS HOLI_D02
+         ,  NVL(G.GOAL_D03, 0)      AS GOAL_D03
+         ,  NVL(H.HOLI_D03, 0)      AS HOLI_D03
+         ,  NVL(G.GOAL_D04, 0)      AS GOAL_D04
+         ,  NVL(H.HOLI_D04, 0)      AS HOLI_D04
+         ,  NVL(G.GOAL_D05, 0)      AS GOAL_D05
+         ,  NVL(H.HOLI_D05, 0)      AS HOLI_D05
+         ,  NVL(G.GOAL_D06, 0)      AS GOAL_D06
+         ,  NVL(H.HOLI_D06, 0)      AS HOLI_D06
+         ,  NVL(G.GOAL_D07, 0)      AS GOAL_D07
+         ,  NVL(H.HOLI_D07, 0)      AS HOLI_D07
+         ,  NVL(G.GOAL_D08, 0)      AS GOAL_D08
+         ,  NVL(H.HOLI_D08, 0)      AS HOLI_D08
+         ,  NVL(G.GOAL_D09, 0)      AS GOAL_D09
+         ,  NVL(H.HOLI_D09, 0)      AS HOLI_D09
+         ,  NVL(G.GOAL_D10, 0)      AS GOAL_D10
+         ,  NVL(H.HOLI_D10, 0)      AS HOLI_D10
+         ,  NVL(G.GOAL_D11, 0)      AS GOAL_D11
+         ,  NVL(H.HOLI_D11, 0)      AS HOLI_D11
+         ,  NVL(G.GOAL_D12, 0)      AS GOAL_D12
+         ,  NVL(H.HOLI_D12, 0)      AS HOLI_D12
+         ,  NVL(G.GOAL_D13, 0)      AS GOAL_D13
+         ,  NVL(H.HOLI_D13, 0)      AS HOLI_D13
+         ,  NVL(G.GOAL_D14, 0)      AS GOAL_D14
+         ,  NVL(H.HOLI_D14, 0)      AS HOLI_D14
+         ,  NVL(G.GOAL_D15, 0)      AS GOAL_D15
+         ,  NVL(H.HOLI_D15, 0)      AS HOLI_D15
+         ,  NVL(G.GOAL_D16, 0)      AS GOAL_D16
+         ,  NVL(H.HOLI_D16, 0)      AS HOLI_D16
+         ,  NVL(G.GOAL_D17, 0)      AS GOAL_D17
+         ,  NVL(H.HOLI_D17, 0)      AS HOLI_D17
+         ,  NVL(G.GOAL_D18, 0)      AS GOAL_D18
+         ,  NVL(H.HOLI_D18, 0)      AS HOLI_D18
+         ,  NVL(G.GOAL_D19, 0)      AS GOAL_D19
+         ,  NVL(H.HOLI_D19, 0)      AS HOLI_D19
+         ,  NVL(G.GOAL_D20, 0)      AS GOAL_D20
+         ,  NVL(H.HOLI_D20, 0)      AS HOLI_D20
+         ,  NVL(G.GOAL_D21, 0)      AS GOAL_D21
+         ,  NVL(H.HOLI_D21, 0)      AS HOLI_D21
+         ,  NVL(G.GOAL_D22, 0)      AS GOAL_D22
+         ,  NVL(H.HOLI_D22, 0)      AS HOLI_D22
+         ,  NVL(G.GOAL_D23, 0)      AS GOAL_D23
+         ,  NVL(H.HOLI_D23, 0)      AS HOLI_D23
+         ,  NVL(G.GOAL_D24, 0)      AS GOAL_D24
+         ,  NVL(H.HOLI_D24, 0)      AS HOLI_D24
+         ,  NVL(G.GOAL_D25, 0)      AS GOAL_D25
+         ,  NVL(H.HOLI_D25, 0)      AS HOLI_D25
+         ,  NVL(G.GOAL_D26, 0)      AS GOAL_D26
+         ,  NVL(H.HOLI_D26, 0)      AS HOLI_D26
+         ,  NVL(G.GOAL_D27, 0)      AS GOAL_D27
+         ,  NVL(H.HOLI_D27, 0)      AS HOLI_D27
+         ,  NVL(G.GOAL_D28, 0)      AS GOAL_D28
+         ,  NVL(H.HOLI_D28, 0)      AS HOLI_D28
+         ,  NVL(G.GOAL_D29, 0)      AS GOAL_D29
+         ,  NVL(H.HOLI_D29, 0)      AS HOLI_D29
+         ,  NVL(G.GOAL_D30, 0)      AS GOAL_D30
+         ,  NVL(H.HOLI_D30, 0)      AS HOLI_D30
+         ,  NVL(G.GOAL_D31, 0)      AS GOAL_D31
+         ,  NVL(H.HOLI_D31, 0)      AS HOLI_D31
+         ,  TO_NUMBER(TO_CHAR(LAST_DAY(TO_DATE(${SCH_YM}||'01')), 'DD')) MON_LAST_DAY
+         ,  NVL(H.HOLI_D01, 0) + NVL(H.HOLI_D02, 0) + NVL(H.HOLI_D03, 0) + NVL(H.HOLI_D04, 0) + NVL(H.HOLI_D05, 0) +
+            NVL(H.HOLI_D06, 0) + NVL(H.HOLI_D07, 0) + NVL(H.HOLI_D08, 0) + NVL(H.HOLI_D09, 0) + NVL(H.HOLI_D10, 0) +
+            NVL(H.HOLI_D11, 0) + NVL(H.HOLI_D12, 0) + NVL(H.HOLI_D13, 0) + NVL(H.HOLI_D14, 0) + NVL(H.HOLI_D15, 0) +
+            NVL(H.HOLI_D16, 0) + NVL(H.HOLI_D17, 0) + NVL(H.HOLI_D18, 0) + NVL(H.HOLI_D19, 0) + NVL(H.HOLI_D20, 0) +
+            NVL(H.HOLI_D21, 0) + NVL(H.HOLI_D22, 0) + NVL(H.HOLI_D23, 0) + NVL(H.HOLI_D24, 0) + NVL(H.HOLI_D25, 0) +
+            NVL(H.HOLI_D26, 0) + NVL(H.HOLI_D27, 0) + NVL(H.HOLI_D28, 0) + NVL(H.HOLI_D29, 0) + NVL(H.HOLI_D30, 0) +
+            NVL(H.HOLI_D31, 0) AS HOLI_DAT_CNT
+      FROM  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(LS.STOR_NM, S.STOR_NM) AS STOR_NM
+                  FROM  STORE S
+                     ,  (
+                            SELECT  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                               AND  (${SCH_STOR_CD} IS NULL OR STOR_CD = ${SCH_STOR_CD})
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN = 'Y'
+                        ) LS
+                     ,  COMMON  C
+                 WHERE  S.COMP_CD   = C.COMP_CD
+                   AND  S.STOR_TP   = C.CODE_CD
+                   AND  S.BRAND_CD  = LS.BRAND_CD(+)
+                   AND  S.STOR_CD   = LS.STOR_CD(+)
+                   AND  S.COMP_CD   = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+                   AND  (${SCH_STOR_CD} IS NULL OR S.STOR_CD = ${SCH_STOR_CD})
+                   AND  C.CODE_TP   = '00565'
+                   AND  INSTR('SF', C.VAL_C1, 1) > 0
+            ) S
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  SUM(GOAL_AMT)                                                         AS GOAL_MON
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '01' THEN GOAL_AMT ELSE 0 END) AS GOAL_D01
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '02' THEN GOAL_AMT ELSE 0 END) AS GOAL_D02
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '03' THEN GOAL_AMT ELSE 0 END) AS GOAL_D03
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '04' THEN GOAL_AMT ELSE 0 END) AS GOAL_D04
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '05' THEN GOAL_AMT ELSE 0 END) AS GOAL_D05
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '06' THEN GOAL_AMT ELSE 0 END) AS GOAL_D06
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '07' THEN GOAL_AMT ELSE 0 END) AS GOAL_D07
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '08' THEN GOAL_AMT ELSE 0 END) AS GOAL_D08
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '09' THEN GOAL_AMT ELSE 0 END) AS GOAL_D09
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '10' THEN GOAL_AMT ELSE 0 END) AS GOAL_D10
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '11' THEN GOAL_AMT ELSE 0 END) AS GOAL_D11
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '12' THEN GOAL_AMT ELSE 0 END) AS GOAL_D12
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '13' THEN GOAL_AMT ELSE 0 END) AS GOAL_D13
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '14' THEN GOAL_AMT ELSE 0 END) AS GOAL_D14
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '15' THEN GOAL_AMT ELSE 0 END) AS GOAL_D15
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '16' THEN GOAL_AMT ELSE 0 END) AS GOAL_D16
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '17' THEN GOAL_AMT ELSE 0 END) AS GOAL_D17
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '18' THEN GOAL_AMT ELSE 0 END) AS GOAL_D18
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '19' THEN GOAL_AMT ELSE 0 END) AS GOAL_D19
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '20' THEN GOAL_AMT ELSE 0 END) AS GOAL_D20
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '21' THEN GOAL_AMT ELSE 0 END) AS GOAL_D21
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '22' THEN GOAL_AMT ELSE 0 END) AS GOAL_D22
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '23' THEN GOAL_AMT ELSE 0 END) AS GOAL_D23
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '24' THEN GOAL_AMT ELSE 0 END) AS GOAL_D24
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '25' THEN GOAL_AMT ELSE 0 END) AS GOAL_D25
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '26' THEN GOAL_AMT ELSE 0 END) AS GOAL_D26
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '27' THEN GOAL_AMT ELSE 0 END) AS GOAL_D27
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '28' THEN GOAL_AMT ELSE 0 END) AS GOAL_D28
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '29' THEN GOAL_AMT ELSE 0 END) AS GOAL_D29
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '30' THEN GOAL_AMT ELSE 0 END) AS GOAL_D30
+                     ,  SUM(CASE WHEN SUBSTR(GOAL_YMD, 7, 2) = '31' THEN GOAL_AMT ELSE 0 END) AS GOAL_D31
+                  FROM  SALE_GOAL_YMD
+                 WHERE  COMP_CD  = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                   AND  (${SCH_STOR_CD}  IS NULL OR STOR_CD  = ${SCH_STOR_CD} )
+                   AND  GOAL_YMD LIKE ${SCH_YM}||'%'
+                 GROUP  BY COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+            ) G
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '01' THEN 1 ELSE 0 END) AS HOLI_D01
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '02' THEN 1 ELSE 0 END) AS HOLI_D02
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '03' THEN 1 ELSE 0 END) AS HOLI_D03
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '04' THEN 1 ELSE 0 END) AS HOLI_D04
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '05' THEN 1 ELSE 0 END) AS HOLI_D05
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '06' THEN 1 ELSE 0 END) AS HOLI_D06
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '07' THEN 1 ELSE 0 END) AS HOLI_D07
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '08' THEN 1 ELSE 0 END) AS HOLI_D08
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '09' THEN 1 ELSE 0 END) AS HOLI_D09
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '10' THEN 1 ELSE 0 END) AS HOLI_D10
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '11' THEN 1 ELSE 0 END) AS HOLI_D11
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '12' THEN 1 ELSE 0 END) AS HOLI_D12
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '13' THEN 1 ELSE 0 END) AS HOLI_D13
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '14' THEN 1 ELSE 0 END) AS HOLI_D14
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '15' THEN 1 ELSE 0 END) AS HOLI_D15
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '16' THEN 1 ELSE 0 END) AS HOLI_D16
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '17' THEN 1 ELSE 0 END) AS HOLI_D17
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '18' THEN 1 ELSE 0 END) AS HOLI_D18
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '19' THEN 1 ELSE 0 END) AS HOLI_D19
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '20' THEN 1 ELSE 0 END) AS HOLI_D20
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '21' THEN 1 ELSE 0 END) AS HOLI_D21
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '22' THEN 1 ELSE 0 END) AS HOLI_D22
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '23' THEN 1 ELSE 0 END) AS HOLI_D23
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '24' THEN 1 ELSE 0 END) AS HOLI_D24
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '25' THEN 1 ELSE 0 END) AS HOLI_D25
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '26' THEN 1 ELSE 0 END) AS HOLI_D26
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '27' THEN 1 ELSE 0 END) AS HOLI_D27
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '28' THEN 1 ELSE 0 END) AS HOLI_D28
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '29' THEN 1 ELSE 0 END) AS HOLI_D29
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '30' THEN 1 ELSE 0 END) AS HOLI_D30
+                     ,  MAX(CASE WHEN SUBSTR(START_DT, 7, 2) = '31' THEN 1 ELSE 0 END) AS HOLI_D31
+                  FROM  STORE_HOLIDAY
+                 WHERE  COMP_CD  = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                   AND  (${SCH_STOR_CD}  IS NULL OR STOR_CD  = ${SCH_STOR_CD} )
+                   AND  START_DT LIKE ${SCH_YM}||'%'
+                 GROUP  BY COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+            ) H
+     WHERE  S.COMP_CD    = G.COMP_CD (+)
+       AND  S.BRAND_CD   = G.BRAND_CD(+)
+       AND  S.STOR_CD    = G.STOR_CD (+)
+       AND  S.COMP_CD    = H.COMP_CD (+)
+       AND  S.BRAND_CD   = H.BRAND_CD(+)
+       AND  S.STOR_CD    = H.STOR_CD (+)
+       AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_CD}  IS NULL OR S.STOR_CD  = ${SCH_STOR_CD} )
+     ORDER  BY S.STOR_CD
+]]></query>
+
+<!-- 점포 조회 -->
+<query name='STORE_Q'><![CDATA[  
+    SELECT  STOR_CD
+      FROM  STORE
+     WHERE  COMP_CD  = ${COMP_CD}
+       AND  BRAND_CD = ${BRAND_CD}
+       AND  STOR_CD  = ${STOR_CD}
+]]></query>
+
+<!-- 매장별 매출목표 데이터 저장 -->
+<query name='SALE_GOAL_DAY_U'><![CDATA[  
+    MERGE INTO SALE_GOAL_DAY
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  GOAL_YM     = ${GOAL_YM}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  GOAL_MON    = ${GOAL_MON}
+             ,  GOAL_D01    = ${GOAL_D01}
+             ,  GOAL_D02    = ${GOAL_D02}
+             ,  GOAL_D03    = ${GOAL_D03}
+             ,  GOAL_D04    = ${GOAL_D04}
+             ,  GOAL_D05    = ${GOAL_D05}
+             ,  GOAL_D06    = ${GOAL_D06}
+             ,  GOAL_D07    = ${GOAL_D07}
+             ,  GOAL_D08    = ${GOAL_D08}
+             ,  GOAL_D09    = ${GOAL_D09}
+             ,  GOAL_D10    = ${GOAL_D10}
+             ,  GOAL_D11    = ${GOAL_D11}
+             ,  GOAL_D12    = ${GOAL_D12}
+             ,  GOAL_D13    = ${GOAL_D13}
+             ,  GOAL_D14    = ${GOAL_D14}
+             ,  GOAL_D15    = ${GOAL_D15}
+             ,  GOAL_D16    = ${GOAL_D16}
+             ,  GOAL_D17    = ${GOAL_D17}
+             ,  GOAL_D18    = ${GOAL_D18}
+             ,  GOAL_D19    = ${GOAL_D19}
+             ,  GOAL_D20    = ${GOAL_D20}
+             ,  GOAL_D21    = ${GOAL_D21}
+             ,  GOAL_D22    = ${GOAL_D22}
+             ,  GOAL_D23    = ${GOAL_D23}
+             ,  GOAL_D24    = ${GOAL_D24}
+             ,  GOAL_D25    = ${GOAL_D25}
+             ,  GOAL_D26    = ${GOAL_D26}
+             ,  GOAL_D27    = ${GOAL_D27}
+             ,  GOAL_D28    = ${GOAL_D28}
+             ,  GOAL_D29    = ${GOAL_D29}
+             ,  GOAL_D30    = ${GOAL_D30}
+             ,  GOAL_D31    = ${GOAL_D31}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  GOAL_YM
+             ,  GOAL_MON 
+             ,  GOAL_D01
+             ,  GOAL_D02
+             ,  GOAL_D03
+             ,  GOAL_D04
+             ,  GOAL_D05
+             ,  GOAL_D06
+             ,  GOAL_D07
+             ,  GOAL_D08
+             ,  GOAL_D09
+             ,  GOAL_D10
+             ,  GOAL_D11
+             ,  GOAL_D12
+             ,  GOAL_D13
+             ,  GOAL_D14
+             ,  GOAL_D15
+             ,  GOAL_D16
+             ,  GOAL_D17
+             ,  GOAL_D18
+             ,  GOAL_D19
+             ,  GOAL_D20
+             ,  GOAL_D21
+             ,  GOAL_D22
+             ,  GOAL_D23
+             ,  GOAL_D24
+             ,  GOAL_D25
+             ,  GOAL_D26
+             ,  GOAL_D27
+             ,  GOAL_D28
+             ,  GOAL_D29
+             ,  GOAL_D30
+             ,  GOAL_D31
+             ,  INST_DT 
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${GOAL_YM}
+             ,  ${GOAL_MON} 
+             ,  ${GOAL_D01}
+             ,  ${GOAL_D02}
+             ,  ${GOAL_D03}
+             ,  ${GOAL_D04}
+             ,  ${GOAL_D05}
+             ,  ${GOAL_D06}
+             ,  ${GOAL_D07}
+             ,  ${GOAL_D08}
+             ,  ${GOAL_D09}
+             ,  ${GOAL_D10}
+             ,  ${GOAL_D11}
+             ,  ${GOAL_D12}
+             ,  ${GOAL_D13}
+             ,  ${GOAL_D14}
+             ,  ${GOAL_D15}
+             ,  ${GOAL_D16}
+             ,  ${GOAL_D17}
+             ,  ${GOAL_D18}
+             ,  ${GOAL_D19}
+             ,  ${GOAL_D20}
+             ,  ${GOAL_D21}
+             ,  ${GOAL_D22}
+             ,  ${GOAL_D23}
+             ,  ${GOAL_D24}
+             ,  ${GOAL_D25}
+             ,  ${GOAL_D26}
+             ,  ${GOAL_D27}
+             ,  ${GOAL_D28}
+             ,  ${GOAL_D29}
+             ,  ${GOAL_D30}
+             ,  ${GOAL_D31}
+             ,  SYSDATE 
+             ,  ${UPD_USER} 
+             ,  SYSDATE 
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<!-- 매장별 매출목표 데이터 삭제 -->
+<query name='SALE_GOAL_DAY_D'><![CDATA[  
+    DELETE  FROM SALE_GOAL_DAY
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_CD     = ${STOR_CD}
+       AND  GOAL_YM     = ${GOAL_YM}
+]]></query>
+
+<query name='SALE_GOAL_YMD_U'><![CDATA[
+    MERGE INTO SALE_GOAL_YMD
+    USING DUAL
+    ON (
+            COMP_CD   = ${COMP_CD}
+        AND BRAND_CD  = ${BRAND_CD}
+        AND STOR_CD   = ${STOR_CD}
+        AND GOAL_YM   = ${GOAL_YM}
+        AND GOAL_YMD  = ${GOAL_YMD}
+        AND GOAL_DIV  = ${GOAL_DIV}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+        SET GOAL_AMT  =    ${GOAL_AMT}
+        ,   UPD_DT    =    SYSDATE    
+        ,   UPD_USER  =    ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+           (
+            COMP_CD
+          , BRAND_CD
+          , STOR_CD
+          , GOAL_YM
+          , GOAL_YMD
+          , GOAL_DIV
+          , GOAL_AMT
+          , INST_DT
+          , INST_USER
+          , UPD_DT
+          , UPD_USER
+           )
+        VALUES 
+           (
+            ${COMP_CD}
+          , ${BRAND_CD}
+          , ${STOR_CD}
+          , ${GOAL_YM}
+          , ${GOAL_YMD}
+          , ${GOAL_DIV}
+          , ${GOAL_AMT}
+          , SYSDATE
+          , ${UPD_USER}
+          , SYSDATE
+          , ${UPD_USER}
+           )
+]]></query>
+
+<query name='SALE_GOAL_YMD_D'><![CDATA[
+    DELETE  SALE_GOAL_YMD
+    WHERE   COMP_CD  = ${COMP_CD}
+    AND     BRAND_CD = ${BRAND_CD}
+    AND     STOR_CD  = ${STOR_CD}
+    AND     GOAL_YM  = ${GOAL_YM}
+    AND     GOAL_DIV = ${GOAL_DIV}
+]]></query>
+
+</SQLResource>

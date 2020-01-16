@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='PRMT_AGREE_STORE_Q'><![CDATA[
+    SELECT  PA.CONTENT
+         ,  PS.COMP_CD
+         ,  PS.PA_SEQ
+         ,  PS.BRAND_CD
+         ,  PS.STOR_CD
+         ,  PS.AGREE_YN
+      FROM  PRMT_AGREE_STORE    PS
+         ,  PRMT_AGREE          PA
+     WHERE  PS.COMP_CD      = PA.COMP_CD
+       AND  PS.PA_SEQ       = PA.PA_SEQ
+       AND  PS.COMP_CD      = ${SCH_COMP_CD}
+       AND  PS.PA_SEQ       = ${SCH_PA_SEQ}
+       AND  PS.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  PS.STOR_CD      = ${SCH_STOR_CD}
+       AND  PS.USE_YN       = 'Y'
+]]></query>
+
+<query name='PRMT_AGREE_STORE_U'><![CDATA[
+    UPDATE  PRMT_AGREE_STORE
+       SET  AGREE_YN    = ${AGREE_YN}
+         ,  AGREE_DTM   = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  PA_SEQ      = ${PA_SEQ}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_CD     = ${STOR_CD}
+]]></query>
+
+</SQLResource>
+

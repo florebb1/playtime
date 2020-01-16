@@ -1,0 +1,1168 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='MASTER_ORG_Q'><![CDATA[
+    SELECT  MO.TABLE_ID
+         ,  MO.COLUMN_ID 
+      FROM  MASTER_ORG      MO
+         ,  (
+                SELECT  COMP_CD
+                     ,  MST_ORG_CD
+                  FROM  HQ_USER
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  USER_ID = ${SCH_USER_ID}
+                   AND  USE_YN  = 'Y'
+            )       U
+     WHERE  MO.COMP_CD      = U.COMP_CD
+       AND  MO.MST_ORG_CD   = U.MST_ORG_CD
+       AND  MO.COMP_CD      = ${SCH_COMP_CD} 
+       AND  MO.TABLE_ID     = 'STORE'
+       AND  MO.USE_YN       = 'Y'
+     ORDER  BY MO.TABLE_ID, MO.COLUMN_ID 
+]]></query>
+ 
+<query name='STORE_LIST_Q'><![CDATA[
+    SELECT  S.COMP_CD
+         ,  S.BRAND_CD
+         ,  NVL(BL.BRAND_NM, B.BRAND_NM)  AS BRAND_NM
+         ,  S.STOR_CD
+         ,  S.STOR_NM                     AS STOR_NM
+         ,  SL.STOR_NM                    AS STOR_LANG_NM
+         ,  S.STOR_TP
+         ,  C1.STOR_TP_NM
+         ,  S.STOR_TG
+         ,  C12.CODE_NM                   AS STOR_TG_NM
+         ,  S.DSTN_COMP
+         ,  D.STOR_NM                     AS DSTN_COMP_NM
+         ,  S.BUSI_NO
+         ,  S.SUB_BUSI_NO
+         ,  S.BUSI_NM
+         ,  S.BUSI_TP
+         ,  S.BUSI_CT
+         ,  S.TEL_NO
+         ,  S.FAX
+         ,  S.ZIP_CD
+         ,  S.ADDR1 || ' ' || S.ADDR2    AS ADDR
+         ,  S.BILL_ADDR
+         ,  S.TABLE_NO
+         ,  S.SEAT
+         ,  S.SIDO_CD
+         ,  C4.SIDO_NM
+         ,  S.REGION_CD
+         ,  C2.REGION_NM
+         ,  S.TRAD_AREA
+         ,  C3.TRAD_AREA_NM
+         ,  S.APP_DIV
+         ,  C10.APP_DIV_NM
+         ,  S.OPEN_DT
+         ,  S.DEPT_CD
+         ,  C5.DEPT_NM
+         ,  S.TEAM_CD
+         ,  C6.TEAM_NM
+         ,  S.SV_USER_ID
+         ,  U.USER_NM                     AS SV_USER_NM
+         ,  S.USE_YN
+         ,  LN.NATION_NM
+         ,  LR.REGION_NM                  AS REGION_NO_NM
+         ,  LC.CURRENCY_NM
+      FROM  BRAND       B
+         ,  TABLE (FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}))  A
+         ,  STORE       S
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL      AS BRAND_CD
+                     ,  LANG_NM     AS BRAND_NM
+                  FROM  LANG_TABLE
+                 WHERE  TABLE_NM    = 'BRAND'
+                   AND  COL_NM      = 'BRAND_NM'
+                   AND  COMP_CD     = ${SCH_COMP_CD}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   BL
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  STOR_NM
+                  FROM  LANG_STORE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   SL
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD                  AS STOR_TP
+                     ,  NVL(L.CODE_NM, C.CODE_NM)  AS STOR_TP_NM
+                  FROM  COMMON C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD    = ${SCH_COMP_CD}
+                               AND  CODE_TP    = '00565'
+                               AND  LANGUAGE_TP= ${SCH_LANGUAGE_TP}
+                               AND  USE_YN     = 'Y'
+                        ) L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '00565'
+                   AND  C.VAL_C1    = 'S' -- 매장만
+                   AND  C.USE_YN    = 'Y'
+            )   C1
+         ,  (
+                SELECT  DISTINCT
+                        R.COMP_CD
+                     ,  R.CITY_CD                       AS CITY_CD
+                     ,  R.REGION_CD                     AS REGION_CD
+                     ,  NVL(L.LANG_NM, R.REGION_NM)     AS REGION_NM 
+                  FROM  REGION  R
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'REGION'
+                               AND  COL_NM      = 'REGION_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        ) L
+                 WHERE  R.COMP_CD   = L.COMP_CD(+)
+                   AND  LPAD(R.NATION_CD, 3, ' ')||LPAD(R.CITY_CD, 3, ' ')||LPAD(R.REGION_CD, 6, ' ') = L.PK_COL(+)
+                   AND  R.COMP_CD   = ${SCH_COMP_CD}
+                   AND  R.USE_YN    = 'Y'
+            )   C2
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD                   AS TRAD_AREA
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS TRAD_AREA_NM
+                  FROM  COMMON  C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '00595'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        ) L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '00595'
+                   AND  C.USE_YN    = 'Y'
+            )   C3
+         ,  (
+                SELECT  R.COMP_CD
+                     ,  R.NATION_CD
+                     ,  R.CITY_CD
+                     ,  R.REGION_CD                     AS SIDO_CD
+                     ,  NVL(L.LANG_NM, R.REGION_NM)     AS SIDO_NM
+                  FROM  REGION      R
+                     ,  LANG_TABLE  L
+                 WHERE  L.COMP_CD(+)    = R.COMP_CD
+                   AND  L.PK_COL(+)     = LPAD(R.NATION_CD, 3, ' ')||LPAD(R.CITY_CD, 3, ' ')||LPAD(R.REGION_CD, 6, ' ')
+                   AND  R.COMP_CD       = ${SCH_COMP_CD}
+                   AND  R.CITY_CD       = '000'
+                   AND  R.USE_YN        = 'Y'
+                   AND  L.TABLE_NM(+)   = 'REGION'
+                   AND  L.COL_NM(+)     = 'REGION_NM'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )   C4
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD                   AS DEPT_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS DEPT_NM
+                  FROM  COMMON  C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '00600'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '00600'
+                   AND  C.USE_YN    = 'Y'
+            )   C5
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD                   AS TEAM_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS TEAM_NM
+                  FROM  COMMON      C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '00605'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '00605'
+                   AND  C.USE_YN    = 'Y'
+            )   C6
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD                   AS APP_DIV
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS APP_DIV_NM
+                  FROM  COMMON      C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '02345'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '02345'
+                   AND  C.USE_YN    = 'Y'
+            )   C10
+         ,  (
+                SELECT  C.COMP_CD 
+                     ,  C.CODE_CD                   AS BRAND_CLASS
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS BRAND_CLASS_NM
+                  FROM  COMMON  C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '01845'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '01845'
+                   AND  C.USE_YN    = 'Y'
+            ) C11
+         ,  (
+                SELECT  C.COMP_CD 
+                     ,  C.CODE_CD                   AS CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON  C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '02035'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '02035'
+                   AND  C.USE_YN    = 'Y'
+            ) C12
+         ,  (
+                SELECT  U.COMP_CD
+                     ,  U.USER_ID
+                     ,  NVL(L.LANG_NM, U.USER_NM)   AS USER_NM
+                  FROM  HQ_USER     U
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'HQ_USER'
+                               AND  COL_NM      = 'USER_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.COMP_CD(+)    = U.COMP_CD
+                   AND  L.PK_COL(+)     = LPAD(U.USER_ID, 10, ' ')
+                   AND  U.COMP_CD       = ${SCH_COMP_CD} 
+            )   U
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  S.BRAND_CD      = '0000'
+                   AND  S.STOR_TP       = '40'
+            )   D
+         ,  (
+                SELECT  LN.NATION_CD
+                     ,  NVL(L.LANG_NM, LN.NATION_NM)    AS NATION_NM
+                  FROM  L_NATION    LN
+                     ,  (
+                            SELECT  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = 'ZZZ'
+                               AND  TABLE_NM    = 'L_NATION'
+                               AND  COL_NM      = 'NATION_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.PK_COL(+)     = LPAD(LN.NATION_CD, 3, ' ')
+                   AND  LN.USE_YN       = 'Y' 
+            )   LN
+         ,  (
+                SELECT  LR.NATION_CD
+                     ,  LR.REGION_NO
+                     ,  NVL(L.LANG_NM, LR.REGION_NM)    AS REGION_NM
+                  FROM  L_REGION    LR
+                     ,  (
+                            SELECT  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = 'ZZZ'
+                               AND  TABLE_NM    = 'L_REGION'
+                               AND  COL_NM      = 'REGION_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.PK_COL(+)     = LPAD(LR.NATION_CD, 3, ' ')||LPAD(LR.REGION_NO, 3, ' ')
+                   AND  LR.USE_YN       = 'Y' 
+            )   LR
+         ,  (
+                SELECT  LC.CURRENCY_CD
+                     ,  NVL(L.LANG_NM, LC.CURRENCY_FNM) AS CURRENCY_NM
+                  FROM  L_CURRENCY  LC
+                     ,  (
+                            SELECT  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = 'ZZZ'
+                               AND  TABLE_NM    = 'L_CURRENCY'
+                               AND  COL_NM      = 'CURRENCY_FNM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.PK_COL(+)     = LPAD(LC.CURRENCY_CD, 3, ' ')
+                   AND  LC.USE_YN       = 'Y' 
+            )   LC
+     WHERE  B.COMP_CD       = A.COMP_CD
+       AND  B.BRAND_CD      = A.BRAND_CD
+       AND  A.COMP_CD       = S.COMP_CD
+       AND  A.BRAND_CD      = S.BRAND_CD
+       AND  A.STOR_CD       = S.STOR_CD
+       AND  BL.COMP_CD(+)   = B.COMP_CD
+       AND  BL.BRAND_CD(+)  = LPAD(B.BRAND_CD,4,' ')
+       AND  S.COMP_CD       = SL.COMP_CD    (+)
+       AND  S.BRAND_CD      = SL.BRAND_CD   (+)
+       AND  S.STOR_CD       = SL.STOR_CD    (+)
+       AND  S.COMP_CD       = C1.COMP_CD
+       AND  S.STOR_TP       = C1.STOR_TP
+       AND  S.COMP_CD       = C2.COMP_CD    (+)
+       AND  S.SIDO_CD       = C2.CITY_CD    (+)
+       AND  S.REGION_CD     = C2.REGION_CD  (+)
+       AND  S.COMP_CD       = C3.COMP_CD    (+)
+       AND  S.TRAD_AREA     = C3.TRAD_AREA  (+)
+       AND  S.COMP_CD       = C10.COMP_CD   (+)
+       AND  S.APP_DIV       = C10.APP_DIV   (+)
+       AND  S.COMP_CD       = C4.COMP_CD    (+)
+       AND  S.SIDO_CD       = C4.SIDO_CD    (+)
+       AND  S.COMP_CD       = C5.COMP_CD    (+)
+       AND  S.DEPT_CD       = C5.DEPT_CD    (+)
+       AND  S.COMP_CD       = C6.COMP_CD    (+)
+       AND  S.TEAM_CD       = C6.TEAM_CD    (+)
+       AND  B.COMP_CD       = C11.COMP_CD   (+)
+       AND  B.BRAND_CLASS   = C11.BRAND_CLASS(+)
+       AND  S.COMP_CD       = C12.COMP_CD   (+)
+       AND  S.STOR_TG       = C12.CODE_CD   (+)
+       AND  S.COMP_CD       = U.COMP_CD     (+)
+       AND  S.SV_USER_ID    = U.USER_ID     (+)
+       AND  S.COMP_CD       = D.COMP_CD     (+)
+       AND  S.DSTN_COMP     = D.STOR_CD     (+)
+       AND  S.NATION_CD     = LN.NATION_CD  (+)
+       AND  S.NATION_CD     = LR.NATION_CD  (+)
+       AND  S.REGION_NO     = LR.REGION_NO  (+)
+       AND  S.CURRENCY_CD   = LC.CURRENCY_CD(+)
+       AND  S.COMP_CD       = ${SCH_COMP_CD}
+       AND  (${SCH_BRAND_CD}    IS NULL OR S.BRAND_CD       = ${SCH_BRAND_CD}) 
+       AND  (${SCH_STOR_TP}     IS NULL OR S.STOR_TP        = ${SCH_STOR_TP})
+       AND  (${SCH_STOR_TG}     IS NULL OR S.STOR_TG        = ${SCH_STOR_TG})
+       AND  (${SCH_DEPT_CD}     IS NULL OR S.DEPT_CD        = ${SCH_DEPT_CD})
+       AND  (${SCH_TEAM_CD}     IS NULL OR S.TEAM_CD        = ${SCH_TEAM_CD})
+       AND  (${SCH_SV_USER_ID}  IS NULL OR S.SV_USER_ID     = ${SCH_SV_USER_ID})
+       AND  (${SCH_TRAD_AREA}   IS NULL OR S.TRAD_AREA      = ${SCH_TRAD_AREA})
+       AND  (${SCH_APP_DIV}     IS NULL OR S.APP_DIV        = ${SCH_APP_DIV})
+       AND  (${SCH_USE_YN}      IS NULL OR S.USE_YN         = ${SCH_USE_YN})
+       AND  (${SCH_STOR_CD}     IS NULL OR S.STOR_CD        = ${SCH_STOR_CD})
+     ORDER  BY B.BRAND_CLASS, S.BRAND_CD, S.STOR_TP, S.STOR_CD
+]]></query>
+
+<query name='STORE_INFO_Q'><![CDATA[
+    SELECT  S.COMP_CD
+         ,  S.BRAND_CD
+         ,  S.STOR_CD
+         ,  S.STOR_TP
+         ,  S.STOR_TG
+         ,  S.STOR_NM
+         ,  L.STOR_NM    AS STOR_LANG_NM
+         ,  S.REP_STOR_CD
+         ,  S.ERP_STOR_CD
+         ,  S.BUSI_NO
+         ,  S.SUB_BUSI_NO
+         ,  S.BUSI_NM
+         ,  S.BUSI_TP
+         ,  S.BUSI_CT
+         ,  S.APP_DIV
+         ,  S.CONTRACT_DIV
+         ,  S.CONTRACT_NM
+         ,  S.EXECUTE_NM
+         ,  S.OFFER_TM
+         ,  S.COMM_YN
+         ,  S.INSHOP_YN
+         ,  S.SIDO_CD
+         ,  S.REGION_CD
+         ,  S.TRAD_AREA
+         ,  S.DEPT_CD
+         ,  S.TEAM_CD
+         ,  S.SV_USER_ID
+         ,  S.DV_USER_ID
+         ,  S.STOR_FORM
+         ,  S.TEL_NO
+         ,  S.FAX
+         ,  S.REST_AREA_TP
+         ,  S.ZIP_CD
+         ,  S.ADDR1
+         ,  S.ADDR2
+         ,  S.BILL_ADDR
+         ,  S.ADDR1_ENG
+         ,  S.ADDR2_ENG
+         ,  S.E_MAIL
+         ,  S.OPEN_DT
+         ,  S.CLOSE_DT
+         ,  S.SEAT
+         ,  S.SPACE
+         ,  S.USE_YN
+         ,  S.CURRENCY_CD
+         ,  S.SELF_POS_YN
+         ,  S.NATION_CD
+         ,  S.REGION_NO
+         ,  S.DSTN_COMP
+         ,  W.STOR_NM                           AS DSTN_COMP_NM
+         ,  S.BRAND_CD                          AS ORG_BRAND_CD
+      FROM  STORE       S
+         ,  STORE       W
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  STOR_NM
+                  FROM  LANG_STORE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  BRAND_CD    = ${SCH_BRAND_CD}
+                   AND  STOR_CD     = ${SCH_STOR_CD}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  S.COMP_CD   = L.COMP_CD(+)
+       AND  S.BRAND_CD  = L.BRAND_CD(+)
+       AND  S.STOR_CD   = L.STOR_CD(+)
+       AND  S.COMP_CD   = W.COMP_CD(+)
+       AND  S.DSTN_COMP = W.STOR_CD(+)
+       AND  S.COMP_CD   = ${SCH_COMP_CD}
+       AND  S.BRAND_CD  = ${SCH_BRAND_CD}
+       AND  S.STOR_CD   = ${SCH_STOR_CD}
+]]></query>
+
+<query name='STORE_OPTION_Q'><![CDATA[
+    SELECT  SO.COMP_CD
+          , SO.BRAND_CD
+          , SO.STOR_CD
+          , SO.MSG_BOARD_DIV
+          , SO.PST_CASE_DIV
+          , SO.MENU_BOARD_SIZE
+          , SO.MENU_BOARD_QTY
+          , SO.SHOW_CASE_TP
+          , SO.BANN_HOLD_TP
+          , SO.STOR_CONCEPT
+          , SO.DROP_COFFEE_TP
+          , SO.SPCL_TEA_TP
+          , SO.PLAT_SALE_YN
+          , SO.COLD_MEAL_YN
+          , SO.ALL_TIME_TP
+          , SO.SPACE
+          , SO.TERS_EXIST_YN
+          , SO.SMOK_ROOM_YN
+          , SO.REST_ROOM_TP
+          , SO.PARK_LOT_YN
+          , SO.SIGN_VENDOR
+          , SO.FACI_VENDOR
+          , SO.FACI_USER_NM
+          , ST.SELF_POS_YN
+          , SO.USE_YN
+    FROM    STORE_OPTION SO
+          , STORE        ST
+    WHERE   SO.COMP_CD   = ST.COMP_CD
+    AND     SO.BRAND_CD  = ST.BRAND_CD
+    AND     SO.STOR_CD   = ST.STOR_CD
+    AND     SO.COMP_CD   = ${SCH_COMP_CD}
+    AND     SO.BRAND_CD  = ${SCH_BRAND_CD}
+    AND     SO.STOR_CD   = ${SCH_STOR_CD}
+]]></query>
+
+<query name='STORE_I'><![CDATA[
+    INSERT INTO STORE
+    (  
+        COMP_CD
+      , BRAND_CD
+      , STOR_CD
+      , REP_STOR_CD
+      , ERP_STOR_CD
+      , STOR_NM
+      , STOR_TP
+      , STOR_TG
+      , DEPT_CD
+      , TEAM_CD
+      , BUSI_NO
+      , SUB_BUSI_NO
+      , BUSI_NM
+      , BUSI_TP
+      , BUSI_CT
+      , ZIP_CD
+      , ADDR1
+      , ADDR2
+      , ADDR2_ENG
+      , ADDR2_ENG
+      , BILL_ADDR
+      , TEL_NO
+      , FAX
+      , E_MAIL
+      , DV_USER_ID
+      , SV_USER_ID
+      , CENTER_CD
+      , SIDO_CD
+      , REGION_CD
+      , TRAD_AREA
+      , APP_DIV
+      , REST_AREA_TP
+      , CONTRACT_NM
+      , EXECUTE_NM
+      , CONTRACT_DIV
+      , OPEN_DT
+      , CLOSE_DT
+      , OFFER_TM
+      , STOR_FORM
+      , TABLE_NO
+      , SEAT
+      , SPACE
+      , NATION_CD
+      , CURRENCY_CD
+      , REGION_NO
+      , DSTN_COMP
+      , ASIS_STOR_CD
+      , COMM_YN
+      , INSHOP_YN
+      , USE_YN
+      , INST_DT
+      , INST_USER
+      , UPD_DT
+      , UPD_USER
+    ) VALUES (  
+            ${COMP_CD}
+         ,  ${BRAND_CD}
+         ,  ${STOR_CD}
+         ,  ${REP_STOR_CD}
+         ,  ${ERP_STOR_CD}
+         ,  ${STOR_NM}
+         ,  ${STOR_TP}
+         ,  ${STOR_TG}
+         ,  ${DEPT_CD}
+         ,  ${TEAM_CD}
+         ,  ${BUSI_NO}
+         ,  ${SUB_BUSI_NO}
+         ,  ${BUSI_NM}
+         ,  ${BUSI_TP}
+         ,  ${BUSI_CT}
+         ,  ${ZIP_CD}
+         ,  ${ADDR1}
+         ,  ${ADDR2}
+         ,  ${ADDR1_ENG}
+         ,  ${ADDR2_ENG}
+         ,  ${BILL_ADDR}
+         ,  ${TEL_NO}
+         ,  ${FAX}
+         ,  ${E_MAIL}
+         ,  ${DV_USER_ID}
+         ,  ${SV_USER_ID}
+         ,  ${CENTER_CD}
+         ,  ${SIDO_CD}
+         ,  ${REGION_CD}
+         ,  ${TRAD_AREA}
+         ,  NVL(${APP_DIV}, '01')
+         ,  ${REST_AREA_TP}
+         ,  ${CONTRACT_NM}
+         ,  ${EXECUTE_NM}
+         ,  ${CONTRACT_DIV}
+         ,  REPLACE(${OPEN_DT}      , '-', '')
+         ,  REPLACE(${CLOSE_DT}     , '-', '')
+         ,  ${OFFER_TM}
+         ,  ${STOR_FORM}
+         ,  ${TABLE_NO}
+         ,  ${SEAT}
+         ,  ${SPACE}
+         ,  ${NATION_CD}
+         ,  ${CURRENCY_CD}
+         ,  ${REGION_NO}
+         ,  ${DSTN_COMP}
+         ,  ${ASIS_STOR_CD}
+         ,  ${COMM_YN}
+         ,  ${INSHOP_YN}
+         ,  ${USE_YN}
+         ,  SYSDATE
+         ,  ${UPD_USER}
+         ,  SYSDATE
+         ,  ${UPD_USER}
+    )
+]]></query>
+
+<query name='STORE_U'><![CDATA[
+    UPDATE  STORE
+    SET     STOR_NM      = ${STOR_NM}
+          , STOR_TP      = ${STOR_TP}
+          , STOR_TG      = ${STOR_TG}
+          , DEPT_CD      = ${DEPT_CD}
+          , TEAM_CD      = ${TEAM_CD}
+          , BUSI_NO      = ${BUSI_NO}
+          , SUB_BUSI_NO  = ${SUB_BUSI_NO}
+          , BUSI_NM      = ${BUSI_NM}
+          , BUSI_TP      = ${BUSI_TP}
+          , BUSI_CT      = ${BUSI_CT}
+          , ZIP_CD       = ${ZIP_CD}
+          , ADDR1        = ${ADDR1}
+          , ADDR2        = ${ADDR2}
+          , ADDR1_ENG    = ${ADDR1_ENG}
+          , ADDR2_ENG    = ${ADDR2_ENG}
+          , BILL_ADDR    = ${BILL_ADDR}
+          , TEL_NO       = ${TEL_NO}
+          , FAX          = ${FAX}
+          , E_MAIL       = ${E_MAIL}
+          , DV_USER_ID   = ${DV_USER_ID}
+          , SV_USER_ID   = ${SV_USER_ID}
+          , CENTER_CD    = ${CENTER_CD}
+          , SIDO_CD      = ${SIDO_CD}
+          , REGION_CD    = ${REGION_CD}
+          , TRAD_AREA    = ${TRAD_AREA}
+          , APP_DIV      = NVL(${APP_DIV}, '01')
+          , REST_AREA_TP = ${REST_AREA_TP}
+          , CONTRACT_NM  = ${CONTRACT_NM}
+          , EXECUTE_NM   = ${EXECUTE_NM}
+          , CONTRACT_DIV = ${CONTRACT_DIV}
+          , OPEN_DT      = REPLACE(${OPEN_DT}      , '-', '')
+          , CLOSE_DT     = REPLACE(${CLOSE_DT}     , '-', '')
+          , OFFER_TM     = ${OFFER_TM}
+          , STOR_FORM    = ${STOR_FORM}
+          , TABLE_NO     = ${TABLE_NO}
+          , SEAT         = ${SEAT}
+          , SPACE        = ${SPACE}
+          , NATION_CD    = ${NATION_CD}
+          , CURRENCY_CD  = ${CURRENCY_CD}
+          , REGION_NO    = ${REGION_NO}
+          , DSTN_COMP    = ${DSTN_COMP}
+          , COMM_YN      = ${COMM_YN}
+          , INSHOP_YN    = ${INSHOP_YN}
+          , USE_YN       = ${USE_YN}
+          , INST_DT      = SYSDATE
+          , INST_USER    = ${UPD_USER}
+          , UPD_DT       = SYSDATE
+          , UPD_USER     = ${UPD_USER}
+    WHERE   COMP_CD      = ${COMP_CD}
+    AND     BRAND_CD     = ${BRAND_CD}
+    AND     STOR_CD      = ${STOR_CD}
+]]></query>
+
+<query name='LANG_STORE_U'><![CDATA[      
+    MERGE   INTO LANG_STORE
+    USING   DUAL
+    ON  (
+                OMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+        )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  STOR_NM     = ${STOR_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  LANGUAGE_TP
+             ,  STOR_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${LANGUAGE_TP}
+             ,  ${STOR_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='STORE_WEEK_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  NVL(F.BRAND_CD, ${SCH_BRAND_CD})    AS BRAND_CD
+         ,  NVL(F.STOR_CD , ${SCH_STOR_CD})     AS STOR_CD
+         ,  C.CODE_CD                           AS WEEK_DAY
+         ,  C.CODE_NM                           AS WEEK_DAY_NM
+         ,  F.START_HM
+         ,  F.CLOSE_HM
+      FROM  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)         AS CODE_NM
+                     ,  C.SORT_SEQ
+                  FROM  COMMON      C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD} 
+                               AND  CODE_TP     = '00285'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '00285'
+                   AND  C.USE_YN    = 'Y'
+            )   C
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  WEEK_DAY
+                     ,  START_HM
+                     ,  CLOSE_HM 
+                  FROM  STORE_WEEK  
+                 WHERE  COMP_CD  = ${SCH_COMP_CD} 
+                   AND  BRAND_CD = ${SCH_BRAND_CD}
+                   AND  STOR_CD  = ${SCH_STOR_CD}
+            )   F
+     WHERE  C.COMP_CD   = F.COMP_CD(+)
+       AND  C.CODE_CD   = F.WEEK_DAY(+)
+     ORDER  BY C.SORT_SEQ, C.CODE_CD
+]]></query>
+
+<query name='STORE_WEEK_U'><![CDATA[
+    MERGE  INTO STORE_WEEK
+    USING  DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  WEEK_DAY    = ${WEEK_DAY}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  START_HM    = ${START_HM}
+             ,  CLOSE_HM    = ${CLOSE_HM}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  WEEK_DAY
+             ,  START_HM
+             ,  CLOSE_HM 
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${WEEK_DAY}
+             ,  ${START_HM}
+             ,  ${CLOSE_HM}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='STORE_FLAG_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  NVL(F.BRAND_CD, ${SCH_BRAND_CD})    AS BRAND_CD
+         ,  NVL(F.STOR_CD , ${SCH_STOR_CD})     AS STOR_CD
+         ,  C.STOR_FG
+         ,  C.STOR_FG_NM
+         ,  C.STOR_DT_CD
+         ,  C.STOR_DT_NM
+         ,  NVL(F.USE_YN, 'N')                  AS USE_YN
+      FROM  (
+                SELECT  SF.COMP_CD
+                     ,  SF.CODE_TP
+                     ,  SF.CODE_CD      AS STOR_FG
+                     ,  SF.CODE_NM      AS STOR_FG_NM
+                     ,  SD.CODE_CD      AS STOR_DT_CD
+                     ,  SD.CODE_NM      AS STOR_DT_NM
+                  FROM  (
+                            SELECT  C.COMP_CD
+                                 ,  C.VAL_C1                    AS CODE_TP
+                                 ,  C.CODE_CD                   AS CODE_CD
+                                 ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                              FROM  COMMON      C
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  CODE_TP
+                                             ,  CODE_CD
+                                             ,  CODE_NM
+                                          FROM  LANG_COMMON
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD} 
+                                           AND  CODE_TP     = '01065'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )   L
+                             WHERE  C.COMP_CD   = L.COMP_CD(+)
+                               AND  C.CODE_TP   = L.CODE_TP(+)
+                               AND  C.CODE_CD   = L.CODE_CD(+)
+                               AND  C.COMP_CD   = ${SCH_COMP_CD} 
+                               AND  C.CODE_TP   = '01065'
+                               AND  C.USE_YN    = 'Y'
+                        )   SF
+                     ,  (
+                            SELECT  C.COMP_CD
+                                 ,  C.CODE_TP
+                                 ,  C.CODE_CD
+                                 ,  NVL(L.CODE_NM, C.CODE_NM)       AS CODE_NM
+                              FROM  COMMON      C
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  CODE_TP
+                                             ,  CODE_CD
+                                             ,  CODE_NM
+                                          FROM  LANG_COMMON
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  CODE_TP     IN (
+                                                                    SELECT  VAL_C1
+                                                                      FROM  COMMON
+                                                                     WHERE  COMP_CD = ${SCH_COMP_CD}
+                                                                       AND  CODE_TP = '01065'
+                                                                       AND  USE_YN  = 'Y'
+                                                               )
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )   L
+                             WHERE  C.COMP_CD   = L.COMP_CD(+)
+                               AND  C.CODE_TP   = L.CODE_TP(+)
+                               AND  C.CODE_CD   = L.CODE_CD(+)
+                               AND  C.COMP_CD   = ${SCH_COMP_CD}
+                               AND  C.CODE_TP   IN (
+                                                        SELECT  VAL_C1
+                                                          FROM  COMMON
+                                                         WHERE  COMP_CD = ${SCH_COMP_CD}
+                                                           AND  CODE_TP = '01065' 
+                                                           AND  USE_YN  = 'Y'
+                                                   )
+                               AND  C.USE_YN    = 'Y'
+                        )   SD
+                 WHERE  SF.CODE_TP  = SD.CODE_TP
+            )   C
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  STOR_FG
+                     ,  STOR_DT_CD
+                     ,  USE_YN 
+                  FROM  STORE_FLAG  
+                 WHERE  COMP_CD  = ${SCH_COMP_CD} 
+                   AND  BRAND_CD = ${SCH_BRAND_CD}
+                   AND  STOR_CD  = ${SCH_STOR_CD}
+            )   F
+     WHERE  C.COMP_CD   = F.COMP_CD(+)
+       AND  C.STOR_FG   = F.STOR_FG(+)
+       AND  C.STOR_DT_CD= F.STOR_DT_CD(+)
+     ORDER  BY C.STOR_FG, C.STOR_DT_CD
+]]></query>
+
+<query name='STORE_FLAG_U'><![CDATA[
+    MERGE  INTO STORE_FLAG
+    USING  DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  STOR_FG     = ${STOR_FG}
+           AND  STOR_DT_CD  = ${STOR_DT_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  STOR_FG
+             ,  STOR_DT_CD
+             ,  USE_YN 
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${STOR_FG}
+             ,  ${STOR_DT_CD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='STORE_CONTRACT_Q'><![CDATA[
+    SELECT  SC.COMP_CD
+          , SC.BRAND_CD
+          , SC.REP_STOR_CD
+          , SC.SEQ_NO
+          , SC.STOR_CD
+          , SC.STOR_NM
+          , SC.BUSI_NO
+          , SC.BUSI_NM
+          , SC.CONTRACT_DT
+          , SC.EXPIRATION_DT
+          , SC.SEAL_DT
+          , SC.RECONTRACT_DT
+          , SC.OPEN_DT
+          , CASE WHEN SC.EXPIRATION_DT IS NOT NULL THEN TRUNC(TO_DATE(SC.EXPIRATION_DT, 'YYYYMMDD') - TO_DATE(SC.OPEN_DT, 'YYYYMMDD'), 0)
+                 WHEN SC.OPEN_DT IS NOT NULL       THEN TRUNC(SYSDATE - TO_DATE(SC.OPEN_DT, 'YYYYMMDD'), 0) 
+            END AS ACC_BUSI_DAYS
+          , SC.INSURE_YN
+          , SC.STOR_STAT
+          , GET_COMMON_CODE_NM(SC.COMP_CD, '02170', SC.STOR_STAT, ${SCH_LANGUAGE_TP}) AS STOR_STAT_NM
+          , SC.REASON
+          , SC.STOR_REMARK
+          , SC.INFO_OPEN_YN
+          , SC.EXPT_SALE_YN
+          , SC.LOCL_STOR_YN
+          , SC.CONTRACT_REMARK
+    FROM    STORE_CONTRACT SC
+          , STORE          ST
+    WHERE   SC.COMP_CD     = ST.COMP_CD
+    AND     SC.REP_STOR_CD = ST.REP_STOR_CD
+    AND     ST.COMP_CD     = ${SCH_COMP_CD}
+    AND     ST.BRAND_CD    = ${SCH_BRAND_CD}
+    AND     ST.STOR_CD     = ${SCH_STOR_CD}
+    ORDER BY
+            SC.COMP_CD
+          , SC.BRAND_CD
+          , SC.REP_STOR_CD
+          , SC.SEQ_NO DESC
+]]></query>
+
+<query name='STORE_POS_MST_Q'><![CDATA[
+    SELECT  COMP_CD
+          , BRAND_CD
+          , STOR_CD
+          , POS_NO
+          , POS_NM
+          , IP_ADDR
+          , TRANS_TYPE
+          , TOP_IMAGE_YN
+          , USE_YN
+    FROM    STORE_POS_MST
+    WHERE   COMP_CD     = ${SCH_COMP_CD}
+    AND     BRAND_CD    = ${SCH_BRAND_CD}
+    AND     STOR_CD     = ${SCH_STOR_CD}
+    AND     USE_YN      = 'Y'
+    ORDER BY
+            POS_NO
+]]></query>
+
+<query name='STORE_POS_MST_U'><![CDATA[
+    MERGE  INTO STORE_POS_MST
+    USING  DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  POS_NO      = ${POS_NO}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  POS_NM      = ${POS_NM}
+             ,  IP_ADDR     = ${IP_ADDR}
+             ,  TRANS_TYPE  = ${TRANS_TYPE}
+             ,  TOP_IMAGE_YN= ${TOP_IMAGE_YN}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+       (  
+            COMP_CD
+          , BRAND_CD
+          , STOR_CD
+          , POS_NO
+          , POS_NM
+          , IP_ADDR
+          ,  TRANS_TYPE
+          , TOP_IMAGE_YN
+          , USE_YN
+          , INST_DT
+          , INST_USER
+          , UPD_DT
+          , UPD_USER  
+       ) 
+        VALUES 
+       (
+        ${COMP_CD}
+        ,  ${BRAND_CD}
+        ,  ${STOR_CD}
+        ,  ${POS_NO}
+        ,  ${POS_NM}
+        ,  ${IP_ADDR}
+        ,  ${TRANS_TYPE}
+        ,  ${TOP_IMAGE_YN}
+        ,  ${USE_YN}
+        ,  SYSDATE
+        ,  ${UPD_USER}
+        ,  SYSDATE
+        ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='STORE_JOIN_Q'><![CDATA[
+    SELECT  *
+      FROM  STORE_JOIN
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  BRAND_CD    = ${SCH_BRAND_CD}
+       AND  STOR_CD     = ${SCH_STOR_CD}
+       AND  JOIN_COMP_CD= ${SCH_JOIN_COMP_CD}
+       AND  (${SCH_USE_YN} IS NULL OR USE_YN = ${SCH_USE_YN})
+]]></query>
+
+<query name='STORE_JOIN_U'><![CDATA[
+    MERGE  INTO STORE_JOIN
+    USING  DUAL
+    ON  (
+                COMP_CD         = ${COMP_CD}
+           AND  BRAND_CD        = ${BRAND_CD}
+           AND  STOR_CD         = ${STOR_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  JOIN_BRAND_CD   = ${JOIN_BRAND_CD}
+             ,  JOIN_STOR_CD    = ${JOIN_STOR_CD}
+             ,  JOIN_STOR_NM    = ${JOIN_STOR_NM}
+             ,  JOIN_ITEM_CD    = ${JOIN_ITEM_CD}
+             ,  JOIN_ITEM_NM    = ${JOIN_ITEM_NM}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  JOIN_COMP_CD
+             ,  JOIN_BRAND_CD
+             ,  JOIN_STOR_CD
+             ,  JOIN_STOR_NM
+             ,  JOIN_ITEM_CD
+             ,  JOIN_ITEM_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${JOIN_COMP_CD}
+             ,  ${JOIN_BRAND_CD}
+             ,  ${JOIN_STOR_CD}
+             ,  ${JOIN_STOR_NM}
+             ,  ${JOIN_ITEM_CD}
+             ,  ${JOIN_ITEM_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>

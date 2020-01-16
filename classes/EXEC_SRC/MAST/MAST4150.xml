@@ -1,0 +1,1943 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='ITEM_SET_Q'><![CDATA[
+    SELECT  ''      AS ITEM_DIV
+         ,  ''      AS L_CLASS_CD
+         ,  ''      AS M_CLASS_CD
+         ,  ''      AS S_CLASS_CD
+         ,  ''      AS D_CLASS_CD
+         ,  '2'     AS ORD_SALE_DIV
+         ,  '0'     AS SET_DIV
+         ,  'A'     AS STOCK_DIV
+         ,  '1'     AS RECIPE_DIV
+         ,  'N'     AS EXT_YN
+         ,  'N'     AS AUTO_POPUP_YN
+         ,  'H'     AS SALE_PRC_CTRL
+         ,  'EA'    AS SALE_UNIT
+         ,  'Y'     AS SALE_VAT_YN
+         ,  '1'     AS SALE_VAT_RULE
+         ,  10      AS SALE_VAT_IN_RATE
+         ,  10      AS SALE_VAT_OUT_RATE
+         ,  'Y'     AS POINT_YN
+         ,  'Y'     AS SAV_MLG_YN
+         ,  'N'     AS DC_YN
+         ,  'N'     AS OPEN_ITEM_YN
+         ,  '0'     AS ORD_MNG_DIV
+         ,  'EA'    AS ORD_UNIT
+         ,  'Y'     AS COST_VAT_YN
+         ,  '1'     AS COST_VAT_RULE
+         ,  10      AS COST_VAT_RATE
+         ,  'Y'     AS RJT_YN
+         ,  ''      AS VENDOR_CD
+         ,  ''      AS VENDOR_NM
+         ,  0       AS LEAD_TIME
+         ,  'N'     AS SERVICE_ITEM_YN
+         ,  'EA'    AS STOCK_UNIT
+         ,  'EA'    AS DO_UNIT
+      FROM  DUAL
+    UNION ALL
+    SELECT  C.CODE_CD                           AS ITEM_DIV
+         ,  I.L_CLASS_CD
+         ,  I.M_CLASS_CD
+         ,  I.S_CLASS_CD
+         ,  I.D_CLASS_CD
+         ,  NVL(I.ORD_SALE_DIV      , 2)        AS ORD_SALE_DIV
+         ,  NVL(I.SET_DIV           , 0)        AS SET_DIV
+         ,  NVL(I.STOCK_DIV         , 'A')      AS STOCK_DIV
+         ,  NVL(I.RECIPE_DIV        , '1')      AS RECIPE_DIV
+         ,  NVL(I.EXT_YN            , 'N')      AS EXT_YN
+         ,  NVL(I.AUTO_POPUP_YN     , 'N')      AS AUTO_POPUP_YN
+         ,  NVL(I.SALE_PRC_CTRL     , 'H')      AS SALE_PRC_CTRL
+         ,  NVL(I.SALE_UNIT         , 'EA')     AS SALE_UNIT
+         ,  NVL(I.SALE_VAT_YN       , 'Y')      AS SALE_VAT_YN
+         ,  NVL(I.SALE_VAT_RULE     , '1')      AS SALE_VAT_RULE
+         ,  NVL(I.SALE_VAT_IN_RATE  , 0.1)*100  AS SALE_VAT_IN_RATE
+         ,  NVL(I.SALE_VAT_OUT_RATE , 0.1)*100  AS SALE_VAT_OUT_RATE
+         ,  NVL(I.POINT_YN          , 'Y')      AS POINT_YN
+         ,  NVL(I.SAV_MLG_YN        , 'Y')      AS SAV_MLG_YN
+         ,  NVL(I.DC_YN             , 'N')      AS DC_YN
+         ,  NVL(I.OPEN_ITEM_YN      , 'N')      AS OPEN_ITEM_YN
+         ,  NVL(I.ORD_MNG_DIV       , '0')      AS ORD_MNG_DIV
+         ,  NVL(I.ORD_UNIT          , 'EA')     AS ORD_UNIT
+         ,  NVL(I.COST_VAT_YN       , 'Y')      AS COST_VAT_YN
+         ,  NVL(I.COST_VAT_RULE     , '1')      AS COST_VAT_RULE
+         ,  NVL(I.COST_VAT_RATE     , 0.1)*100  AS COST_VAT_RATE
+         ,  NVL(I.RJT_YN            , 'Y')      AS RJT_YN
+         ,  I.VENDOR_CD
+         ,  V.STOR_NM                           AS VENDOR_NM
+         ,  NVL(I.LEAD_TIME         , '0')      AS LEAD_TIME
+         ,  NVL(I.SERVICE_ITEM_YN   , 'N')      AS SERVICE_ITEM_YN
+         ,  NVL(I.STOCK_UNIT        , 'EA')     AS STOCK_UNIT
+         ,  NVL(I.DO_UNIT           , 'EA')     AS DO_UNIT
+      FROM  COMMON      C
+         ,  ITEM_SET    I
+         ,  STORE       V
+     WHERE  C.COMP_CD   = I.COMP_CD
+       AND  C.CODE_CD   = I.ITEM_DIV
+       AND  I.COMP_CD   = V.COMP_CD(+)
+       AND  I.VENDOR_CD = V.STOR_CD(+)
+       AND  C.COMP_CD   = ${SCH_COMP_CD}
+       AND  C.CODE_TP   = '00005'
+       AND  C.USE_YN    = 'Y'
+       AND  I.USE_YN    = 'Y'
+]]></query>
+
+<query name='ITEM_LIST_Q'><![CDATA[
+    WITH S_COMM AS 
+    (
+        SELECT  C.CODE_TP                       AS CODE_TP
+             ,  C.CODE_CD                       AS CODE_CD
+             ,  NVL(L.CODE_NM, C.CODE_NM)       AS CODE_NM
+          FROM  COMMON C
+             ,  (
+                    SELECT  * 
+                      FROM  LANG_COMMON
+                     WHERE  COMP_CD     = ${SCH_COMP_CD}
+                       AND  CODE_TP IN ('00005','00020','00055','00095','00105','00100','00040','00045','00850','01040','01100','00050','01060','02030','02335','02340')
+                       AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                       AND  USE_YN      = 'Y'
+                )   L
+         WHERE  C.CODE_TP = L.CODE_TP(+)
+           AND  C.CODE_CD = L.CODE_CD(+)
+           AND  C.COMP_CD = ${SCH_COMP_CD}
+           AND  C.CODE_TP IN ('00005','00020','00055','00095','00105','00100','00040','00045','00850','01040','01100','00050','01060','02030','02335','02340')
+           AND  C.USE_YN  = 'Y'      
+    )
+    SELECT  I.COMP_CD
+         ,  I.ITEM_CD                            AS ITEM_CD
+         ,  I.BRAND_CD
+         ,  I.ITEM_NM                            AS ITEM_NM
+         ,  I.ITEM_LANG_NM                       AS ITEM_LANG_NM
+         ,  I.ITEM_POS_NM                        AS ITEM_POS_NM
+         ,  I.ITEM_LANG_POS_NM                   AS ITEM_LANG_POS_NM
+         ,  I.ITEM_KDS_NM                        AS ITEM_KDS_NM
+         ,  I.ITEM_LANG_KDS_NM                   AS ITEM_LANG_KDS_NM
+         ,  I.VENDOR_CD                          AS VENDOR_CD
+         ,  I.VENDOR_NM                          AS VENDOR_NM
+         ,  L_CLASS.L_CLASS_NM                   AS L_CLASS_NM
+         ,  M_CLASS.M_CLASS_NM                   AS M_CLASS_NM
+         ,  S_CLASS.S_CLASS_NM                   AS S_CLASS_NM
+         ,  D_CLASS.D_CLASS_NM                   AS D_CLASS_NM
+         ,  C_ITEM_DIV.CODE_NM                   AS ITEM_DIV 
+         ,  I.CAPACITY                           AS CAPACITY
+         ,  I.STANDARD                           AS STANDARD
+         ,  USE.CODE_NM                          AS ORD_SALE_DIV
+         ,  S_SEASON.CODE_NM                     AS SEASON_DIV_NM
+         ,  I.CUST_STD_CNT                       AS CUST_STD_CNT 
+         ,  I.SALE_PRC                           AS SALE_PRC     
+         ,  DC_YN.CODE_NM                        AS DC_YN   
+         ,  S_UNIT.CODE_NM                       AS SALE_UNIT    
+         ,  I.SALE_UNIT_QTY                      AS SALE_UNIT_QTY
+         ,  D_UNIT.CODE_NM                       AS DO_UNIT
+         ,  I.WEIGHT_UNIT                        AS WEIGHT_UNIT        
+         ,  OPEN_ITEM_YN.CODE_NM                 AS OPEN_ITEM_YN 
+         ,  I.RJT_YN                             AS RJT_YN       
+         ,  PRC.CODE_NM                          AS SALE_PRC_CTRL
+         ,  I.SALE_START_DT                      AS SALE_START_DT
+         ,  I.SALE_CLOSE_DT                      AS SALE_CLOSE_DT
+         ,  I.COST                               AS COST         
+         ,  O_UNIT.CODE_NM                       AS ORD_UNIT     
+         ,  I.ORD_UNIT_QTY                       AS ORD_UNIT_QTY 
+         ,  I.ORD_START_DT                       AS ORD_START_DT 
+         ,  I.ORD_CLOSE_DT                       AS ORD_CLOSE_DT 
+         ,  I.MAX_ORD_QTY                        AS MAX_ORD_QTY    
+         ,  MNG.CODE_NM                          AS ORD_MNG_DIV  
+         ,  I.MIN_ORD_QTY                        AS MIN_ORD_QTY  
+         ,  I.ALERT_ORD_QTY                      AS ALERT_ORD_QTY
+         ,  I.USE_YN                             AS USE_YN
+         ,  RECIPE.CODE_NM                       AS RECIPE_DIV
+         ,  VAT_YN.CODE_NM                       AS SALE_VAT_YN
+         ,  VAT_RULE.CODE_NM                     AS SALE_VAT_RULE
+         ,  I.SALE_VAT_IN_RATE*100               AS SALE_VAT_IN_RATE
+         ,  I.SALE_VAT_OUT_RATE*100              AS SALE_VAT_OUT_RATE
+         ,  STOCK_DIV.CODE_NM                    AS STOCK_DIV
+         ,  T_UNIT.CODE_NM                       AS STOCK_UNIT
+         ,  SET_DIV.CODE_NM                      AS SET_DIV
+         ,  POINT_YN.CODE_NM                     AS POINT_YN
+         ,  S_SAVMLG.CODE_NM                     AS SAV_MLG_YN
+         ,  EXT_YN.CODE_NM                       AS EXT_YN
+         ,  SERVICE_ITEM_YN.CODE_NM              AS SERVICE_ITEM_YN
+         ,  I.LEAD_TIME                          AS LEAD_TIME
+         ,  I.YIELD_RATE                         AS YIELD_RATE
+         ,  I.PROD_QTY                           AS PROD_QTY
+         ,  S_HCON.CODE_NM                       AS HOLLYS_CON_YN
+         ,  S_BBG_YN.CODE_NM                     AS BEVERAGE_DIV
+         ,  S_BBG_ATT.CODE_NM                    AS BEVERAGE_ATT
+      FROM  (
+                SELECT  /*+ LEADING(I2) USE_HASH(I) */
+                        I.COMP_CD
+                     ,  I.BRAND_CD
+                     ,  I.ITEM_CD                                 AS ITEM_CD
+                     ,  I.ITEM_NM                                 AS ITEM_NM
+                     ,  L.ITEM_NM                                 AS ITEM_LANG_NM
+                     ,  I.ITEM_POS_NM                             AS ITEM_POS_NM
+                     ,  L.ITEM_POS_NM                             AS ITEM_LANG_POS_NM
+                     ,  I.ITEM_KDS_NM                             AS ITEM_KDS_NM
+                     ,  L.ITEM_KDS_NM                             AS ITEM_LANG_KDS_NM
+                     ,  I.VENDOR_CD                               AS VENDOR_CD
+                     ,  S.VENDOR_NM                               AS VENDOR_NM
+                     ,  IC.L_CLASS_CD                             AS L_CLASS_CD
+                     ,  IC.M_CLASS_CD                             AS M_CLASS_CD
+                     ,  IC.S_CLASS_CD                             AS S_CLASS_CD
+                     ,  IC.D_CLASS_CD                             AS D_CLASS_CD
+                     ,  I.CAPACITY                                AS CAPACITY
+                     ,  I.STANDARD                                AS STANDARD
+                     ,  I.ITEM_DIV                                AS ITEM_DIV      
+                     ,  I.ORD_SALE_DIV                            AS ORD_SALE_DIV 
+                     ,  I.SEASON_DIV                              AS SEASON_DIV
+                     ,  I.CUST_STD_CNT                            AS CUST_STD_CNT
+                     ,  I.HOLLYS_CON_YN                           AS HOLLYS_CON_YN
+                     ,  I.BEVERAGE_DIV                            AS BEVERAGE_DIV
+                     ,  I.BEVERAGE_ATT                            AS BEVERAGE_ATT
+                     ,  I.SALE_PRC                                AS SALE_PRC     
+                     ,  I.DC_YN                                   AS DC_YN   
+                     ,  I.SALE_UNIT                               AS SALE_UNIT    
+                     ,  I.SALE_UNIT_QTY                           AS SALE_UNIT_QTY
+                     ,  I.DO_UNIT                                 AS DO_UNIT
+                     ,  I.WEIGHT_UNIT                             AS WEIGHT_UNIT
+                     ,  I.OPEN_ITEM_YN                            AS OPEN_ITEM_YN 
+                     ,  I.RJT_YN                                  AS RJT_YN       
+                     ,  I.SALE_PRC_CTRL                           AS SALE_PRC_CTRL
+                     ,  I.SALE_START_DT                           AS SALE_START_DT
+                     ,  I.SALE_CLOSE_DT                           AS SALE_CLOSE_DT
+                     ,  I.COST                                    AS COST         
+                     ,  I.ORD_UNIT                                AS ORD_UNIT     
+                     ,  I.ORD_UNIT_QTY                            AS ORD_UNIT_QTY 
+                     ,  I.ORD_START_DT                            AS ORD_START_DT 
+                     ,  I.ORD_CLOSE_DT                            AS ORD_CLOSE_DT 
+                     ,  I.MAX_ORD_QTY                             AS MAX_ORD_QTY    
+                     ,  I.ORD_MNG_DIV                             AS ORD_MNG_DIV  
+                     ,  I.MIN_ORD_QTY                             AS MIN_ORD_QTY  
+                     ,  I.ALERT_ORD_QTY                           AS ALERT_ORD_QTY
+                     ,  I.USE_YN                                  AS USE_YN
+                     ,  I.RECIPE_DIV
+                     ,  I.SALE_VAT_YN
+                     ,  I.SALE_VAT_RULE
+                     ,  I.SALE_VAT_IN_RATE
+                     ,  I.SALE_VAT_OUT_RATE
+                     ,  I.STOCK_DIV
+                     ,  I.STOCK_UNIT
+                     ,  I.SET_DIV
+                     ,  I.POINT_YN
+                     ,  I.SAV_MLG_YN
+                     ,  I.EXT_YN
+                     ,  I.SERVICE_ITEM_YN
+                     ,  I.LEAD_TIME
+                     ,  I.YIELD_RATE
+                     ,  I.PROD_QTY
+                  FROM  ITEM I
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                              FROM  (
+                                        SELECT  I.COMP_CD
+                                             ,  I.ITEM_CD
+                                          FROM  (
+                                                    SELECT  COMP_CD
+                                                         ,  BRAND_CD
+                                                      FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+                                                     GROUP  BY COMP_CD, BRAND_CD
+                                                )           S
+                                             ,  ITEM_CHAIN  I
+                                         WHERE  S.COMP_CD   = I.COMP_CD
+                                           AND  S.BRAND_CD  = I.BRAND_CD
+                                        UNION ALL
+                                        SELECT  COMP_CD
+                                             ,  ITEM_CD
+                                          FROM  ITEM
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  ITEM_CD NOT IN (
+                                                                    SELECT  ITEM_CD
+                                                                      FROM  ITEM_CHAIN
+                                                                     WHERE  COMP_CD = ${SCH_COMP_CD}
+                                                               )
+                                    )
+                             GROUP  BY COMP_CD, ITEM_CD
+                        )           I2
+                     ,  ITEM_CLASS IC
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_NM
+                                 ,  ITEM_POS_NM
+                                 ,  ITEM_KDS_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                               AND  USE_YN      = 'Y'
+                        )    L
+                     ,  (
+                            SELECT  S.COMP_CD
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_CD                   AS VENDOR_CD
+                                 ,  NVL(LS.STOR_NM, S.STOR_NM)  AS VENDOR_NM
+                              FROM  STORE   S
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  BRAND_CD
+                                             ,  STOR_CD
+                                             ,  STOR_NM
+                                          FROM  LANG_STORE
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )   LS
+                             WHERE  S.COMP_CD   = LS.COMP_CD (+)
+                               AND  S.BRAND_CD  = LS.BRAND_CD(+)
+                               AND  S.STOR_CD   = LS.STOR_CD (+)
+                               AND  S.COMP_CD   = ${SCH_COMP_CD}
+                        )   S
+                WHERE  I.COMP_CD   = I2.COMP_CD
+                  AND  I.ITEM_CD   = I2.ITEM_CD
+                  AND  I.COMP_CD   = S.COMP_CD   (+)
+                  AND  I.VENDOR_CD = S.VENDOR_CD (+)
+                  AND  I.COMP_CD   = IC.COMP_CD  (+)
+                  AND  I.ITEM_CD   = IC.ITEM_CD  (+)
+                  AND  I.COMP_CD   = L.COMP_CD   (+)
+                  AND  I.ITEM_CD   = L.ITEM_CD   (+)
+                  AND  I.COMP_CD   = ${SCH_COMP_CD}
+                  AND  I.BRAND_CD  IN ( ${SCH_BRAND_CD}, '0000' )
+                  AND  I.ORD_SALE_DIV IN ('3', '4') 
+                  AND  (${SCH_VENDOR_TXT}    IS NULL OR (S.VENDOR_CD  LIKE '%'||${SCH_VENDOR_TXT} ||'%' OR S.VENDOR_NM  LIKE '%'||${SCH_VENDOR_TXT} ||'%')) 
+                  AND  (${SCH_ITEM_DIV}      IS NULL OR I.ITEM_DIV     = ${SCH_ITEM_DIV}) 
+                  AND  (${SCH_OPEN_ITEM_YN}  IS NULL OR I.OPEN_ITEM_YN = ${SCH_OPEN_ITEM_YN}) 
+                  AND  (${SCH_SET_DIV}       IS NULL OR I.SET_DIV      = ${SCH_SET_DIV})
+                  AND  (${SCH_RECIPE_DIV}    IS NULL OR I.RECIPE_DIV   = ${SCH_RECIPE_DIV})
+                  AND  (${SCH_DC_YN}         IS NULL OR I.DC_YN        = ${SCH_DC_YN})
+                  AND  (${SCH_POINT_YN}      IS NULL OR I.POINT_YN     = ${SCH_POINT_YN})
+                  AND  (${SCH_SAV_MLG_YN}    IS NULL OR I.SAV_MLG_YN   = ${SCH_SAV_MLG_YN})
+                  AND  (${SCH_SEASON_DIV}    IS NULL OR I.SEASON_DIV   = ${SCH_SEASON_DIV})
+                  AND  (${SCH_CUST_STD_CNT_YN} IS NULL OR (
+                                                           1 = (
+                                                                CASE WHEN ${SCH_CUST_STD_CNT_YN} IS NULL  THEN 1
+                                                                     WHEN ${SCH_CUST_STD_CNT_YN} = 'N' AND NVL(I.CUST_STD_CNT, 0) = 0  THEN 1
+                                                                     WHEN ${SCH_CUST_STD_CNT_YN} = 'Y' AND NVL(I.CUST_STD_CNT, 0) != 0 THEN 1
+                                                                     ELSE 0
+                                                                END
+                                                               )
+                                                           ))
+                  AND  (${SCH_EXT_YN}        IS NULL OR I.EXT_YN       = ${SCH_EXT_YN})
+                  AND  (${SCH_SALE_PRC_CTRL} IS NULL OR I.SALE_PRC_CTRL= ${SCH_SALE_PRC_CTRL})
+                  AND  (${SCH_L_CLASS_CD}    IS NULL OR I.L_CLASS_CD   = ${SCH_L_CLASS_CD})
+                  AND  (${SCH_M_CLASS_CD}    IS NULL OR I.M_CLASS_CD   = ${SCH_M_CLASS_CD})
+                  AND  (${SCH_S_CLASS_CD}    IS NULL OR I.S_CLASS_CD   = ${SCH_S_CLASS_CD})
+                  AND  (${SCH_D_CLASS_CD}    IS NULL OR I.D_CLASS_CD   = ${SCH_D_CLASS_CD})
+                  AND  (${SCH_USE_YN}        IS NULL OR I.USE_YN       = ${SCH_USE_YN})
+                  AND  IC.ORG_CLASS_CD(+) = '00'
+                  AND  IC.USE_YN(+)       = 'Y'
+            )   I
+        ,   (
+                SELECT  C.COMP_CD
+                     ,  L_CLASS_CD                      AS L_CLASS_CD
+                     ,  NVL(L.LANG_NM, C.L_CLASS_NM)    AS L_CLASS_NM
+                     ,  SORT_ORDER
+                  FROM  ITEM_L_CLASS  C
+                     ,  (
+                            SELECT  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_L_CLASS'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COL_NM      = 'L_CLASS_NM'
+                               AND  USE_YN      = 'Y'
+                        )             L
+                 WHERE  C.COMP_CD||C.ORG_CLASS_CD || C.L_CLASS_CD = L.PK_COL(+)
+                   AND  C.COMP_CD      = ${SCH_COMP_CD}
+                   AND  C.ORG_CLASS_CD = '00'
+                   AND  C.USE_YN       = 'Y'
+            )   L_CLASS
+        ,   (
+                SELECT  C.COMP_CD
+                     ,  L_CLASS_CD                      AS L_CLASS_CD
+                     ,  M_CLASS_CD                      AS M_CLASS_CD
+                     ,  NVL(L.LANG_NM, C.M_CLASS_NM)    AS M_CLASS_NM
+                     ,  SORT_ORDER
+                  FROM  ITEM_M_CLASS  C
+                     ,  (
+                            SELECT  PK_COL, LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_M_CLASS'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COL_NM      = 'M_CLASS_NM'
+                               AND  USE_YN      = 'Y'
+                        )             L
+                 WHERE  C.COMP_CD||C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD = L.PK_COL(+)
+                   AND  C.COMP_CD      = ${SCH_COMP_CD}
+                   AND  C.ORG_CLASS_CD = '00'
+                   AND  C.USE_YN       = 'Y'
+            )   M_CLASS
+        ,   (
+                SELECT  C.COMP_CD
+                     ,  L_CLASS_CD                      AS L_CLASS_CD
+                     ,  M_CLASS_CD                      AS M_CLASS_CD
+                     ,  S_CLASS_CD                      AS S_CLASS_CD
+                     ,  NVL(L.LANG_NM, C.S_CLASS_NM)    AS S_CLASS_NM
+                     ,  SORT_ORDER
+                  FROM  ITEM_S_CLASS  C
+                     ,  (
+                            SELECT  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_S_CLASS'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COL_NM      = 'S_CLASS_NM'
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD||C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD || C.S_CLASS_CD = L.PK_COL(+)
+                   AND  C.COMP_CD      = ${SCH_COMP_CD}
+                   AND  C.ORG_CLASS_CD = '00'
+                   AND  C.USE_YN       = 'Y'
+            )   S_CLASS
+        ,   (
+                SELECT  C.COMP_CD
+                     ,  L_CLASS_CD                      AS L_CLASS_CD
+                     ,  M_CLASS_CD                      AS M_CLASS_CD
+                     ,  S_CLASS_CD                      AS S_CLASS_CD
+                     ,  D_CLASS_CD                      AS D_CLASS_CD
+                     ,  NVL(L.LANG_NM, C.D_CLASS_NM)    AS D_CLASS_NM
+                     ,  SORT_ORDER
+                  FROM  ITEM_D_CLASS  C
+                     ,  (
+                            SELECT  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_D_CLASS'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COL_NM      = 'D_CLASS_NM'
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD||C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD || C.S_CLASS_CD || C.D_CLASS_CD = L.PK_COL(+)
+                   AND  C.COMP_CD      = ${SCH_COMP_CD}
+                   AND  C.ORG_CLASS_CD = '00'
+                   AND  C.USE_YN       = 'Y'
+            )   D_CLASS
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00005' ) C_ITEM_DIV
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00095' ) S_UNIT
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00095' ) O_UNIT
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00095' ) T_UNIT
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00095' ) D_UNIT
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00100' ) MNG
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00040' ) PRC
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00045' ) USE
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01040' ) RECIPE
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00055' ) VAT_YN
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00850' ) VAT_RULE
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '00020' ) STOCK_DIV
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01100' ) SET_DIV
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01060' ) DC_YN
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01060' ) POINT_YN
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01060' ) OPEN_ITEM_YN
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01060' ) EXT_YN
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01060' ) SERVICE_ITEM_YN
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '02030' ) S_SEASON
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01060' ) S_SAVMLG
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '01060' ) S_HCON
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '02335' ) S_BBG_YN
+         ,  ( SELECT * FROM S_COMM WHERE CODE_TP = '02340' ) S_BBG_ATT
+     WHERE  I.L_CLASS_CD      = L_CLASS.L_CLASS_CD(+)
+       AND  I.L_CLASS_CD      = M_CLASS.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD      = M_CLASS.M_CLASS_CD(+)      
+       AND  I.L_CLASS_CD      = S_CLASS.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD      = S_CLASS.M_CLASS_CD(+)
+       AND  I.S_CLASS_CD      = S_CLASS.S_CLASS_CD(+)
+       AND  I.L_CLASS_CD      = D_CLASS.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD      = D_CLASS.M_CLASS_CD(+)
+       AND  I.S_CLASS_CD      = D_CLASS.S_CLASS_CD(+)
+       AND  I.D_CLASS_CD      = D_CLASS.D_CLASS_CD(+)
+       AND  I.ITEM_DIV        = C_ITEM_DIV.CODE_CD(+)
+       AND  I.SALE_UNIT       = S_UNIT.CODE_CD(+)
+       AND  I.ORD_UNIT        = O_UNIT.CODE_CD(+)
+       AND  I.DO_UNIT         = D_UNIT.CODE_CD(+)
+       AND  I.ORD_MNG_DIV     = MNG.CODE_CD(+)
+       AND  I.SALE_PRC_CTRL   = PRC.CODE_CD(+) 
+       AND  I.ORD_SALE_DIV    = USE.CODE_CD(+)
+       AND  I.STOCK_UNIT      = T_UNIT.CODE_CD(+)
+       AND  I.RECIPE_DIV      = RECIPE.CODE_CD(+)
+       AND  I.SALE_VAT_YN     = VAT_YN.CODE_CD(+)
+       AND  I.SALE_VAT_RULE   = VAT_RULE.CODE_CD(+)
+       AND  I.STOCK_DIV       = STOCK_DIV.CODE_CD(+)
+       AND  I.SET_DIV         = SET_DIV.CODE_CD(+)
+       AND  I.DC_YN           = DC_YN.CODE_CD(+)
+       AND  I.POINT_YN        = POINT_YN.CODE_CD(+)
+       AND  I.SAV_MLG_YN      = S_SAVMLG.CODE_CD(+)
+       AND  I.OPEN_ITEM_YN    = OPEN_ITEM_YN.CODE_CD(+)
+       AND  I.EXT_YN          = EXT_YN.CODE_CD(+)
+       AND  I.SERVICE_ITEM_YN = SERVICE_ITEM_YN.CODE_CD(+)
+       AND  I.SEASON_DIV      = S_SEASON.CODE_CD(+)
+       AND  I.HOLLYS_CON_YN   = S_HCON.CODE_CD(+)
+       AND  I.BEVERAGE_DIV    = S_BBG_YN.CODE_CD(+)
+       AND  I.BEVERAGE_ATT    = S_BBG_ATT.CODE_CD(+)
+       AND  (${SCH_ITEM_TXT}    IS NULL OR (I.ITEM_CD  LIKE '%'||${SCH_ITEM_TXT} ||'%' OR I.ITEM_NM  LIKE '%'||${SCH_ITEM_TXT} ||'%' OR I.ITEM_LANG_NM  LIKE '%'||${SCH_ITEM_TXT} ||'%')) 
+    ORDER BY  L_CLASS.SORT_ORDER
+           ,  M_CLASS.SORT_ORDER
+           ,  S_CLASS.SORT_ORDER
+           ,  I.ITEM_CD
+]]></query>
+
+<query name='ITEM_C'><![CDATA[
+    INSERT  INTO ITEM
+    SELECT  COMP_CD
+         ,  BRAND_CD
+         ,  ${TGT_ITEM_CD}
+         ,  ${TGT_ITEM_CD}
+         ,  ${TGT_ITEM_NM}
+         ,  ${TGT_ITEM_NM}
+         ,  ${TGT_ITEM_NM}
+         ,  L_CLASS_CD
+         ,  M_CLASS_CD
+         ,  S_CLASS_CD
+         ,  D_CLASS_CD
+         ,  ITEM_DIV
+         ,  ORD_SALE_DIV
+         ,  STOCK_DIV
+         ,  STANDARD
+         ,  CAPACITY
+         ,  COUNTRY_CD
+         ,  STOCK_PERIOD
+         ,  SALE_PRC
+         ,  SALE_VAT_YN
+         ,  SALE_VAT_RULE
+         ,  SALE_VAT_IN_RATE
+         ,  SALE_VAT_OUT_RATE
+         ,  SALE_PRC_CTRL
+         ,  ${START_DT}
+         ,  SALE_CLOSE_DT
+         ,  SET_DIV
+         ,  SERVICE_ITEM_YN
+         ,  EXT_YN
+         ,  AUTO_POPUP_YN
+         ,  EXT_COMMENT
+         ,  OPEN_ITEM_YN
+         ,  DC_YN
+         ,  COST
+         ,  COST_VAT_YN
+         ,  COST_VAT_RULE
+         ,  COST_VAT_RATE
+         ,  ${START_DT}
+         ,  ORD_CLOSE_DT
+         ,  VENDOR_CD
+         ,  LEAD_TIME
+         ,  ORD_B_CNT
+         ,  ALERT_ORD_QTY
+         ,  MIN_ORD_QTY
+         ,  MAX_ORD_QTY
+         ,  ORD_MNG_DIV
+         ,  RJT_YN
+         ,  RECIPE_DIV
+         ,  YIELD_RATE
+         ,  PROD_QTY
+         ,  ORD_UNIT
+         ,  ORD_UNIT_QTY
+         ,  SALE_UNIT
+         ,  SALE_UNIT_QTY
+         ,  STOCK_UNIT
+         ,  REUSE_YN
+         ,  DO_YN
+         ,  DO_UNIT
+         ,  WEIGHT_UNIT
+         ,  SAV_MLG_YN
+         ,  POINT_YN
+         ,  ERP_ITEM_CD
+         ,  ASIS_ITEM_CD
+         ,  USE_YN
+         ,  SYSDATE
+         ,  ${USER_ID}
+         ,  SYSDATE
+         ,  ${USER_ID}
+      FROM  ITEM
+     WHERE  COMP_CD = ${COMP_CD}
+       AND  ITEM_CD = ${SRC_ITEM_CD}
+]]></query>
+
+<query name='ITEM_CHAIN_C'><![CDATA[
+    INSERT  INTO ITEM_CHAIN
+    SELECT  COMP_CD
+         ,  BRAND_CD
+         ,  STOR_TP
+         ,  ${TGT_ITEM_CD}
+         ,  ${TGT_ITEM_CD}
+         ,  ${TGT_ITEM_NM}
+         ,  ${TGT_ITEM_NM}
+         ,  ${TGT_ITEM_NM}
+         ,  L_CLASS_CD
+         ,  M_CLASS_CD
+         ,  S_CLASS_CD
+         ,  D_CLASS_CD
+         ,  ITEM_DIV
+         ,  ORD_SALE_DIV
+         ,  STOCK_DIV
+         ,  STANDARD
+         ,  CAPACITY
+         ,  COUNTRY_CD
+         ,  STOCK_PERIOD
+         ,  SALE_PRC
+         ,  SALE_VAT_YN
+         ,  SALE_VAT_RULE
+         ,  SALE_VAT_IN_RATE
+         ,  SALE_VAT_OUT_RATE
+         ,  SALE_PRC_CTRL
+         ,  ${START_DT}
+         ,  SALE_CLOSE_DT
+         ,  SET_DIV
+         ,  SERVICE_ITEM_YN
+         ,  EXT_YN
+         ,  AUTO_POPUP_YN
+         ,  EXT_COMMENT
+         ,  OPEN_ITEM_YN
+         ,  DC_YN
+         ,  COST
+         ,  COST_VAT_YN
+         ,  COST_VAT_RULE
+         ,  COST_VAT_RATE
+         ,  ${START_DT}
+         ,  ORD_CLOSE_DT
+         ,  VENDOR_CD
+         ,  LEAD_TIME
+         ,  ORD_B_CNT
+         ,  ALERT_ORD_QTY
+         ,  MIN_ORD_QTY
+         ,  MAX_ORD_QTY
+         ,  ORD_MNG_DIV
+         ,  RJT_YN
+         ,  RECIPE_DIV
+         ,  YIELD_RATE
+         ,  PROD_QTY
+         ,  ORD_UNIT
+         ,  ORD_UNIT_QTY
+         ,  SALE_UNIT
+         ,  SALE_UNIT_QTY
+         ,  STOCK_UNIT
+         ,  REUSE_YN
+         ,  DO_YN
+         ,  DO_UNIT
+         ,  WEIGHT_UNIT
+         ,  SAV_MLG_YN
+         ,  POINT_YN
+         ,  ERP_ITEM_CD
+         ,  ASIS_ITEM_CD
+         ,  USE_YN
+         ,  SYSDATE
+         ,  ${USER_ID}
+         ,  SYSDATE
+         ,  ${USER_ID}
+      FROM  ITEM_CHAIN
+     WHERE  COMP_CD = ${COMP_CD}
+       AND  ITEM_CD = ${SRC_ITEM_CD}
+       AND  USE_YN  = 'Y'
+]]></query>
+
+<query name='ITEM_CHAIN_HIS_C'><![CDATA[
+    INSERT INTO ITEM_CHAIN_HIS
+    SELECT  COMP_CD
+         ,  BRAND_CD
+         ,  STOR_TP
+         ,  ${TGT_ITEM_CD}
+         ,  ${START_DT}
+         ,  '99991231'
+         ,  SALE_PRC
+         ,  COST
+         ,  USE_YN
+         ,  SYSDATE
+         ,  ${USER_ID}
+         ,  SYSDATE
+         ,  ${USER_ID}
+      FROM  ITEM_CHAIN_HIS    I
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  ITEM_CD     = ${SRC_ITEM_CD}
+       AND  START_DT    = (
+                            SELECT  MAX(START_DT)
+                              FROM  ITEM_CHAIN_HIS
+                             WHERE  COMP_CD     = I.COMP_CD
+                               AND  BRAND_CD    = I.BRAND_CD
+                               AND  STOR_TP     = I.STOR_TP
+                               AND  ITEM_CD     = I.ITEM_CD
+                               AND  START_DT   <= ${START_DT}
+                               AND  USE_YN   = 'Y'
+                          )
+      AND  USE_YN  = 'Y'
+]]></query>
+
+<query name='TAB2_ITEM_Q'><![CDATA[
+    SELECT  I.COMP_CD
+         ,  I.BRAND_CD
+         ,  ''                  AS STOR_TP
+         ,  I.ITEM_CD
+         ,  I.REP_ITEM_CD
+         ,  I.ITEM_NM
+         ,  L.ITEM_NM           AS LANG_NM
+         ,  I.ITEM_POS_NM
+         ,  L.ITEM_POS_NM       AS LANG_POS_NM
+         ,  I.ITEM_KDS_NM
+         ,  L.ITEM_KDS_NM       AS LANG_KDS_NM
+         ,  IC.L_CLASS_CD
+         ,  IC.M_CLASS_CD
+         ,  IC.S_CLASS_CD
+         ,  IC.D_CLASS_CD
+         ,  I.ITEM_DIV
+         ,  I.STANDARD
+         ,  I.CAPACITY
+         ,  I.COUNTRY_CD
+         ,  I.RECIPE_DIV
+         ,  I.STOCK_PERIOD
+         ,  I.STOCK_DIV
+         ,  I.SET_DIV
+         ,  I.SALE_PRC_CTRL
+         ,  I.ORD_SALE_DIV
+         ,  I.AUTO_POPUP_YN
+         ,  I.EXT_YN
+         ,  I.EXT_COMMENT
+         ,  I.SALE_START_DT
+         ,  I.SALE_CLOSE_DT
+         ,  I.SALE_PRC
+         ,  I.SALE_VAT_YN
+         ,  I.SALE_VAT_RULE
+         ,  I.SALE_VAT_IN_RATE * 100  AS SALE_VAT_IN_RATE
+         ,  I.POINT_YN
+         ,  I.COST
+         ,  I.COST_VAT_YN
+         ,  I.COST_VAT_RULE
+         ,  I.COST_VAT_RATE * 100  AS COST_VAT_RATE
+         ,  I.ORD_START_DT
+         ,  I.ORD_CLOSE_DT
+         ,  I.ORD_UNIT
+         ,  I.ORD_UNIT_QTY
+         ,  I.SALE_UNIT
+         ,  I.SALE_UNIT_QTY
+         ,  I.STOCK_UNIT
+         ,  I.ORD_B_CNT
+         ,  I.MAX_ORD_QTY
+         ,  I.ORD_MNG_DIV
+         ,  I.MIN_ORD_QTY
+         ,  I.ALERT_ORD_QTY
+         ,  I.RJT_YN
+         ,  I.OPEN_ITEM_YN
+         ,  I.DC_YN
+         ,  I.USE_YN
+         ,  I.INST_DT
+         ,  I.INST_USER
+         ,  I.UPD_DT
+         ,  I.UPD_USER
+         ,  I.SALE_VAT_OUT_RATE * 100  AS SALE_VAT_OUT_RATE 
+         ,  I.ERP_ITEM_CD
+         ,  DECODE(L.ITEM_CD, NULL, 'I', 'R') AS MULT_PRC
+         ,  I.WEIGHT_UNIT
+         ,  I.LEAD_TIME
+         ,  I.VENDOR_CD
+         ,  V.VENDOR_NM
+         ,  I.DO_UNIT
+         ,  I.SERVICE_ITEM_YN
+         ,  I.YIELD_RATE
+         ,  I.PROD_QTY
+         ,  I.SAV_MLG_YN
+         ,  I.SEASON_DIV
+         ,  I.CUST_STD_CNT
+         ,  I.REUSE_YN
+         ,  I.DO_YN
+         ,  I.HOLLYS_CON_YN
+         ,  I.BEVERAGE_DIV
+         ,  I.BEVERAGE_ATT
+         ,  I.ASIS_ITEM_CD
+      FROM  ITEM        I
+         ,  ITEM_CLASS  IC
+         ,  ( 
+                SELECT  ITEM_CD
+                     ,  ITEM_NM
+                     ,  ITEM_POS_NM
+                     ,  ITEM_KDS_NM
+                  FROM  LANG_ITEM
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )           L
+        ,   (
+                SELECT  S.STOR_CD                   AS VENDOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS VENDOR_NM
+                  FROM  STORE S
+                     ,  (
+                            SELECT  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        ) L
+                 WHERE  S.BRAND_CD = L.BRAND_CD(+)
+                   AND  S.STOR_CD  = L.STOR_CD(+)
+                   AND  S.COMP_CD  = ${SCH_COMP_CD}
+            ) V
+     WHERE  I.COMP_CD     = IC.COMP_CD(+)
+       AND  I.ITEM_CD     = IC.ITEM_CD(+)
+       AND  I.ITEM_CD     = L.ITEM_CD(+)
+       AND  I.VENDOR_CD   = V.VENDOR_CD(+)
+       AND  I.COMP_CD     = ${SCH_COMP_CD}
+       AND  I.BRAND_CD   IN ( ${SCH_BRAND_CD}, '0000' )
+       AND  I.ITEM_CD     = ${SCH_ITEM_CD} 
+       AND  IC.ORG_CLASS_CD(+) = '00'
+]]></query>
+
+<query name='ITEM_I'><![CDATA[
+    INSERT  INTO ITEM
+    ( 
+            COMP_CD
+         ,  BRAND_CD
+         ,  ITEM_CD
+         ,  ITEM_NM
+         ,  ITEM_POS_NM
+         ,  ITEM_KDS_NM
+         ,  REP_ITEM_CD
+         ,  L_CLASS_CD
+         ,  M_CLASS_CD
+         ,  S_CLASS_CD
+         ,  D_CLASS_CD
+         ,  ITEM_DIV
+         ,  STANDARD
+         ,  CAPACITY
+         ,  COUNTRY_CD
+         ,  RECIPE_DIV
+         ,  STOCK_PERIOD
+         ,  STOCK_DIV
+         ,  SET_DIV
+         ,  SALE_PRC_CTRL
+         ,  ORD_SALE_DIV
+         ,  AUTO_POPUP_YN
+         ,  EXT_YN
+         ,  EXT_COMMENT
+         ,  SALE_START_DT
+         ,  SALE_CLOSE_DT
+         ,  SALE_PRC
+         ,  SALE_VAT_YN
+         ,  SALE_VAT_RULE
+         ,  SALE_VAT_IN_RATE
+         ,  SALE_VAT_OUT_RATE
+         ,  POINT_YN
+         ,  ERP_ITEM_CD
+         ,  COST
+         ,  COST_VAT_YN
+         ,  COST_VAT_RULE
+         ,  COST_VAT_RATE
+         ,  ORD_START_DT
+         ,  ORD_CLOSE_DT
+         ,  ORD_UNIT
+         ,  ORD_UNIT_QTY
+         ,  SALE_UNIT
+         ,  SALE_UNIT_QTY
+         ,  STOCK_UNIT
+         ,  ORD_B_CNT
+         ,  MAX_ORD_QTY
+         ,  ORD_MNG_DIV
+         ,  MIN_ORD_QTY
+         ,  ALERT_ORD_QTY
+         ,  RJT_YN
+         ,  OPEN_ITEM_YN
+         ,  DC_YN
+         ,  WEIGHT_UNIT
+         ,  LEAD_TIME
+         ,  DO_UNIT
+         ,  SERVICE_ITEM_YN
+         ,  YIELD_RATE
+         ,  PROD_QTY
+         ,  VENDOR_CD
+         ,  USE_YN
+         ,  INST_DT
+         ,  INST_USER
+         ,  UPD_DT
+         ,  UPD_USER
+         ,  SAV_MLG_YN
+         ,  SEASON_DIV
+         ,  CUST_STD_CNT
+         ,  HOLLYS_CON_YN
+         ,  BEVERAGE_DIV
+         ,  BEVERAGE_ATT
+         ,  ASIS_ITEM_CD
+    ) VALUES (  
+            ${COMP_CD}
+         ,  DECODE(${BRAND_CD}, '', '0000', ${BRAND_CD})
+         ,  TRIM(${ITEM_CD})
+         ,  ${ITEM_NM}
+         ,  ${ITEM_POS_NM}
+         ,  ${ITEM_KDS_NM}
+         ,  TRIM(${REP_ITEM_CD})
+         ,  ${L_CLASS_CD}
+         ,  ${M_CLASS_CD}
+         ,  ${S_CLASS_CD}
+         ,  ${D_CLASS_CD}
+         ,  CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ITEM_DIV}, '06') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ITEM_DIV}, '08') ELSE '01' END
+         ,  ${STANDARD}
+         ,  ${CAPACITY}
+         ,  ${COUNTRY_CD}
+         ,  NVL(${RECIPE_DIV}, '1')
+         ,  ${STOCK_PERIOD}
+         ,  NVL(${STOCK_DIV}, 'N')
+         ,  ${SET_DIV}
+         ,  ${SALE_PRC_CTRL}
+         ,  CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ORD_SALE_DIV}, '3') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ORD_SALE_DIV}, '4') ELSE '2' END
+         ,  ${AUTO_POPUP_YN}
+         ,  ${EXT_YN}
+         ,  ${EXT_COMMENT}
+         ,  NVL(${SALE_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  NVL(${SALE_CLOSE_DT}, '99991231')
+         ,  ${SALE_PRC}
+         ,  ${SALE_VAT_YN}
+         ,  ${SALE_VAT_RULE}
+         ,  ${SALE_VAT_IN_RATE} / 100
+         ,  ${SALE_VAT_OUT_RATE} / 100
+         ,  ${POINT_YN}
+         ,  ${ERP_ITEM_CD}
+         ,  NVL(${COST}, 0)
+         ,  NVL(${COST_VAT_YN}, 'Y')
+         ,  NVL(${COST_VAT_RULE}, '1')
+         ,  NVL(${COST_VAT_RATE}, 10) / 100
+         ,  NVL(${ORD_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  NVL(${ORD_CLOSE_DT}, '99991231')
+         ,  NVL(${ORD_UNIT}, 'EA')
+         ,  NVL(${ORD_UNIT_QTY}, 1)
+         ,  NVL(${SALE_UNIT}, 'EA')
+         ,  NVL(${SALE_UNIT_QTY}, 1)
+         ,  NVL(${STOCK_UNIT}, 'EA')
+         ,  ${ORD_B_CNT}
+         ,  ${MAX_ORD_QTY}
+         ,  ${ORD_MNG_DIV}
+         ,  ${MIN_ORD_QTY}
+         ,  ${ALERT_ORD_QTY}
+         ,  NVL(${RJT_YN}, 'Y')
+         ,  ${OPEN_ITEM_YN}
+         ,  ${DC_YN}
+         ,  NVL(${WEIGHT_UNIT}, 0)
+         ,  NVL(${LEAD_TIME}, 0)
+         ,  NVL(${DO_UNIT}, 'EA')
+         ,  NVL(${SERVICE_ITEM_YN}, 'N')
+         ,  NVL(${YIELD_RATE}, 1)
+         ,  NVL(${PROD_QTY}, 1)
+         ,  ${VENDOR_CD}
+         ,  ${USE_YN}
+         ,  SYSDATE
+         ,  ${UPD_USER}
+         ,  SYSDATE
+         ,  ${UPD_USER}
+         ,  ${SAV_MLG_YN}
+         ,  ${SEASON_DIV}
+         ,  ${CUST_STD_CNT}
+         ,  ${HOLLYS_CON_YN}
+         ,  ${BEVERAGE_DIV}
+         ,  ${BEVERAGE_ATT}
+         ,  ${ASIS_ITEM_CD}
+    )
+]]></query>
+
+<query name='ITEM_U'><![CDATA[
+    UPDATE  ITEM
+       SET  ITEM_NM             = ${ITEM_NM}
+         ,  ITEM_POS_NM         = ${ITEM_POS_NM}
+         ,  ITEM_KDS_NM         = ${ITEM_KDS_NM}
+         ,  REP_ITEM_CD         = ${REP_ITEM_CD}
+         ,  L_CLASS_CD          = ${L_CLASS_CD}
+         ,  M_CLASS_CD          = ${M_CLASS_CD}
+         ,  S_CLASS_CD          = ${S_CLASS_CD}
+         ,  D_CLASS_CD          = ${D_CLASS_CD}
+         ,  ITEM_DIV            = CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ITEM_DIV}, '06') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ITEM_DIV}, '08') ELSE '01' END
+         ,  STANDARD            = ${STANDARD}
+         ,  CAPACITY            = ${CAPACITY}
+         ,  COUNTRY_CD          = ${COUNTRY_CD}
+         ,  RECIPE_DIV          = NVL(${RECIPE_DIV}, '1')
+         ,  STOCK_PERIOD        = ${STOCK_PERIOD}
+         ,  STOCK_DIV           = NVL(${STOCK_DIV}, 'N')
+         ,  SET_DIV             = ${SET_DIV}
+         ,  SALE_PRC_CTRL       = ${SALE_PRC_CTRL}
+         ,  ORD_SALE_DIV        = CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ORD_SALE_DIV}, '3') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ORD_SALE_DIV}, '4') ELSE '2' END
+         ,  AUTO_POPUP_YN       = ${AUTO_POPUP_YN}
+         ,  EXT_YN              = ${EXT_YN}
+         ,  EXT_COMMENT         = ${EXT_COMMENT}
+         ,  SALE_START_DT       = NVL(${SALE_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  SALE_CLOSE_DT       = NVL(${SALE_CLOSE_DT}, '99991231')
+         ,  SALE_PRC            = ${SALE_PRC}
+         ,  SALE_VAT_YN         = ${SALE_VAT_YN}
+         ,  SALE_VAT_RULE       = ${SALE_VAT_RULE}
+         ,  SALE_VAT_IN_RATE    = ${SALE_VAT_IN_RATE} / 100
+         ,  POINT_YN            = ${POINT_YN}
+         ,  COST                = NVL(${COST}, 0)
+         ,  COST_VAT_YN         = NVL(${COST_VAT_YN}, 'Y')
+         ,  COST_VAT_RULE       = NVL(${COST_VAT_RULE}, '1')
+         ,  COST_VAT_RATE       = NVL(${COST_VAT_RATE}, 10) / 100    
+         ,  ORD_START_DT        = NVL(${ORD_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  ORD_CLOSE_DT        = NVL(${ORD_CLOSE_DT}, '99991231')
+         ,  ORD_UNIT            = NVL(${ORD_UNIT}, 'EA')
+         ,  ORD_UNIT_QTY        = NVL(${ORD_UNIT_QTY}, 1)
+         ,  SALE_UNIT           = NVL(${SALE_UNIT}, 'EA')
+         ,  SALE_UNIT_QTY       = NVL(${SALE_UNIT_QTY}, 1)
+         ,  STOCK_UNIT          = NVL(${STOCK_UNIT}, 'EA')
+         ,  ORD_B_CNT           = ${ORD_B_CNT}
+         ,  MAX_ORD_QTY         = ${MAX_ORD_QTY}
+         ,  ORD_MNG_DIV         = ${ORD_MNG_DIV}
+         ,  MIN_ORD_QTY         = ${MIN_ORD_QTY}
+         ,  ALERT_ORD_QTY       = ${ALERT_ORD_QTY}
+         ,  RJT_YN              = NVL(${RJT_YN}, 'Y')
+         ,  OPEN_ITEM_YN        = ${OPEN_ITEM_YN}
+         ,  DC_YN               = ${DC_YN}
+         ,  WEIGHT_UNIT         = NVL(${WEIGHT_UNIT}, 0)
+         ,  USE_YN              = ${USE_YN}
+         ,  UPD_DT              = SYSDATE
+         ,  UPD_USER            = ${UPD_USER}
+         ,  SALE_VAT_OUT_RATE   = ${SALE_VAT_OUT_RATE} / 100
+         ,  ERP_ITEM_CD         = ${ERP_ITEM_CD}   
+         ,  LEAD_TIME           = NVL(${LEAD_TIME}, 0)
+         ,  DO_UNIT             = NVL(${DO_UNIT}, 'EA')
+         ,  SERVICE_ITEM_YN     = NVL(${SERVICE_ITEM_YN}, 'N')
+         ,  YIELD_RATE          = NVL(${YIELD_RATE}, 1)
+         ,  PROD_QTY            = NVL(${PROD_QTY}, 1)
+         ,  VENDOR_CD           = ${VENDOR_CD}
+         ,  SAV_MLG_YN          = ${SAV_MLG_YN}
+         ,  SEASON_DIV          = ${SEASON_DIV}
+         ,  CUST_STD_CNT        = ${CUST_STD_CNT}
+         ,  HOLLYS_CON_YN       = ${HOLLYS_CON_YN}
+         ,  BEVERAGE_DIV        = ${BEVERAGE_DIV}
+         ,  BEVERAGE_ATT        = ${BEVERAGE_ATT}
+         ,  ASIS_ITEM_CD        = ${ASIS_ITEM_CD}
+     WHERE  COMP_CD             = ${COMP_CD}
+       AND  BRAND_CD            = DECODE(${BRAND_CD}, '', '0000', ${BRAND_CD})
+       AND  ITEM_CD             = ${ITEM_CD}
+]]></query>
+
+<query name='ITEM_CHAIN_I'><![CDATA[
+    INSERT  INTO ITEM_CHAIN
+    (  
+            COMP_CD
+         ,  BRAND_CD
+         ,  ITEM_CD
+         ,  STOR_TP
+         ,  ITEM_NM
+         ,  ITEM_POS_NM
+         ,  ITEM_KDS_NM
+         ,  REP_ITEM_CD
+         ,  L_CLASS_CD
+         ,  M_CLASS_CD
+         ,  S_CLASS_CD
+         ,  D_CLASS_CD
+         ,  ITEM_DIV
+         ,  STANDARD
+         ,  CAPACITY
+         ,  COUNTRY_CD
+         ,  RECIPE_DIV
+         ,  STOCK_PERIOD
+         ,  STOCK_DIV
+         ,  SET_DIV
+         ,  SALE_PRC_CTRL
+         ,  ORD_SALE_DIV
+         ,  AUTO_POPUP_YN
+         ,  EXT_YN
+         ,  EXT_COMMENT
+         ,  SALE_START_DT
+         ,  SALE_CLOSE_DT
+         ,  SALE_PRC
+         ,  SALE_VAT_YN
+         ,  SALE_VAT_RULE
+         ,  SALE_VAT_IN_RATE
+         ,  SALE_VAT_OUT_RATE
+         ,  POINT_YN
+         ,  ERP_ITEM_CD
+         ,  COST
+         ,  COST_VAT_YN
+         ,  COST_VAT_RULE
+         ,  COST_VAT_RATE
+         ,  ORD_START_DT
+         ,  ORD_CLOSE_DT
+         ,  ORD_UNIT
+         ,  ORD_UNIT_QTY
+         ,  SALE_UNIT
+         ,  SALE_UNIT_QTY
+         ,  STOCK_UNIT
+         ,  ORD_B_CNT
+         ,  MAX_ORD_QTY
+         ,  ORD_MNG_DIV
+         ,  MIN_ORD_QTY
+         ,  ALERT_ORD_QTY
+         ,  RJT_YN
+         ,  OPEN_ITEM_YN
+         ,  DC_YN
+         ,  WEIGHT_UNIT
+         ,  LEAD_TIME
+         ,  DO_UNIT
+         ,  SERVICE_ITEM_YN
+         ,  YIELD_RATE
+         ,  PROD_QTY
+         ,  VENDOR_CD
+         ,  USE_YN
+         ,  INST_DT
+         ,  INST_USER
+         ,  UPD_DT
+         ,  UPD_USER
+         ,  SAV_MLG_YN
+         ,  SEASON_DIV
+         ,  CUST_STD_CNT
+         ,  HOLLYS_CON_YN
+         ,  BEVERAGE_DIV
+         ,  BEVERAGE_ATT
+         ,  ASIS_ITEM_CD
+    ) VALUES (
+            ${COMP_CD}
+         ,  ${BRAND_CD}
+         ,  TRIM(${ITEM_CD})
+         ,  ${STOR_TP}
+         ,  ${ITEM_NM}
+         ,  ${ITEM_POS_NM}
+         ,  ${ITEM_KDS_NM}
+         ,  TRIM(${REP_ITEM_CD})
+         ,  ${L_CLASS_CD}
+         ,  ${M_CLASS_CD}
+         ,  ${S_CLASS_CD}
+         ,  ${D_CLASS_CD}
+         ,  CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ITEM_DIV}, '06') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ITEM_DIV}, '08') ELSE '01' END
+         ,  ${STANDARD}
+         ,  ${CAPACITY}
+         ,  ${COUNTRY_CD}
+         ,  NVL(${RECIPE_DIV}, '1')
+         ,  ${STOCK_PERIOD}
+         ,  NVL(${STOCK_DIV}, 'N')
+         ,  ${SET_DIV}
+         ,  ${SALE_PRC_CTRL}
+         ,  CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ORD_SALE_DIV}, '3') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ORD_SALE_DIV}, '4') ELSE '2' END
+         ,  ${AUTO_POPUP_YN}
+         ,  ${EXT_YN}
+         ,  ${EXT_COMMENT}
+         ,  NVL(${SALE_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  NVL(${SALE_CLOSE_DT}, '99991231')
+         ,  ${SALE_PRC}
+         ,  ${SALE_VAT_YN}
+         ,  ${SALE_VAT_RULE}
+         ,  ${SALE_VAT_IN_RATE} / 100
+         ,  ${SALE_VAT_OUT_RATE} / 100 
+         ,  ${POINT_YN}
+         ,  ${ERP_ITEM_CD}
+         ,  ${COST}
+         ,  ${COST_VAT_YN}
+         ,  ${COST_VAT_RULE}
+         ,  ${COST_VAT_RATE} / 100
+         ,  NVL(${ORD_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  NVL(${ORD_CLOSE_DT}, '99991231')
+         ,  NVL(${ORD_UNIT}, 'EA')
+         ,  NVL(${ORD_UNIT_QTY}, 1)
+         ,  NVL(${SALE_UNIT}, 'EA')
+         ,  NVL(${SALE_UNIT_QTY}, 1)
+         ,  NVL(${STOCK_UNIT}, 'EA')
+         ,  ${ORD_B_CNT}
+         ,  ${MAX_ORD_QTY}
+         ,  ${ORD_MNG_DIV}
+         ,  ${MIN_ORD_QTY}
+         ,  ${ALERT_ORD_QTY}
+         ,  NVL(${RJT_YN}, 'Y')
+         ,  ${OPEN_ITEM_YN}
+         ,  ${DC_YN}
+         ,  NVL(${WEIGHT_UNIT}, 0)
+         ,  ${LEAD_TIME}
+         ,  NVL(${DO_UNIT}, 'EA')
+         ,  NVL(${SERVICE_ITEM_YN}, 'N')
+         ,  ${YIELD_RATE}
+         ,  ${PROD_QTY}
+         ,  ${VENDOR_CD}
+         ,  ${USE_YN}
+         ,  SYSDATE
+         ,  ${UPD_USER}
+         ,  SYSDATE
+         ,  ${UPD_USER}
+         ,  ${SAV_MLG_YN}
+         ,  ${SEASON_DIV}
+         ,  ${CUST_STD_CNT}
+         ,  ${HOLLYS_CON_YN}
+         ,  ${BEVERAGE_DIV}
+         ,  ${BEVERAGE_ATT}
+         ,  ${ASIS_ITEM_CD}
+    )
+]]></query>
+
+<query name='ITEM_CHAIN_U'><![CDATA[
+    UPDATE  ITEM_CHAIN
+       SET  ITEM_NM             = ${ITEM_NM}
+         ,  ITEM_POS_NM         = ${ITEM_POS_NM}
+         ,  ITEM_KDS_NM         = ${ITEM_KDS_NM}
+         ,  REP_ITEM_CD         = ${REP_ITEM_CD}
+         ,  L_CLASS_CD          = ${L_CLASS_CD}
+         ,  M_CLASS_CD          = ${M_CLASS_CD}
+         ,  S_CLASS_CD          = ${S_CLASS_CD}
+         ,  D_CLASS_CD          = ${D_CLASS_CD}
+         ,  ITEM_DIV            = CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ITEM_DIV}, '06') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ITEM_DIV}, '08') ELSE '01' END
+         ,  STANDARD            = ${STANDARD}
+         ,  CAPACITY            = ${CAPACITY}
+         ,  COUNTRY_CD          = ${COUNTRY_CD}
+         ,  RECIPE_DIV          = NVL(${RECIPE_DIV}, '1')
+         ,  STOCK_PERIOD        = ${STOCK_PERIOD}
+         ,  STOCK_DIV           = NVL(${STOCK_DIV}, 'N')
+         ,  SET_DIV             = ${SET_DIV}
+         ,  SALE_PRC_CTRL       = ${SALE_PRC_CTRL}
+         ,  ORD_SALE_DIV        = CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ORD_SALE_DIV}, '3') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ORD_SALE_DIV}, '4') ELSE '2' END
+         ,  AUTO_POPUP_YN       = ${AUTO_POPUP_YN}
+         ,  EXT_YN              = ${EXT_YN}
+         ,  EXT_COMMENT         = ${EXT_COMMENT}
+         ,  SALE_START_DT       = NVL(${SALE_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  SALE_CLOSE_DT       = NVL(${SALE_CLOSE_DT}, '99991231')
+         ,  SALE_PRC            = ${SALE_PRC}
+         ,  SALE_VAT_YN         = ${SALE_VAT_YN}
+         ,  SALE_VAT_RULE       = ${SALE_VAT_RULE}
+         ,  SALE_VAT_IN_RATE    = ${SALE_VAT_IN_RATE} / 100 
+         ,  POINT_YN            = ${POINT_YN}
+         ,  COST                = ${COST}
+         ,  COST_VAT_YN         = ${COST_VAT_YN}
+         ,  COST_VAT_RULE       = ${COST_VAT_RULE}
+         ,  COST_VAT_RATE       = ${COST_VAT_RATE} / 100    
+         ,  ORD_START_DT        = NVL(${ORD_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  ORD_CLOSE_DT        = NVL(${ORD_CLOSE_DT}, '99991231')
+         ,  ORD_UNIT            = NVL(${ORD_UNIT}, 'EA')
+         ,  ORD_UNIT_QTY        = NVL(${ORD_UNIT_QTY}, 1)
+         ,  SALE_UNIT           = NVL(${SALE_UNIT}, 'EA')
+         ,  SALE_UNIT_QTY       = NVL(${SALE_UNIT_QTY}, 1)
+         ,  STOCK_UNIT          = NVL(${STOCK_UNIT}, 'EA')
+         ,  ORD_B_CNT           = ${ORD_B_CNT}
+         ,  MAX_ORD_QTY         = ${MAX_ORD_QTY}
+         ,  ORD_MNG_DIV         = ${ORD_MNG_DIV}
+         ,  MIN_ORD_QTY         = ${MIN_ORD_QTY}
+         ,  ALERT_ORD_QTY       = ${ALERT_ORD_QTY}
+         ,  RJT_YN              = NVL(${RJT_YN}, 'Y')
+         ,  OPEN_ITEM_YN        = ${OPEN_ITEM_YN}
+         ,  DC_YN               = ${DC_YN}
+         ,  WEIGHT_UNIT         = NVL(${WEIGHT_UNIT}, 0)
+         ,  USE_YN              = ${USE_YN}
+         ,  UPD_DT              = SYSDATE
+         ,  UPD_USER            = ${UPD_USER}
+         ,  SALE_VAT_OUT_RATE   = ${SALE_VAT_OUT_RATE} / 100
+         ,  ERP_ITEM_CD         = ${ERP_ITEM_CD}
+         ,  LEAD_TIME           = ${LEAD_TIME}
+         ,  DO_UNIT             = NVL(${DO_UNIT}, 'EA')
+         ,  SERVICE_ITEM_YN     = NVL(${SERVICE_ITEM_YN}, 'N')
+         ,  YIELD_RATE          = ${YIELD_RATE}
+         ,  PROD_QTY            = ${PROD_QTY}
+         ,  VENDOR_CD           = ${VENDOR_CD}
+         ,  SAV_MLG_YN          = ${SAV_MLG_YN}
+         ,  SEASON_DIV          = ${SEASON_DIV}
+         ,  CUST_STD_CNT        = ${CUST_STD_CNT}
+         ,  HOLLYS_CON_YN       = ${HOLLYS_CON_YN}
+         ,  BEVERAGE_DIV        = ${BEVERAGE_DIV}
+         ,  BEVERAGE_ATT        = ${BEVERAGE_ATT}
+         ,  ASIS_ITEM_CD        = ${ASIS_ITEM_CD}
+     WHERE  COMP_CD             = ${COMP_CD}
+       AND  BRAND_CD            = ${BRAND_CD}
+       AND  STOR_TP             = ${STOR_TP}
+       AND  ITEM_CD             = ${ITEM_CD}
+]]></query>
+
+<query name='ITEM_CHAIN_SYNC_U'><![CDATA[
+    UPDATE  ITEM_CHAIN
+       SET  REP_ITEM_CD         = ${REP_ITEM_CD}
+         ,  ITEM_NM             = ${ITEM_NM}
+         ,  ITEM_POS_NM         = ${ITEM_POS_NM}
+         ,  ITEM_KDS_NM         = ${ITEM_KDS_NM}
+         ,  ITEM_DIV            = CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ITEM_DIV}, '06') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ITEM_DIV}, '08') ELSE '01' END
+         ,  ORD_SALE_DIV        = CASE WHEN NVL(${RECIPE_DIV}, '1') = '1' THEN NVL(${ORD_SALE_DIV}, '3') WHEN NVL(${RECIPE_DIV}, '1') = '3' THEN NVL(${ORD_SALE_DIV}, '4') ELSE '2' END
+         ,  STANDARD            = ${STANDARD}
+         ,  CAPACITY            = ${CAPACITY}
+         ,  COUNTRY_CD          = ${COUNTRY_CD}
+         ,  STOCK_PERIOD        = ${STOCK_PERIOD}
+         ,  SET_DIV             = ${SET_DIV}
+         ,  STOCK_DIV           = NVL(${STOCK_DIV}, 'N')
+         ,  RECIPE_DIV          = NVL(${RECIPE_DIV}, '1')
+         ,  REUSE_YN            = ${REUSE_YN}
+         ,  DO_YN               = ${DO_YN}
+         ,  YIELD_RATE          = ${YIELD_RATE}
+         ,  PROD_QTY            = ${PROD_QTY}
+         ,  ORD_UNIT            = NVL(${ORD_UNIT}, 'EA')
+         ,  ORD_UNIT_QTY        = NVL(${ORD_UNIT_QTY}, 1)
+         ,  SALE_UNIT           = NVL(${SALE_UNIT}, 'EA')
+         ,  SALE_UNIT_QTY       = NVL(${SALE_UNIT_QTY}, 1)
+         ,  DO_UNIT             = NVL(${DO_UNIT}, 'EA')
+         ,  WEIGHT_UNIT         = NVL(${WEIGHT_UNIT}, 0)
+         ,  STOCK_UNIT          = NVL(${STOCK_UNIT}, 'EA')
+         ,  EXT_YN              = ${EXT_YN}
+         ,  EXT_COMMENT         = ${EXT_COMMENT}
+         ,  AUTO_POPUP_YN       = ${AUTO_POPUP_YN}
+         ,  L_CLASS_CD          = ${L_CLASS_CD}
+         ,  M_CLASS_CD          = ${M_CLASS_CD}
+         ,  S_CLASS_CD          = ${S_CLASS_CD}
+         ,  D_CLASS_CD          = ${D_CLASS_CD}
+         ,  SALE_PRC_CTRL       = ${SALE_PRC_CTRL}
+         ,  SALE_START_DT       = NVL(${SALE_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  SALE_CLOSE_DT       = NVL(${SALE_CLOSE_DT}, '99991231')
+         ,  SALE_VAT_YN         = ${SALE_VAT_YN}
+         ,  SALE_VAT_RULE       = ${SALE_VAT_RULE}
+         ,  SALE_VAT_IN_RATE    = ${SALE_VAT_IN_RATE} / 100
+         ,  SALE_VAT_OUT_RATE   = ${SALE_VAT_OUT_RATE} / 100
+         ,  POINT_YN            = ${POINT_YN}
+         ,  SAV_MLG_YN          = ${SAV_MLG_YN}
+         ,  OPEN_ITEM_YN        = ${OPEN_ITEM_YN}
+         ,  SERVICE_ITEM_YN     = NVL(${SERVICE_ITEM_YN}, 'N')
+         ,  ORD_MNG_DIV         = ${ORD_MNG_DIV}
+         ,  ORD_START_DT        = NVL(${ORD_START_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+         ,  ORD_CLOSE_DT        = NVL(${ORD_CLOSE_DT}, '99991231')
+         ,  COST_VAT_YN         = ${COST_VAT_YN}
+         ,  COST_VAT_RULE       = ${COST_VAT_RULE}
+         ,  COST_VAT_RATE       = ${COST_VAT_RATE} / 100
+         ,  ALERT_ORD_QTY       = ${ALERT_ORD_QTY}
+         ,  MIN_ORD_QTY         = ${MIN_ORD_QTY}
+         ,  MAX_ORD_QTY         = ${MAX_ORD_QTY}
+         ,  VENDOR_CD           = ${VENDOR_CD}
+         ,  LEAD_TIME           = ${LEAD_TIME}
+         ,  USE_YN              = ${USE_YN}
+         ,  UPD_DT              = SYSDATE
+         ,  UPD_USER            = ${UPD_USER}
+         ,  SEASON_DIV          = ${SEASON_DIV}
+         ,  CUST_STD_CNT        = ${CUST_STD_CNT}
+         ,  HOLLYS_CON_YN       = ${HOLLYS_CON_YN}
+         ,  BEVERAGE_DIV        = ${BEVERAGE_DIV}
+         ,  BEVERAGE_ATT        = ${BEVERAGE_ATT}
+         ,  ASIS_ITEM_CD        = ${ASIS_ITEM_CD}
+     WHERE  COMP_CD             = ${COMP_CD}
+       AND  ITEM_CD             = ${ITEM_CD}
+       AND  USE_YN              = 'Y'
+]]></query>
+
+<query name='LANG_ITEM_U'><![CDATA[
+    MERGE   INTO LANG_ITEM
+    USING   DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  ITEM_CD     = ${ITEM_CD}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  ITEM_NM     = ${ITEM_NM} 
+             ,  ITEM_POS_NM = ${ITEM_POS_NM}
+             ,  ITEM_KDS_NM = ${ITEM_KDS_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (  
+                COMP_CD
+             ,  ITEM_CD
+             ,  LANGUAGE_TP
+             ,  ITEM_NM 
+             ,  ITEM_POS_NM
+             ,  ITEM_KDS_NM
+             ,  USE_YN 
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  TRIM(${ITEM_CD})
+             ,  ${LANGUAGE_TP}
+             ,  ${ITEM_NM} 
+             ,  ${ITEM_POS_NM}
+             ,  ${ITEM_KDS_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='TAB2_ITEM_CHAIN_Q'><![CDATA[
+    SELECT  I.COMP_CD
+         ,  I.BRAND_CD
+         ,  I.STOR_TP
+         ,  I.ITEM_CD
+         ,  I.ITEM_NM
+         ,  L.ITEM_NM          AS LANG_NM
+         ,  I.ITEM_POS_NM
+         ,  L.ITEM_POS_NM      AS LANG_POS_NM
+         ,  I.ITEM_KDS_NM
+         ,  L.ITEM_KDS_NM      AS LANG_KDS_NM
+         ,  I.REP_ITEM_CD
+         ,  IC.L_CLASS_CD
+         ,  IC.M_CLASS_CD
+         ,  IC.S_CLASS_CD
+         ,  IC.D_CLASS_CD
+         ,  I.ITEM_DIV
+         ,  I.STANDARD
+         ,  I.CAPACITY
+         ,  I.COUNTRY_CD
+         ,  I.RECIPE_DIV
+         ,  I.STOCK_PERIOD
+         ,  I.STOCK_DIV
+         ,  I.SET_DIV
+         ,  I.SALE_PRC_CTRL
+         ,  I.ORD_SALE_DIV
+         ,  I.AUTO_POPUP_YN
+         ,  I.EXT_YN
+         ,  I.EXT_COMMENT
+         ,  I.SALE_START_DT
+         ,  I.SALE_CLOSE_DT
+         ,  I.SALE_PRC
+         ,  I.SALE_VAT_YN
+         ,  I.SALE_VAT_RULE
+         ,  I.SALE_VAT_IN_RATE * 100 AS SALE_VAT_IN_RATE
+         ,  I.POINT_YN
+         ,  I.COST
+         ,  I.COST_VAT_YN
+         ,  I.COST_VAT_RULE
+         ,  I.COST_VAT_RATE * 100 AS COST_VAT_RATE
+         ,  I.ORD_START_DT
+         ,  I.ORD_CLOSE_DT
+         ,  I.ORD_UNIT
+         ,  I.ORD_UNIT_QTY
+         ,  I.SALE_UNIT
+         ,  I.SALE_UNIT_QTY
+         ,  I.STOCK_UNIT
+         ,  I.ORD_B_CNT
+         ,  I.MAX_ORD_QTY
+         ,  I.ORD_MNG_DIV
+         ,  I.MIN_ORD_QTY
+         ,  I.ALERT_ORD_QTY
+         ,  I.RJT_YN
+         ,  I.OPEN_ITEM_YN
+         ,  I.DC_YN
+         ,  I.USE_YN
+         ,  I.INST_DT
+         ,  I.INST_USER
+         ,  I.UPD_DT
+         ,  I.UPD_USER
+         ,  I.SALE_VAT_OUT_RATE * 100 AS SALE_VAT_OUT_RATE
+         ,  I.ERP_ITEM_CD
+         ,  DECODE(L.ITEM_CD, NULL, 'I', 'R') AS MULT_PRC
+         ,  I.WEIGHT_UNIT
+         ,  I.LEAD_TIME
+         ,  I.VENDOR_CD
+         ,  V.VENDOR_NM
+         ,  I.DO_UNIT
+         ,  I.SERVICE_ITEM_YN
+         ,  I.YIELD_RATE
+         ,  I.PROD_QTY
+         ,  I.SAV_MLG_YN
+         ,  I.REUSE_YN
+         ,  I.DO_YN
+         ,  I.SEASON_DIV
+         ,  I.CUST_STD_CNT
+         ,  I.HOLLYS_CON_YN
+         ,  I.BEVERAGE_DIV
+         ,  I.BEVERAGE_ATT
+         ,  I.ASIS_ITEM_CD
+      FROM  ITEM_CHAIN      I
+         ,  ITEM_CLASS      IC
+         ,  ( 
+                SELECT  COMP_CD
+                     ,  ITEM_CD
+                     ,  ITEM_NM
+                     ,  ITEM_POS_NM
+                     ,  ITEM_KDS_NM
+                  FROM  LANG_ITEM
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )    L
+         ,  (
+                SELECT  S.STOR_CD                   AS VENDOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS VENDOR_NM
+                  FROM  STORE S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        ) L
+                 WHERE  S.COMP_CD  = L.COMP_CD(+)
+                   AND  S.BRAND_CD = L.BRAND_CD(+)
+                   AND  S.STOR_CD  = L.STOR_CD(+)
+                   AND  S.COMP_CD  = ${SCH_COMP_CD}
+            ) V
+     WHERE  I.COMP_CD     = IC.COMP_CD(+)
+       AND  I.ITEM_CD     = IC.ITEM_CD(+)
+       AND  I.ITEM_CD     = L.ITEM_CD(+)
+       AND  I.VENDOR_CD   = V.VENDOR_CD(+)
+       AND  I.COMP_CD     = ${SCH_COMP_CD}
+       AND  I.BRAND_CD    = ${SCH_BRAND_CD}
+       AND  I.ITEM_CD     = ${SCH_ITEM_CD}
+       AND  I.STOR_TP     = ${SCH_STOR_TP}
+       AND  IC.ORG_CLASS_CD(+) = '00'
+]]></query>
+
+<query name='MASTER_ORG_Q'><![CDATA[
+    SELECT  M.TABLE_ID            AS TABLE_ID
+         ,  M.COLUMN_ID           AS COLUMN_ID 
+      FROM  MASTER_ORG      M
+         ,  (
+                SELECT  COMP_CD, MST_ORG_CD
+                  FROM  HQ_USER
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  USER_ID = ${SCH_USER_ID}
+                   AND  USE_YN  = 'Y'
+            )               U
+     WHERE  M.COMP_CD        = U.COMP_CD
+       AND  M.MST_ORG_CD     = U.MST_ORG_CD 
+       AND  M.COMP_CD        = ${SCH_COMP_CD}
+       AND  M.TABLE_ID       = ${SCH_TABLE_ID}
+       AND  M.MST_MNG_DIV    = '02'
+       AND  M.USE_YN         = 'Y'
+     ORDER  BY M.TABLE_ID, M.COLUMN_ID 
+]]></query>
+
+<query name='ITEM_CHAIN_TREE_Q'><![CDATA[   
+    SELECT  *
+      FROM  (
+                SELECT  B.COMP_CD
+                     ,  B.BRAND_CD                              AS BRAND_CD
+                     ,  B.BRAND_NM                              AS BRAND_NM
+                     ,  B.STOR_TP                               AS STOR_TP
+                     ,  B.STOR_TP_NM                            AS STOR_TP_NM
+                     ,  B.ITEM_CD                               AS ITEM_CD
+                     ,  B.ITEM_NM                               AS ITEM_NM
+                     ,  DECODE(C.USE_YN, NULL, 'N', C.USE_YN)   AS USE_YN
+                     ,  DECODE(C.ITEM_CD, NULL, 'I', 'U')       AS I_MODE
+                     ,  2                                       AS BRAND_LVL
+                  FROM  (
+                            SELECT  B.COMP_CD
+                                 ,  B.BRAND_CD                              AS BRAND_CD
+                                 ,  B.BRAND_NM                              AS BRAND_NM
+                                 ,  B.STOR_TP                               AS STOR_TP
+                                 ,  B.STOR_TP_NM                            AS STOR_TP_NM
+                                 ,  I.ITEM_CD                               AS ITEM_CD
+                                 ,  I.ITEM_NM                               AS ITEM_NM  
+                              FROM  (
+                                        SELECT  B.COMP_CD
+                                             ,  B.BRAND_CD                      AS BRAND_CD
+                                             ,  NVL(LT.LANG_NM, B.BRAND_NM)     AS BRAND_NM
+                                             ,  D.STOR_TP                       AS STOR_TP
+                                             ,  D.STOR_TP_NM                    AS STOR_TP_NM
+                                          FROM  BRAND B
+                                             ,  (
+                                                    SELECT  PK_COL      AS PK_COL
+                                                         ,  LANG_NM     AS LANG_NM 
+                                                      FROM  LANG_TABLE
+                                                     WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                                       AND  TABLE_NM    = 'BRAND'
+                                                       AND  COL_NM      = 'BRAND_NM'
+                                                       AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                                       AND  USE_YN      = 'Y'   
+                                                )   LT
+                                             ,  (
+                                                    SELECT  C.CODE_CD                   AS STOR_TP
+                                                         ,  NVL(L.CODE_NM, C.CODE_NM)   AS STOR_TP_NM
+                                                      FROM  COMMON  C
+                                                         ,  (
+                                                                SELECT  CODE_TP, CODE_CD, CODE_NM
+                                                                  FROM  LANG_COMMON
+                                                                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                                                   AND  CODE_TP     = '00565'
+                                                                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                                                   AND  USE_YN      = 'Y'
+                                                            )   L
+                                                     WHERE  C.CODE_CD = L.CODE_CD(+)
+                                                       AND  C.COMP_CD = ${SCH_COMP_CD}
+                                                       AND  C.CODE_TP = '00565'
+                                                       AND  C.USE_YN  = 'Y'
+                                                       AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+                                                )   D
+                                         WHERE  LT.PK_COL(+)= LPAD(B.BRAND_CD, 4, ' ')
+                                           AND  B.USE_YN    = 'Y'
+                                           AND  B.COMP_CD   = ${SCH_COMP_CD}
+                                           AND  B.BRAND_CD  <> '0000'
+                                    )   B
+                                 ,  (
+                                        SELECT  I.BRAND_CD                     AS BRAND_CD
+                                             ,  I.ITEM_CD                      AS ITEM_CD
+                                             ,  NVL(L.ITEM_NM, I.ITEM_NM)      AS ITEM_NM
+                                             ,  I.USE_YN                       AS USE_YN 
+                                          FROM  ITEM       I
+                                             ,  LANG_ITEM  L
+                                         WHERE  I.COMP_CD   = L.COMP_CD(+)
+                                           AND  I.ITEM_CD   = L.ITEM_CD(+)
+                                           AND  I.COMP_CD   = ${SCH_COMP_CD}
+                                           AND  I.ITEM_CD   = ${SCH_ITEM_CD}
+                                           AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+                                           AND  L.USE_YN(+) = 'Y'
+                                    )   I
+                             WHERE  B.BRAND_CD = I.BRAND_CD(+)
+                        )   B
+                     ,  ( 
+                            SELECT  * 
+                              FROM  ITEM_CHAIN
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  ITEM_CD = ${SCH_ITEM_CD}
+                        )   C
+                     ,  (
+                            SELECT  S.COMP_CD
+                                 ,  S.BRAND_CD
+                              FROM  ( 
+                                        SELECT  COMP_CD
+                                             ,  DECODE(AUTH_LEVEL, '10', BRAND_CD       , '%')  AS BRAND_CD
+                                             ,  DECODE(AUTH_LEVEL, '20', AUTH_DEPT_CD   , '%')  AS DEPT_CD
+                                             ,  DECODE(AUTH_LEVEL, '30', AUTH_TEAM_CD   , '%')  AS TEAM_CD
+                                             ,  DECODE(AUTH_LEVEL, '40', AUTH_SV_USER_ID, '%')  AS SV_USER_ID
+                                             ,  DECODE(AUTH_LEVEL, '50', AUTH_STOR_CD   , '%')  AS STOR_CD
+                                             ,  USER_ID
+                                          FROM  USER_AUTH
+                                         WHERE  COMP_CD = ${SCH_COMP_CD}
+                                           AND  USER_ID = ${SCH_USER_ID}
+                                           AND  USE_YN  = 'Y'
+                                    )       A
+                                 ,  STORE   S
+                             WHERE  S.COMP_CD    = A.COMP_CD
+                               AND  S.COMP_CD    = ${SCH_COMP_CD}
+                               AND  (S.BRAND_CD   IS NULL OR S.BRAND_CD   = DECODE(TRIM(A.BRAND_CD)  , '%', S.BRAND_CD  , A.BRAND_CD  ))
+                               AND  (S.DEPT_CD    IS NULL OR S.DEPT_CD    = DECODE(TRIM(A.DEPT_CD)   , '%', S.DEPT_CD   , A.DEPT_CD   ))
+                               AND  (S.TEAM_CD    IS NULL OR S.TEAM_CD    = DECODE(TRIM(A.TEAM_CD)   , '%', S.TEAM_CD   , A.TEAM_CD   ))
+                               AND  (S.SV_USER_ID IS NULL OR S.SV_USER_ID = DECODE(TRIM(A.SV_USER_ID), '%', S.SV_USER_ID, A.SV_USER_ID))
+                               AND  (S.STOR_CD    IS NULL OR S.STOR_CD    = DECODE(TRIM(A.STOR_CD)   , '%', S.STOR_CD   , A.STOR_CD   ))
+                             GROUP  BY S.COMP_CD
+                                 ,  S.BRAND_CD
+                        )   A
+                 WHERE  B.BRAND_CD  = C.BRAND_CD(+)
+                   AND  B.STOR_TP   = C.STOR_TP(+) 
+                   AND  B.BRAND_CD  = A.BRAND_CD
+            )
+     ORDER  BY BRAND_CD, BRAND_LVL, STOR_TP
+]]></query>
+
+<query name='BARCODE_Q'><![CDATA[   
+    SELECT  COMP_CD
+         ,  ITEM_CD
+         ,  BAR_CODE
+         ,  USE_YN 
+      FROM  BARCODE
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  ITEM_CD     = ${SCH_ITEM_CD}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='BARCODE_U'><![CDATA[      
+    MERGE   INTO BARCODE
+    USING   DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  BAR_CODE    = ${BAR_CODE}
+           AND  ITEM_CD     = ${ITEM_CD}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  USE_YN      = ${USE_YN} 
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (  
+                COMP_CD
+             ,  BAR_CODE
+             ,  ITEM_CD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BAR_CODE}
+             ,  TRIM(${ITEM_CD})
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='ITEM_INFO_Q'><![CDATA[   
+    SELECT  COMP_CD
+         ,  ITEM_CD              AS ITEM_CD
+         ,  ITEM_INFORM          AS ITEM_INFORM
+         ,  ITEM_IMG_PATH        AS ITEM_IMG_PATH
+         ,  ITEM_SVR_FILE        AS ITEM_SVR_FILE 
+      FROM  ITEM_INFO
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  ITEM_CD     = ${SCH_ITEM_CD}
+]]></query>
+
+<query name='ITEM_INFO_U'><![CDATA[      
+    MERGE   INTO ITEM_INFO
+    USING   DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  ITEM_CD     = ${ITEM_CD}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  ITEM_INFORM = ${ITEM_INFORM} 
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (  
+                COMP_CD
+             ,  ITEM_CD
+             ,  ITEM_INFORM
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  TRIM(${ITEM_CD})
+             ,  ${ITEM_INFORM}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+ 
+<query name='ITEM_FLAG_Q'><![CDATA[   
+    SELECT  C.COMP_CD
+         ,  F.ITEM_CD                                      AS ITEM_CD
+         ,  C.CODE_CD                                      AS ITEM_FG
+         ,  C.CODE_NM                                      AS ITEM_FG_NM
+         ,  F.USE_YN
+         ,  DECODE(F.ITEM_FG, NULL, 'I', 'R')              AS M_MODE
+         ,  F.START_DT                                     AS START_DT
+         ,  F.END_DT                                       AS END_DT
+         ,  C.VAL_C1                                       AS VAL_C1
+      FROM  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD                   AS CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                     ,  C.VAL_C1                    AS VAL_C1
+                  FROM  COMMON      C
+                     ,  (
+                            SELECT  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '01090'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'   
+                        )   L
+                 WHERE  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '01090'
+                   AND  C.USE_YN    = 'Y'
+            )   C
+         ,  (
+                SELECT  COMP_CD
+                     ,  ITEM_CD
+                     ,  ITEM_FG 
+                     ,  START_DT
+                     ,  END_DT
+                     ,  USE_YN 
+                  FROM  ITEM_FLAG  
+                 WHERE  COMP_CD  = ${SCH_COMP_CD}
+                   AND  ITEM_CD  = ${SCH_ITEM_CD}
+            )   F
+     WHERE  C.CODE_CD   = F.ITEM_FG(+)
+]]></query>
+
+<query name='ITEM_FLAG_U'><![CDATA[      
+    MERGE   INTO ITEM_FLAG
+    USING   DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  ITEM_CD     = ${ITEM_CD}
+           AND  ITEM_FG     = ${ITEM_FG}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  START_DT    = ${START_DT}
+             ,  END_DT      = ${END_DT}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (  
+                COMP_CD
+             ,  ITEM_CD
+             ,  ITEM_FG
+             ,  START_DT
+             ,  END_DT
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  TRIM(${ITEM_CD})
+             ,  ${ITEM_FG}
+             ,  ${START_DT}
+             ,  ${END_DT}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='MULTI_ITEM_CHAIN_U'><![CDATA[
+    UPDATE  ITEM_CHAIN
+       SET  USE_YN      = ${USE_YN}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_TP     = ${STOR_TP}
+       AND  ITEM_CD     = ${ITEM_CD}
+]]></query>
+
+<query name='ITEM_CLASS_Q'><![CDATA[
+    WITH CM AS
+    (
+        SELECT  C.CODE_CD                   AS CODE_CD
+             ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+          FROM  COMMON C
+             ,  (
+                    SELECT  CODE_TP, CODE_CD, CODE_NM
+                      FROM  LANG_COMMON
+                     WHERE  COMP_CD      = ${SCH_COMP_CD}
+                       AND  CODE_TP      = '01020' 
+                       AND  LANGUAGE_TP  = ${SCH_LANGUAGE_TP}
+                       AND  USE_YN       = 'Y'
+                )   L
+         WHERE  C.CODE_TP  = L.CODE_TP(+)
+           AND  C.CODE_CD  = L.CODE_CD(+)
+           AND  C.COMP_CD  = ${SCH_COMP_CD}
+           AND  C.CODE_TP  = '01020' 
+           AND  C.USE_YN   = 'Y'
+    )
+    SELECT  NVL(I.ORG_CLASS_CD, C.CODE_CD)          AS ORG_CLASS_CD 
+         ,  C.CODE_NM                               AS ORG_CLASS_NM
+         ,  I.L_CLASS_CD                            AS L_CLASS_CD 
+         ,  I.M_CLASS_CD                            AS M_CLASS_CD 
+         ,  I.S_CLASS_CD                            AS S_CLASS_CD
+         ,  I.D_CLASS_CD                            AS D_CLASS_CD
+         ,  I.USE_YN                                AS USE_YN
+         ,  DECODE(I.ORG_CLASS_CD, NULL, 'I', 'U')  AS M_MODE
+         ,  I.L_CLASS_CD                            AS L_CLASS_CD1 
+         ,  I.M_CLASS_CD                            AS M_CLASS_CD1 
+         ,  I.S_CLASS_CD                            AS S_CLASS_CD1
+         ,  I.D_CLASS_CD                            AS D_CLASS_CD1
+         ,  I.COMP_CD
+         ,  I.ITEM_CD
+      FROM  (
+                SELECT  * 
+                  FROM  ITEM_CLASS
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  ITEM_CD = ${SCH_ITEM_CD} 
+            )   I
+         ,  CM         C
+     WHERE  I.ORG_CLASS_CD(+) = C.CODE_CD
+]]></query>
+
+<query name='ITEM_CLASS_U'><![CDATA[      
+    MERGE   INTO ITEM_CLASS
+    USING   DUAL
+    ON  (
+                COMP_CD         = ${COMP_CD}
+           AND  ORG_CLASS_CD    = ${ORG_CLASS_CD}
+           AND  ITEM_CD         = ${ITEM_CD}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  L_CLASS_CD      = ${L_CLASS_CD}
+             ,  M_CLASS_CD      = ${M_CLASS_CD}
+             ,  S_CLASS_CD      = ${S_CLASS_CD}
+             ,  D_CLASS_CD      = ${D_CLASS_CD}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (  
+                COMP_CD
+             ,  ORG_CLASS_CD
+             ,  ITEM_CD
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  S_CLASS_CD
+             ,  D_CLASS_CD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${ORG_CLASS_CD}
+             ,  ${ITEM_CD}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${S_CLASS_CD}
+             ,  ${D_CLASS_CD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='ITEM_BRAND_HIS_Q'><![CDATA[
+    SELECT  H.COMP_CD
+         ,  H.BRAND_CD
+         ,  H.STOR_TP
+         ,  H.ITEM_CD
+         ,  H.START_DT
+         ,  H.CLOSE_DT
+         ,  H.SALE_PRC
+         ,  H.COST
+         ,  H.USE_YN
+      FROM  ITEM_CHAIN_HIS  H
+         ,  BRAND           B
+     WHERE  H.COMP_CD       = B.COMP_CD
+       AND  H.BRAND_CD      = B.BRAND_CD
+       AND  H.COMP_CD       = ${SCH_COMP_CD}
+       AND  H.ITEM_CD       = ${SCH_ITEM_CD} 
+       AND  H.USE_YN        = 'Y'
+       AND  B.USE_YN        = 'Y'
+     ORDER  BY H.START_DT DESC, H.BRAND_CD, H.STOR_TP
+]]></query>
+
+<query name='ITEM_CHAIN_PRC_U'><![CDATA[
+    UPDATE  ITEM_CHAIN  IC
+       SET  SALE_PRC = NVL((
+                            SELECT  SALE_PRC
+                              FROM  ITEM_CHAIN_HIS  ICH
+                             WHERE  ICH.COMP_CD = IC.COMP_CD
+                               AND  ICH.BRAND_CD= IC.BRAND_CD
+                               AND  ICH.STOR_TP = IC.STOR_TP
+                               AND  ICH.ITEM_CD = IC.ITEM_CD
+                               AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN ICH.START_DT AND ICH.CLOSE_DT
+                               AND  ICH.USE_YN  = 'Y'
+                       ), SALE_PRC)
+         ,  COST     = NVL((
+                            SELECT  COST
+                              FROM  ITEM_CHAIN_HIS  ICH
+                             WHERE  ICH.COMP_CD = IC.COMP_CD
+                               AND  ICH.BRAND_CD= IC.BRAND_CD
+                               AND  ICH.STOR_TP = IC.STOR_TP
+                               AND  ICH.ITEM_CD = IC.ITEM_CD
+                               AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN ICH.START_DT AND ICH.CLOSE_DT
+                               AND  ICH.USE_YN  = 'Y'
+                       ), COST)
+         ,  UPD_DT    = SYSDATE
+     WHERE  IC.COMP_CD  = ${COMP_CD}
+       AND  IC.BRAND_CD = ${BRAND_CD}
+       AND  IC.STOR_TP  = ${STOR_TP}
+       AND  IC.ITEM_CD  = ${ITEM_CD}
+ ]]></query>
+
+<query name='ITEM_CHECK_Q'><![CDATA[
+    SELECT  COUNT(*)    AS CNT
+      FROM  ITEM
+     WHERE  COMP_CD = ${SCH_COMP_CD}
+       AND  ITEM_CD = ${SCH_ITEM_CD}
+       AND  ROWNUM  = 1
+]]></query>
+
+</SQLResource>

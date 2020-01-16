@@ -1,0 +1,932 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='SearchLClass'><![CDATA[
+    SELECT  ILC.L_CLASS_CD AS    CODE_CD
+         ,  CASE WHEN LT1.LANG_NM IS NULL THEN ILC.L_CLASS_NM
+                 ELSE   LT1.LANG_NM
+            END AS CODE_NM
+     FROM   ITEM_L_CLASS ILC
+        ,   (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD  = ${SCH_COMP_CD}
+                   AND  TABLE_NM = 'ITEM_L_CLASS'
+                   AND  COL_NM   = 'L_CLASS_NM'
+                   AND  LANGUAGE_TP = ${S_LANGUAGE}
+                   AND  USE_YN      = 'Y'
+            ) LT1
+     WHERE  ILC.COMP_CD||ILC.ORG_CLASS_CD||ILC.L_CLASS_CD    = LT1.PK_COL(+)
+       AND  ILC.COMP_CD       = ${SCH_COMP_CD}
+       AND  ILC.ORG_CLASS_CD  = ${ORG_CLASS_CD}
+       AND  ILC.USE_YN        = 'Y'
+     ORDER  BY ILC.SORT_ORDER
+]]></query>
+
+<query name='SearchMClass'><![CDATA[
+    SELECT  IMC.M_CLASS_CD AS    CODE_CD
+         ,  CASE WHEN LT1.LANG_NM IS NULL THEN IMC.M_CLASS_NM
+                 ELSE   LT1.LANG_NM
+            END AS CODE_NM
+     FROM   ITEM_M_CLASS IMC
+        ,   (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ITEM_M_CLASS'
+                   AND  COL_NM      = 'M_CLASS_NM'
+                   AND  LANGUAGE_TP = ${S_LANGUAGE}
+                   AND  USE_YN      = 'Y'
+            ) LT1
+     WHERE  IMC.COMP_CD||IMC.ORG_CLASS_CD||IMC.L_CLASS_CD||IMC.M_CLASS_CD = LT1.PK_COL(+)
+       AND  IMC.COMP_CD         = ${SCH_COMP_CD}
+       AND  IMC.ORG_CLASS_CD    = ${ORG_CLASS_CD}
+       AND  IMC.L_CLASS_CD      = ${L_CLASS_CD}
+       AND  IMC.USE_YN          = 'Y'
+     ORDER  BY IMC.SORT_ORDER
+]]></query>
+
+<query name='SearchSClass'><![CDATA[
+    SELECT  ISC.S_CLASS_CD AS    CODE_CD
+         ,  CASE WHEN LT1.LANG_NM IS NULL THEN ISC.S_CLASS_NM
+                 ELSE   LT1.LANG_NM
+            END AS CODE_NM
+      FROM  ITEM_S_CLASS ISC
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ITEM_S_CLASS'
+                   AND  COL_NM      = 'S_CLASS_NM'
+                   AND  LANGUAGE_TP = ${S_LANGUAGE}
+                   AND  USE_YN      = 'Y'
+        ) LT1
+   WHERE ISC.COMP_CD||ISC.ORG_CLASS_CD||ISC.L_CLASS_CD||ISC.M_CLASS_CD||ISC.S_CLASS_CD = LT1.PK_COL(+)
+     AND ISC.COMP_CD        = ${SCH_COMP_CD}
+     AND ISC.ORG_CLASS_CD   = ${ORG_CLASS_CD}
+     AND ISC.L_CLASS_CD     = ${L_CLASS_CD}
+     AND ISC.M_CLASS_CD     = ${M_CLASS_CD}
+     AND ISC.USE_YN         = 'Y'
+   ORDER BY ISC.SORT_ORDER
+]]></query>
+
+<query name='SearchDClass'><![CDATA[
+    SELECT  ISC.D_CLASS_CD AS    CODE_CD
+         ,  CASE WHEN LT1.LANG_NM IS NULL THEN ISC.D_CLASS_NM
+                 ELSE   LT1.LANG_NM
+            END AS CODE_NM
+      FROM  ITEM_D_CLASS ISC
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ITEM_S_CLASS'
+                   AND  COL_NM      = 'S_CLASS_NM'
+                   AND  LANGUAGE_TP = ${S_LANGUAGE}
+                   AND  USE_YN      = 'Y'
+        ) LT1
+   WHERE ISC.COMP_CD||ISC.ORG_CLASS_CD||ISC.L_CLASS_CD||ISC.M_CLASS_CD||ISC.S_CLASS_CD||ISC.D_CLASS_CD = LT1.PK_COL(+)
+     AND ISC.COMP_CD        = ${SCH_COMP_CD}
+     AND ISC.ORG_CLASS_CD   = ${ORG_CLASS_CD}
+     AND ISC.L_CLASS_CD     = ${L_CLASS_CD}
+     AND ISC.M_CLASS_CD     = ${M_CLASS_CD}
+     AND ISC.S_CLASS_CD     = ${S_CLASS_CD}
+     AND ISC.USE_YN         = 'Y'
+   ORDER BY ISC.SORT_ORDER
+]]></query>
+
+<query name='SearchDept'><![CDATA[
+    SELECT  A.DEPT_CD                   AS CODE_CD
+         ,  NVL(C.DEPT_NM,B.CODE_NM)    AS CODE_NM
+      FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${S_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+         ,  COMMON B
+         ,  (
+                SELECT  A1.CODE_CD  DEPT_CD
+                     ,  NVL(B1.CODE_NM ,A1.CODE_NM) AS DEPT_NM
+                  FROM  COMMON  A1
+                     ,  (
+                            SELECT  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  CODE_TP = '00600'
+                               AND  LANGUAGE_TP = ${S_LANGUAGE}
+                               AND  USE_YN  = 'Y'
+                        ) B1
+                 WHERE   A1.CODE_TP = B1.CODE_TP(+)
+                   AND   A1.CODE_CD = B1.CODE_CD(+)
+                   AND   B1.CODE_TP = '00600'
+                   AND   A1.COMP_CD = ${SCH_COMP_CD}
+            ) C
+     WHERE  B.COMP_CD  = ${SCH_COMP_CD}
+       AND  B.CODE_TP  = '00600'
+       AND  A.DEPT_CD  = B.CODE_CD
+       AND  A.DEPT_CD  = C.DEPT_CD(+)
+       AND  A.BRAND_CD = ${SCH_BRAND_CD}
+     GROUP  BY A.DEPT_CD, NVL(C.DEPT_NM,B.CODE_NM), A.BRAND_CD
+   ORDER BY A.DEPT_CD
+]]></query>
+
+<query name='SearchTeam'><![CDATA[
+    SELECT  A.TEAM_CD                   AS CODE_CD
+         ,  NVL(C.TEAM_NM,B.CODE_NM)    AS CODE_NM
+      FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${S_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+         ,  COMMON B
+         ,  (
+                SELECT  A1.CODE_CD  TEAM_CD
+                     ,  NVL(B1.CODE_NM ,A1.CODE_NM) AS TEAM_NM
+                  FROM  COMMON  A1
+                     ,  (
+                            SELECT  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  CODE_TP = '00605'
+                               AND  LANGUAGE_TP = ${S_LANGUAGE}
+                               AND  USE_YN  = 'Y'
+                        ) B1
+                 WHERE   A1.CODE_TP = B1.CODE_TP(+)
+                   AND   A1.CODE_CD = B1.CODE_CD(+)
+                   AND   B1.CODE_TP = '00605'
+                   AND   A1.COMP_CD = ${SCH_COMP_CD}
+            ) C
+     WHERE  B.COMP_CD  = ${SCH_COMP_CD}
+       AND  B.CODE_TP  = '00605'
+       AND  A.TEAM_CD  = B.CODE_CD
+       AND  A.TEAM_CD  = C.TEAM_CD(+)
+       AND  A.BRAND_CD = ${SCH_BRAND_CD}
+       AND  A.DEPT_CD  = ${SCH_DEPT_CD}
+     GROUP  BY A.TEAM_CD  , NVL(C.TEAM_NM,B.CODE_NM), A.DEPT_CD
+     ORDER  BY A.TEAM_CD
+]]></query>
+
+<query name='SearchSvUser'><![CDATA[
+    SELECT  A.SV_USER_ID                AS CODE_CD
+         ,  NVL(L.LANG_NM, B.USER_NM)   AS CODE_NM
+      FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${S_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+         ,  HQ_USER B
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'HQ_USER'
+                   AND  COL_NM      = 'USER_NM'
+                   AND  LANGUAGE_TP = ${S_LANGUAGE}
+                   AND  USE_YN      = 'Y'
+            )       L
+     WHERE  A.SV_USER_ID = B.USER_ID
+       AND  L.COMP_CD(+) = B.COMP_CD
+       AND  L.PK_COL(+)  = LPAD(B.USER_ID, 10, ' ')
+       AND  B.COMP_CD    = ${SCH_COMP_CD}
+       AND  A.BRAND_CD   = ${SCH_BRAND_CD}
+       AND  A.DEPT_CD    = ${SCH_DEPT_CD}
+       AND  A.TEAM_CD    = ${SCH_TEAM_CD}
+     GROUP  BY A.SV_USER_ID, NVL(L.LANG_NM, B.USER_NM), A.TEAM_CD, A.DEPT_CD, A.BRAND_CD
+     ORDER  BY NVL(L.LANG_NM, B.USER_NM)
+]]></query>
+
+<query name='SearchCommon'><![CDATA[
+    SELECT  C.CODE_CD
+         ,  NVL(L.CODE_NM, C.CODE_NM)  AS CODE_NM
+         ,  C.VAL_C1
+         ,  C.VAL_C2
+         ,  C.VAL_C3
+         ,  C.VAL_C4
+         ,  C.VAL_C5
+      FROM  COMMON   C
+         ,  (
+                SELECT  CODE_CD
+                     ,  CODE_NM
+                  FROM  LANG_COMMON
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  CODE_TP     = ${SCH_CODE_TP}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            ) L
+     WHERE  C.CODE_CD = L.CODE_CD(+)
+       AND  C.COMP_CD = ${SCH_COMP_CD}
+       AND  C.CODE_TP = ${SCH_CODE_TP}
+       AND  (${SCH_VAL_C1} IS NULL OR C.VAL_C1 = ${SCH_VAL_C1})
+       AND  C.USE_YN  = 'Y'
+     ORDER  BY C.SORT_SEQ, C.CODE_CD
+]]></query>
+
+<query name='SearchCommonRef'><![CDATA[
+    WITH W1 AS
+   (
+    SELECT  COMP_CD AS COMP_CD
+          , VAL_C1  AS CODE_TP
+    FROM    COMMON
+    WHERE   COMP_CD     = ${SCH_COMP_CD}
+    AND     CODE_TP     = ${SCH_CODE_TP}
+    AND     CODE_CD     = ${SCH_CODE_CD}
+    AND     USE_YN      = 'Y'
+   )
+    SELECT  C.CODE_CD
+         ,  NVL(L.CODE_NM, C.CODE_NM)  AS CODE_NM
+      FROM  COMMON   C
+         ,  W1       W
+         ,  (
+                SELECT  L.CODE_CD
+                      , L.CODE_NM
+                FROM    LANG_COMMON L
+                      , W1          W
+                WHERE   W.COMP_CD = L.COMP_CD
+                AND     W.CODE_TP = L.CODE_TP 
+                AND     L.LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                AND     L.USE_YN      = 'Y'
+            ) L
+     WHERE  C.COMP_CD = W.COMP_CD
+     AND    C.CODE_TP = W.CODE_TP 
+     AND    C.CODE_CD = L.CODE_CD(+)
+       AND  C.USE_YN  = 'Y'
+     ORDER  BY C.SORT_SEQ, C.CODE_CD
+]]></query>
+
+<query name='SearchGiftCd'><![CDATA[
+    SELECT  GCM.GIFT_CD                         AS CODE_CD
+         ,  MAX(NVL(L.LANG_NM, GCM.GIFT_NM))    AS CODE_NM
+      FROM  GIFT_CODE_MST   GCM
+         ,  GIFT_MST        GM
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'GIFT_CODE_MST'
+                   AND  COL_NM      = 'GIFT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            ) L
+     WHERE  GCM.COMP_CD     = GM.COMP_CD
+       AND  GCM.GIFT_CD     = GM.GIFT_CD
+       AND  L.COMP_CD(+)    = GCM.COMP_CD
+       AND  L.PK_COL (+)    = LPAD(GCM.GIFT_CD, 2, ' ')
+       AND  GCM.COMP_CD     = ${SCH_COMP_CD}
+       AND  GCM.USE_YN      = 'Y'
+       AND  GM.EXP_DT      >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+     GROUP  BY GCM.GIFT_CD
+     ORDER  BY GCM.GIFT_CD
+]]></query>
+
+<query name='ItemChainRev'><![CDATA[
+    SELECT  DISTINCT
+            REV_VER AS CODE_CD,
+            REV_VER AS CODE_NM
+    FROM    ITEM_CHAIN_REV
+    WHERE   COMP_CD  = ${SCH_COMP_CD}
+    AND     BRAND_CD = ${SCH_BRAND_CD}
+    AND     REV_YM   = ${SCH_REV_YM}
+    ORDER BY REV_VER
+]]></query>
+
+<query name='RecipeBrandRev'><![CDATA[
+    SELECT  DISTINCT
+            REV_VER AS CODE_CD,
+            REV_VER AS CODE_NM
+    FROM    RECIPE_BRAND_FOOD_REV
+    WHERE   COMP_CD  = ${SCH_COMP_CD}
+    AND     BRAND_CD = ${SCH_BRAND_CD}
+    AND     REV_YM   = ${SCH_REV_YM}
+    ORDER BY REV_VER
+]]></query>
+
+<query name='SearchRcpVer'><![CDATA[
+    SELECT  REV_VER AS CODE_CD,
+            REV_VER AS CODE_NM
+      FROM  RECIPE_BRAND_FOOD_REV
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  BRAND_CD    = ${SCH_BRAND_CD}
+       AND  REV_YM      = ${SCH_REV_YM}
+       AND  P_ITEM_CD   = ' '
+       AND  C_ITEM_CD   = ${SCH_ITEM_CD}
+    GROUP BY REV_VER
+    ORDER BY REV_VER
+]]></query>
+
+<query name='SearchCompany'><![CDATA[
+    SELECT  C.COMP_CD                   AS CODE_CD
+         ,  '[ '||C.COMP_CD||' ] '||NVL(L.LANG_NM, C.COMP_NM)   AS CODE_NM
+      FROM  COMPANY     C
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  TABLE_NM    = 'COMPANY'
+                   AND  COL_NM      = 'COMP_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = C.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(C.COMP_CD, 3, ' ')
+       AND  (${SCH_EXT_COMP_CD} IS NULL OR C.COMP_CD <> ${SCH_EXT_COMP_CD})
+       AND  C.USE_YN        = 'Y'
+     ORDER  BY C.COMP_CD
+]]></query>
+
+<query name='SearchBrand'><![CDATA[
+    SELECT  CODE_CD
+         ,  CODE_NM
+      FROM  (
+                SELECT  '0000'                                                          AS CODE_CD
+                     ,  FC_GET_WORDPACK(${SCH_COMP_CD}, ${SCH_LANGUAGE_TP}, 'COMMON')   AS CODE_NM
+                  FROM  DUAL
+                 WHERE  NVL(${SCH_BRAND_CLASS}, '00') = '00'
+                UNION ALL
+                SELECT  B.BRAND_CD                   AS CODE_CD
+                     ,  NVL(L.LANG_NM, B.BRAND_NM)   AS CODE_NM
+                  FROM  BRAND     B
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'BRAND'
+                               AND  COL_NM      = 'BRAND_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.COMP_CD(+)    = B.COMP_CD
+                   AND  L.PK_COL(+)     = LPAD(B.BRAND_CD, 4, ' ')
+                   AND  B.COMP_CD       = ${SCH_COMP_CD}
+                   AND (${SCH_BRAND_CLASS} IS NULL OR BRAND_CLASS = ${SCH_BRAND_CLASS}) 
+                   AND  B.USE_YN        = 'Y'
+            )
+     ORDER  BY CODE_CD
+]]></query>
+
+<query name='SearchDeptAll'><![CDATA[
+    SELECT  C.CODE_CD
+         ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+      FROM  COMMON  C
+         ,  (
+                SELECT  CODE_TP
+                     ,  CODE_CD
+                     ,  CODE_NM
+                  FROM  LANG_COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '00600'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN  = 'Y'
+            ) L
+     WHERE  C.CODE_TP = L.CODE_TP(+)
+       AND  C.CODE_CD = L.CODE_CD(+)
+       AND  C.CODE_TP = '00600'
+       AND  C.COMP_CD = ${SCH_COMP_CD}
+     ORDER  BY C.SORT_SEQ, C.CODE_CD
+]]></query>
+
+<query name='SearchTeamAll'><![CDATA[
+    SELECT  C.CODE_CD
+         ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+      FROM  COMMON  C
+         ,  (
+                SELECT  CODE_TP
+                     ,  CODE_CD
+                     ,  CODE_NM
+                  FROM  LANG_COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '00605'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN  = 'Y'
+            ) L
+     WHERE  C.CODE_TP = L.CODE_TP(+)
+       AND  C.CODE_CD = L.CODE_CD(+)
+       AND  C.CODE_TP = '00605'
+       AND  C.COMP_CD = ${SCH_COMP_CD}
+       AND  C.VAL_C1  = ${SCH_DEPT_CD}
+     ORDER  BY C.SORT_SEQ, C.CODE_CD
+]]></query>
+
+<query name='SearchOrdFavoClass'><![CDATA[
+    SELECT  C.CLASS_CD                  AS CODE_CD
+         ,  NVL(L.LANG_NM, C.CLASS_NM)  AS CODE_NM
+      FROM  ORDER_FAVORITE_CLASS    C
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ORDER_FAVORITE_CLASS'
+                   AND  COL_NM      = 'CLASS_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )                       L
+     WHERE  L.COMP_CD(+) = C.COMP_CD
+       AND  L.PK_COL(+)  = LPAD(C.BRAND_CD, 4, ' ')||LPAD(C.STOR_CD, 10, ' ')||LPAD(C.CLASS_CD, 10, ' ')
+       AND  C.COMP_CD    = ${SCH_COMP_CD}
+       AND  C.BRAND_CD   = ${SCH_BRAND_CD}
+       AND  C.STOR_CD    = ${SCH_STOR_CD}
+       AND  USE_YN       = 'Y'
+     ORDER  BY C.CLASS_CD
+]]></query>
+
+<query name='SearchPosNo'><![CDATA[
+    SELECT  POS_NO          AS CODE_CD
+         ,  POS_NO          AS CODE_NM
+      FROM  SALE_HD
+     WHERE  COMP_CD  = ${SCH_COMP_CD}
+       AND  BRAND_CD = ${SCH_BRAND_CD}
+       AND  STOR_CD  = ${SCH_STOR_CD}
+       AND  SALE_DT  = ${SCH_SALE_DT}
+     GROUP  BY POS_NO
+]]></query>
+
+<query name='SearchPosNoT'><![CDATA[
+    SELECT  POS_NO          AS CODE_CD
+         ,  POS_NO          AS CODE_NM
+      FROM  SALE_HD
+     WHERE  COMP_CD  = ${SCH_COMP_CD}
+       AND  BRAND_CD = ${SCH_BRAND_CD}
+       AND  STOR_CD  = ${SCH_STOR_CD}
+       AND  SALE_DT  BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+     GROUP  BY POS_NO
+]]></query>
+
+<query name='SearchStorPosNo'><![CDATA[
+    SELECT  POS_NO          AS CODE_CD
+         ,  POS_NM          AS CODE_NM
+      FROM  STORE_POS_MST
+     WHERE  COMP_CD  = ${SCH_COMP_CD}
+       AND  BRAND_CD = ${SCH_BRAND_CD}
+       AND  STOR_CD  = ${SCH_STOR_CD}
+]]></query>
+
+<query name='SearchCardID'><![CDATA[
+    SELECT decrypt(CARD_ID) as CODE_CD
+         , decrypt(CARD_ID) as CODE_NM
+      FROM C_CARD
+     WHERE COMP_CD = ${SCH_COMP_CD}
+       AND CUST_ID = ${SCH_CUST_ID}
+       AND USE_YN = 'Y'
+       AND CARD_STAT IN ('10','20','90')
+     ORDER BY 1  
+]]></query>
+
+<query name='SearchContinent'><![CDATA[
+    SELECT  LC.CONTINENT_CD                 AS CODE_CD
+         ,  NVL(L.LANG_NM, LC.CONTINENT_NM) AS CODE_NM
+      FROM  L_CONTINENT     LC
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_CONTINENT'
+                   AND  COL_NM      = 'CONTINENT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+) = LPAD(LC.CONTINENT_CD, 2, ' ')
+       AND  LC.USE_YN   = 'Y'
+     ORDER  BY LC.SORT_ORDER, LC.CONTINENT_CD
+]]></query>
+
+<query name='SearchCurrency'><![CDATA[
+    SELECT  LC.CURRENCY_CD                  AS CODE_CD
+         ,  NVL(L.LANG_NM, LC.CURRENCY_FNM) AS CODE_NM
+      FROM  L_CURRENCY      LC
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_CURRENCY'
+                   AND  COL_NM      = 'CURRENCY_FNM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+) = LPAD(LC.CURRENCY_CD, 3, ' ')
+       AND  LC.USE_YN   = 'Y'
+     ORDER  BY LC.SORT_ORDER, LC.CURRENCY_CD
+]]></query>
+
+<query name='SearchUtc'><![CDATA[
+    SELECT  LU.UTC_CD       AS CODE_CD
+         ,  LU.UTC_CD       AS CODE_NM
+      FROM  L_UTC           LU
+     WHERE  LU.USE_YN   = 'Y'
+     ORDER  BY LU.SORT_ORDER, LU.UTC_SIGN, LU.UTC_VAL
+]]></query>
+
+<query name='SearchSmt'><![CDATA[
+    SELECT  LS.SMT_NO       AS CODE_CD
+         ,  '['||TO_CHAR(TO_DATE(LS.SMT_FR_DT, 'YYYYMMDDHH24'), 'YYYY-MM-DD HH24')||' ~ '||TO_CHAR(TO_DATE(LS.SMT_TO_DT, 'YYYYMMDDHH24'), 'YYYY-MM-DD HH24')||' ]'||LS.SMT_TM  AS CODE_NM
+      FROM  L_SMT           LS
+     WHERE  LS.USE_YN   = 'Y'
+     ORDER  BY LS.SORT_ORDER, LS.SMT_FR_DT, LS.SMT_TO_DT, LS.SMT_TM
+]]></query>
+
+<query name='SearchLanguage'><![CDATA[
+    SELECT  LL.LANGUAGE_CD                  AS CODE_CD
+         ,  NVL(L.LANG_NM, LL.LANGUAGE_NM)  AS CODE_NM
+      FROM  L_LANGUAGE      LL
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_LANGUAGE'
+                   AND  COL_NM      = 'LANGUAGE_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+) = LPAD(LL.LANGUAGE_CD, 3, ' ')
+       AND  LL.USE_YN   = 'Y'
+     ORDER  BY LL.SORT_ORDER, LL.LANGUAGE_CD
+]]></query>
+
+<query name='SearchNation'><![CDATA[
+    SELECT  LN.NATION_CD                    AS CODE_CD
+         ,  NVL(L.LANG_NM, LN.NATION_NM)    AS CODE_NM
+      FROM  L_NATION        LN
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_NATION'
+                   AND  COL_NM      = 'NATION_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+) = LPAD(LN.NATION_CD, 3, ' ')
+       AND  LN.USE_YN   = 'Y'
+     ORDER  BY LN.SORT_ORDER, LN.NATION_CD
+]]></query>
+
+<query name='SearchRegionNo'><![CDATA[
+    SELECT  LR.REGION_NO                    AS CODE_CD
+         ,  NVL(L.LANG_NM, LR.REGION_NM)    AS CODE_NM
+      FROM  L_REGION    LR
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_REGION'
+                   AND  COL_NM      = 'REGION_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+)     = LPAD(LR.NATION_CD, 3, ' ')||LPAD(LR.REGION_NO, 3, ' ')
+       AND  LR.NATION_CD    = ${SCH_NATION_CD}
+       AND  LR.USE_YN       = 'Y'
+     ORDER  BY LR.SORT_ORDER, LR.REGION_NO
+]]></query>
+
+<query name='SearchCityCd'><![CDATA[
+    SELECT  R.REGION_CD                     AS CODE_CD
+         ,  NVL(L.LANG_NM, R.REGION_NM)     AS CODE_NM
+      FROM  REGION      R
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'REGION'
+                   AND  COL_NM      = 'REGION_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = R.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(R.NATION_CD, 3, ' ')||LPAD(R.CITY_CD, 3, ' ')||LPAD(R.REGION_CD, 6, ' ')
+       AND  R.COMP_CD       = ${SCH_COMP_CD}
+       AND  (${SCH_NATION_CD} IS NULL OR R.NATION_CD = ${SCH_NATION_CD})
+       AND  R.CITY_CD       = '000'
+       AND  R.USE_YN        = 'Y'
+     ORDER  BY R.REGION_CD
+]]></query>
+
+<query name='SearchRegionCd'><![CDATA[
+    SELECT  R.REGION_CD                     AS CODE_CD
+         ,  NVL(L.LANG_NM, R.REGION_NM)     AS CODE_NM
+      FROM  REGION      R
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'REGION'
+                   AND  COL_NM      = 'REGION_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = R.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(R.NATION_CD, 3, ' ')||LPAD(R.CITY_CD, 3, ' ')||LPAD(R.REGION_CD, 6, ' ')
+       AND  R.COMP_CD       = ${SCH_COMP_CD}
+       AND  R.NATION_CD     = ${SCH_NATION_CD}
+       AND  R.CITY_CD       = ${SCH_CITY_CD}
+       AND  R.USE_YN        = 'Y'
+     ORDER  BY R.REGION_CD
+]]></query>
+
+<query name='SearchWeek'><![CDATA[
+    SELECT  WEEK_STARTING_DT || '~' || WEEK_ENDING_DT   AS CODE_CD
+         ,  MAX(WEEK_IN_MONTH || FC_GET_WORDPACK(${SCH_COMP_CD}, ${SCH_LANGUAGE_TP}, 'WEEK') || ' ('||WEEK_STARTING_DT||' ~ '||WEEK_ENDING_DT||')') AS CODE_NM
+      FROM  CALENDAR
+     WHERE  WEEK_YM = ${SCH_YM} 
+     GROUP  BY WEEK_STARTING_DT || '~' || WEEK_ENDING_DT
+     ORDER  BY WEEK_STARTING_DT || '~' || WEEK_ENDING_DT
+]]></query>
+
+<query name='SearchProgram'><![CDATA[
+    SELECT  P.PROGRAM_ID                    AS CODE_CD
+         ,  NVL(L.LANG_NM, P.PROGRAM_NM)    AS CODE_NM
+      FROM  CS_PROGRAM          P
+         ,  CS_PROGRAM_STORE    PS
+         ,  LANG_TABLE          L
+     WHERE  P.COMP_CD       = PS.COMP_CD(+)
+       AND  P.PROGRAM_ID    = PS.PROGRAM_ID(+)
+       AND  L.COMP_CD(+)    = P.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(P.PROGRAM_ID, 30, ' ')
+       AND  P.COMP_CD       = ${SCH_COMP_CD}
+       AND  (${SCH_BRAND_CD} IS NULL OR PS.BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_CD}  IS NULL OR PS.STOR_CD  = ${SCH_STOR_CD})
+       AND  P.USE_YN        = 'Y'
+       AND  L.TABLE_NM(+)   = 'CS_PROGRAM'
+       AND  L.COL_NM(+)     = 'PROGRAM_NM'
+       AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+       AND  L.USE_YN(+)     = 'Y'
+]]></query>
+
+<query name='SearchSmsConts'><![CDATA[
+    SELECT  CONTENT_SEQ   AS CODE_CD
+         ,  SUBJECT       AS CODE_NM
+      FROM  CS_CONTENT
+     WHERE  COMP_CD    = ${SCH_COMP_CD}
+       AND  STOR_CD    = ${SCH_STOR_CD}
+       AND  CONTENT_FG = ${SCH_CONTENT_FG}
+       AND  USE_YN     = 'Y'
+]]></query>
+
+<query name='SearchEmpDc'><![CDATA[
+    SELECT  D.DC_DIV                    AS CODE_CD
+         ,  NVL(L.LANG_NM, D.DC_NM)     AS CODE_NM
+      FROM  DC      D
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'DC'
+                   AND  COL_NM      = 'DC_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = D.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(D.BRAND_CD, 4, ' ')||LPAD(D.DC_DIV, 5, ' ')
+       AND  D.COMP_CD       = ${SCH_COMP_CD}
+       AND  D.BRAND_CD      = ${SCH_BRAND_CD}
+       AND  D.DC_GRPCD      = ${SCH_DC_GRPCD}
+       AND  D.DML_FLAG      IN ('I', 'U')
+     ORDER  BY D.DC_DIV
+]]></query>
+
+<query name='SearchCategoryDiv'><![CDATA[
+    SELECT  CATEGORY_CD     AS CODE_CD
+         ,  CATEGORY_NM     AS CODE_NM
+      FROM  C_CARD_CTG
+     WHERE  COMP_CD         = ${SCH_COMP_CD}
+       AND  CATEGORY_DIV    = ${SCH_CTG_DIV}
+       AND  USE_YN = 'Y'
+     ORDER  BY SORT_ORDER
+]]></query>
+
+<query name='SearchClaimLClass'><![CDATA[
+    SELECT  LC.L_CLASS_CD                   AS CODE_CD
+         ,  NVL(L.LANG_NM, LC.L_CLASS_NM)   AS CODE_NM
+      FROM  CLAIM_L_CLASS   LC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'CLAIM_L_CLASS'
+                   AND  COL_NM      = 'L_CLASS_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = LC.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(LC.L_CLASS_CD, 3, ' ')
+       AND  LC.COMP_CD      = ${SCH_COMP_CD}
+       AND  LC.USE_YN       = 'Y'
+     ORDER  BY LC.SORT_ORDER, LC.L_CLASS_CD
+]]></query>
+
+<query name='SearchClaimMClass'><![CDATA[
+    SELECT  MC.M_CLASS_CD                   AS CODE_CD
+         ,  NVL(L.LANG_NM, MC.M_CLASS_NM)   AS CODE_NM
+         ,  MC.RETURN_YN                    AS VAL_C1
+         ,  MC.SL_CD                        AS VAL_C2
+         ,  MC.ITEM_GRP_TP                  AS VAL_C3
+         ,  MC.ERP_ITEM_GRP                 AS VAL_C4
+         ,  MC.IMAGE_YN                     AS VAL_C5
+      FROM  CLAIM_M_CLASS   MC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'CLAIM_M_CLASS'
+                   AND  COL_NM      = 'M_CLASS_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = MC.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(MC.L_CLASS_CD, 3, ' ')||LPAD(MC.M_CLASS_CD, 6, ' ')
+       AND  MC.COMP_CD      = ${SCH_COMP_CD}
+       AND  MC.L_CLASS_CD   = ${SCH_L_CLASS_CD}
+       AND  MC.USE_YN        = 'Y'
+     ORDER  BY MC.SORT_ORDER, MC.L_CLASS_CD, MC.M_CLASS_CD
+]]></query>
+
+<query name='SearchClaimSClass'><![CDATA[
+    SELECT  SC.S_CLASS_CD                   AS CODE_CD
+         ,  NVL(L.LANG_NM, SC.S_CLASS_NM)   AS CODE_NM
+      FROM  CLAIM_S_CLASS   SC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'CLAIM_S_CLASS'
+                   AND  COL_NM      = 'S_CLASS_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = SC.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(SC.L_CLASS_CD, 3, ' ')||LPAD(SC.M_CLASS_CD, 6, ' ')||LPAD(SC.S_CLASS_CD, 9, ' ')
+       AND  SC.COMP_CD      = ${SCH_COMP_CD}
+       AND  SC.L_CLASS_CD   = ${SCH_L_CLASS_CD}
+       AND  SC.M_CLASS_CD   = ${SCH_M_CLASS_CD}
+       AND  SC.USE_YN        = 'Y'
+     ORDER  BY SC.SORT_ORDER, SC.L_CLASS_CD, SC.M_CLASS_CD, SC.S_CLASS_CD
+]]></query>
+
+<query name='SearchChargeSeq'><![CDATA[
+    SELECT  C.CODE_CD
+         ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+      FROM  COMMON      C
+         ,  (
+                SELECT  COMP_CD
+                     ,  CODE_TP
+                     ,  CODE_CD
+                     ,  CODE_NM
+                  FROM  LANG_COMMON
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  CODE_TP     = '02385'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  C.COMP_CD       = L.COMP_CD(+)
+       AND  C.CODE_TP       = L.CODE_TP(+)
+       AND  C.CODE_CD       = L.CODE_CD(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CODE_TP       = '02385'
+       AND  (
+                (${CHARGE_CNT} = '01' AND C.CODE_CD LIKE '1'||'%')
+                OR
+                (${CHARGE_CNT} = '02' AND C.CODE_CD LIKE '2'||'%')
+            )
+     ORDER  BY C.SORT_SEQ, C.CODE_CD
+]]></query>
+
+<query name='SearchCard'><![CDATA[
+    SELECT  C.CARD_CD                       AS CODE_CD
+         ,  NVL(L.LANG_NM, C.CARD_NM)       AS CODE_NM
+      FROM  CARD        C
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'CARD'
+                   AND  COL_NM      = 'CARD_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = C.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(C.VAN_CD, 2, ' ')||LPAD(C.CARD_CD, 10, ' ')
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  (${SCH_VAN_CD}  IS NULL OR C.VAN_CD = ${SCH_VAN_CD})
+       AND  C.USE_YN        = 'Y'
+     ORDER  BY C.CARD_CD
+]]></query>
+
+<query name='SearchStoreUser'><![CDATA[
+    SELECT  SU.USER_ID                          AS CODE_CD
+         ,  SU.USER_NM||'('||SU.USER_ID||')'    AS CODE_NM
+    FROM    STORE_USER SU
+    WHERE   SU.COMP_CD  = ${SCH_COMP_CD}
+    AND     SU.BRAND_CD = ${SCH_BRAND_CD}
+    AND     SU.STOR_CD  = ${SCH_STOR_CD}
+    AND     SU.USER_ID != ${SCH_STOR_CD}||'000'
+    AND     1           =  (
+                            CASE WHEN ${SCH_EMP_DIV} = '02' AND SU.EMP_DIV  = '340' THEN 1
+                                 WHEN ${SCH_EMP_DIV} = '01' AND SU.EMP_DIV != '340' THEN 1
+                            END
+                           )
+    AND     SU.USE_YN   = 'Y'
+    UNION ALL
+    SELECT  SU.USER_ID                          AS CODE_CD
+         ,  SU.USER_NM||'('||SU.USER_ID||')'    AS CODE_NM
+    FROM    STORE_USER SU
+    WHERE   SU.COMP_CD  = ${SCH_COMP_CD}
+    AND     SU.BRAND_CD = ${SCH_BRAND_CD}
+    AND     SU.STOR_CD  = ${SCH_STOR_CD}
+    AND     SU.USER_ID != ${SCH_STOR_CD}||'000'
+    AND     1           =  (
+                            CASE WHEN ${SCH_EMP_DIV} = '02' AND SU.EMP_DIV  = '340' THEN 1
+                                 WHEN ${SCH_EMP_DIV} = '01' AND SU.EMP_DIV != '340' THEN 1
+                            END
+                           )
+    AND     SU.USE_YN   = 'N'
+    AND     EXISTS (
+                    SELECT  1
+                    FROM    ATTENDANCE AT
+                    WHERE   AT.COMP_CD  = SU.COMP_CD
+                    AND     AT.BRAND_CD = SU.BRAND_CD
+                    AND     AT.STOR_CD  = SU.STOR_CD
+                    AND     AT.USER_ID  = SU.USER_ID 
+                    AND     AT.ATTD_DT LIKE ${SCH_ATTD_YM}||'%'
+                    UNION ALL
+                    SELECT  1
+                    FROM    STORE_USER ZZ
+                    WHERE   ZZ.COMP_CD  = SU.COMP_CD
+                    AND     ZZ.BRAND_CD = SU.BRAND_CD
+                    AND     ZZ.STOR_CD  = SU.STOR_CD
+                    AND     ZZ.USER_ID  = SU.USER_ID
+                    AND     ZZ.CLOSE_DT >= TO_CHAR(ADD_MONTHS(TO_DATE(${SCH_ATTD_YM}||'01', 'YYYYMMDD'), -1),'YYYYMMDD')
+                   )
+    ORDER BY 
+            2
+]]></query>
+
+<query name='SearchSubPrmt'><![CDATA[
+    SELECT  P.PRMT_ID           AS CODE_CD
+         ,  P.PRMT_NM           AS CODE_NM
+      FROM  PROMOTION           P
+     WHERE  P.COMP_CD       = ${SCH_COMP_CD}
+       AND  P.SUB_PRMT_YN   = 'Y'
+       AND  P.USE_YN        = 'Y'
+     ORDER  BY P.PRMT_ID DESC
+]]></query>
+
+<query name='SearchSubPrmtStore'><![CDATA[
+    SELECT  P.PRMT_ID           AS CODE_CD
+         ,  P.PRMT_NM           AS CODE_NM
+      FROM  PROMOTION           P
+         ,  PROMOTION_STOR      PS
+     WHERE  P.COMP_CD       = PS.COMP_CD
+       AND  P.PRMT_ID       = PS.PRMT_ID
+       AND  P.COMP_CD       = ${SCH_COMP_CD}
+       AND  P.SUB_PRMT_YN   = 'Y'
+       AND  P.USE_YN        = 'Y'
+       AND  PS.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  PS.STOR_CD      = ${SCH_STOR_CD}
+     ORDER  BY P.PRMT_ID DESC
+]]></query>
+
+<query name='SearchSmsSender'><![CDATA[
+    SELECT  S.SENDER_ID         AS CODE_CD
+         ,  S.SENDER_NM         AS CODE_NM
+         ,  S.PHONE             AS VAL_C1
+      FROM  SMS_SENDER      S
+     WHERE  S.COMP_CD       = ${SCH_COMP_CD}
+       AND  S.USE_YN        = 'Y'
+     ORDER  BY S.SENDER_ID
+]]></query>
+
+<query name='SearchMarketingGp'><![CDATA[
+    SELECT  M.CUST_GP_ID                                                    AS CODE_CD
+         ,  MAX(M.CUST_GP_NM) || '[' || NVL(COUNT(MC.CUST_ID), 0) || ']'    AS CODE_NM
+      FROM  MARKETING_GP        M
+         ,  MARKETING_GP_CUST   MC
+     WHERE  M.COMP_CD       = MC.COMP_CD(+)
+       AND  M.CUST_GP_ID    = MC.CUST_GP_ID(+)
+       AND  M.COMP_CD       = ${SCH_COMP_CD}
+       AND  M.USE_YN        = 'Y'
+     GROUP  BY M.CUST_GP_ID
+     ORDER  BY M.CUST_GP_ID
+]]></query>
+
+</SQLResource>

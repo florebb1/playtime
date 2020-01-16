@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<!-- Bootstrap -->
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+<style> 
+  body {
+    margin: 0;
+  }
+    
+  .find  { 
+    width: 100%;
+    height: 45px;
+    font-size: 13px;
+    border-radius: 10px;
+    border:1px solid #ddd;
+    padding: 12px 20px;
+  }
+  .content  {
+    line-height: 30px;
+    padding-top: 25px;
+    color: #000;
+  }
+
+  .button {
+    height: 45px;
+    background-color: #808080;
+    border-color: #fff;
+    border-radius:10px;
+    color: #fff;
+  }
+  .footer {
+    position:relative;
+    bottom:0;
+    height:90px;
+    width: 100%;
+    text-align: center;
+    background-color: #FFCA02;
+    border:none;
+    color: #fff;
+    font-size: 15px;
+  }
+
+  a:link { color: #808080; text-decoration: none;}
+</style>
+</head>
+<body>
+  <div style="margin:0 8%; text-align:right; padding-top:40px; font-size:20px;"><i class="fas fa-times" id="back"></i></div>
+  <div style="text-align:center; padding-top:25px;">
+    <a href="/login.html"><img src="/images/logo.png" style="width:160px; text-align:center;"></a>
+  </div>
+
+  <div style="text-align:center; height: 160.62px;">
+    <div class="content nsrB" style="font-size:22px; padding-top:50px;"><p>기존 플레이타임<br>회원이신가요?</p></div>
+  </div>
+  <form id="seachID-frm" method="POST" style="margin:0 8%">
+    <!-- <input type="hidden" name="USER_ID" value="MOBILE">
+    <div style="height:45px;">
+      <input class="find" type="text" name="CUST_NM" placeholder="성함을 입력해주세요.">
+    </div>
+    <div style="height:45px; margin-top:20px;">
+      <input class="find" type="text" name="MOBILE" placeholder="휴대전화번호를 입력해 주세요.">
+    </div> -->
+    <div style="text-align:center; font-family:NanumSquare; padding-top:60px;">
+      <button id="sign3-btn" class="nsR login-btn" type="button" style="border:none;">신규 가입하기</button>
+    </div>
+    <div style="text-align:center; font-family:NanumSquare; padding-top:15px;">
+      <button id="sign1-btn" class="nsR login-btn" type="button" style="border:none; background-color:#A8C8F9;">이름과 연락처로 찾기</button>
+    </div>
+    <div style="text-align:center; font-family:NanumSquare; padding-top:15px;">
+      <button id="sign2-btn" class="nsR login-btn" type="button" style="border:none; background-color:#F08080;">다회권 인증번호와 연락처로 찾기</button>
+    </div>
+  
+          
+    <!-- <div style="text-align:center; font-family: NanumSquare; font-weight:400; font-size:15px; color:#808080; padding-top: 30px;">
+      <p>처음 방문하셨나요?<a href="/find_pw.html" style="color:#000; font-weight: 700; padding-top: 15px;">&emsp; 회원가입 하기</a></p>
+    </div> -->
+    <!-- <div id="sms_cookie"></div> -->
+  </form>
+
+<script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script src="/js/sweetalert.min.js"></script>
+<script type="text/javascript">
+  $(document).ready(function(){
+    // $("#sms_cookie").html(getCookie("sms"));
+    // console.log(getCookie("sms"))
+    // 이름 + 전화번호 검색
+    $('#sign1-btn').click(function(){
+      document.location.href="/sign_search1.html";
+    });
+    // 다회권 + 전화번호 검색
+    $('#sign2-btn').click(function(){
+      document.location.href="/sign_search2.html";
+    });
+    // 신규회원가입
+    $('#sign3-btn').click(function(){
+      document.location.href="/sign_chk2.html";
+    });
+
+    $('#back').click(function(){
+      document.location.href="/sign_up.html";
+    });
+  });
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+  }
+</script>
+</body>
+</html>

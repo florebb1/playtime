@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/foundation/5.5.0/css/foundation.css'>
+<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+<style> 
+img {
+  width: 100%;
+  height: 100%;
+}
+.bottom {
+  padding-top:50px;
+}
+.title {
+  /* display: inline-block; */
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.footer {
+    /* position: absolute; */
+    bottom: 0;
+    height:90px;
+    text-align: center;
+    left: 0;
+    right: 0;
+    background-color: #FFCA02;
+    border-color: #FFCA02;
+    color: #fff;
+    width:100%;
+    margin:0;
+}
+.sub-body {
+margin:0 8%;
+min-height:580px !important;
+}
+.sub-body h3 {
+font-weight:700;
+line-height:140%;
+text-align: center;
+padding:30px 0;
+}
+.sub-body input {
+font-size: 13px;
+color: #000;
+width: 100%;
+padding: 0 20px;
+margin: 25px 0;
+box-sizing: border-box;
+border: 0;
+border-bottom: 1px solid #808080;
+box-shadow:none !important;
+}
+.sub-body h5 {
+font-weight:700;
+line-height:140%;
+text-align:center;
+padding:0;
+font-size:14px;
+}
+.change-pw-info {
+line-height:140%;
+padding:10px 0;
+}
+.change-pw-info ul {
+list-style:none;
+margin-bottom:0;
+}
+.change-pw-info ul li {
+padding-bottom:5px;
+list-style:disc;
+line-height:140%;
+text-align:left;
+font-size:12px;
+color:#d35252;
+}
+@media screen and (device-aspect-ratio: 40/71) {
+	.asdasdjj {
+		zoom:0.9;
+		-moz-transform: scale(0.9);
+	}
+	.asdasdjk {
+		zoom: 0.9;
+		-moz-transform: scale(0.9);
+	}
+}
+</style>
+</head>
+<body>
+  <div class="bottom">
+    <div style="margin:0 5.5% 0 5.5%; height:40px; text-align:center;">
+      <div style="float:left; width:15%; text-align:left; font-size:20px; color:#000;"><i id="back" class="fas fa-chevron-left"></i></div>
+      <div class="nsR" style="float:left; width:70%; text-align:center; font-size:20px;">회원 비밀번호 변경</div>
+      <div style="float:left; width:15%; text-align:right; font-size:20px;"></div>
+    </div>
+  </div>
+
+  <div class="sub-body" id="content">
+    <h3 class="asdasdjk">회원 비밀번호 변경을 위해<br>비밀번호를 입력해 주세요.</h3>
+    <h5 class="asdasdjj">보안을 위해 아래와 같이 비밀번호를 설정해 주세요.</h5>
+    <div class="change-pw-info">
+      <ul>
+        <li>영문+숫자 6자~20자로 사용가능하며, 특수문자 !@#$%^&*()_+|[]{}'";:/?의 사용이 가능합니다.</li>
+        <li>전화번호, 생년월일 등 개인정보와 관련된 숫자 등 다른 사람이 알아낼 수 있는 비밀번호는 가급적 사용하지마세요.</li>
+        <li>타 서비스의 비밀번호와 같으면 도용되거나 유출 될 위험이 있으니, 주기적으로 변경하여 사용해주세요.</li>
+      </ul>
+    </div>
+    <div>
+      <form id="pwd_edte" name="pwd_edte" method="post">
+        <input type="hidden" name="USER_ID" value="MOBILE">
+        <input type="hidden" id="CUST_WEB_ID" name="CUST_WEB_ID">
+        <input type="password" id="CUST_PW_BEF" name="CUST_PW_BEF" placeholder="현재 비밀번호">
+        <input type="password" id="CUST_PW_AFT" name="CUST_PW_AFT" placeholder="새비밀번호">
+        <input type="password" id="CUST_PW_AFT2" name="CUST_PW_AFT2" placeholder="새비밀번호 확인" style="margin:25px 0 60px 0;">
+      </form>
+    </div>
+  </div>
+
+  <!-- 확인 button  -->
+  <button id="next-btn" type="button" class="footer nsrB" style="font-size:22px;">
+    <p style="padding-bottom:20px">확인</p>
+  </button>
+
+<script src="//code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+<script src="/js/sweetalert.min.js"></script>
+<script type="text/javascript">
+$(window).resize(function() {
+    $('#content').height($(window).height() - 180);
+});
+
+$(window).trigger('resize');
+function setCookie(name, value, days) {
+  var d = new Date;
+  d.setTime(d.getTime() + 24*60*60*1000*days);
+  document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+}
+function getCookie(name) {
+  var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : null;
+}
+function getParameterByName(name) {
+  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+    results = regex.exec(location.search);
+  return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+$(document).on('ready', function() {
+  var regPw = /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,16}$/;
+  var web_id = getCookie('web_id');
+  console.log(web_id);
+  $("#CUST_WEB_ID").val(web_id);
+  
+  $('#next-btn').click(function(){
+    var datas = $('#pwd_edte').serialize();
+    if($("#CUST_PW_BEF").val() == "") {
+      swal({
+        button: "확인",
+        title: "안내",
+        text: "현재 비밀번호를 입력해주세요.",
+        closeOnClickOutside: false
+      });
+    return false;
+    }
+    if($("#CUST_PW_BEF").val() == $("#CUST_PW_AFT").val()) {
+      swal({
+        button: "확인",
+        title: "안내",
+        text: "이전 비밀번호와 현재 비밀번호가 같습니다.",
+        closeOnClickOutside: false
+      });
+    return false;
+    }
+    if($("#CUST_PW_AFT").val() == "") {
+      swal({
+        button: "확인",
+        title: "안내",
+        text: "새비밀번호를 입력해주세요.",
+        closeOnClickOutside: false
+      });
+    return false;
+    }
+    if($("#CUST_PW_AFT2").val() == "") {
+      swal({
+        button: "확인",
+        title: "안내",
+        text: "새비밀번호를 확인해주세요.",
+        closeOnClickOutside: false
+      });
+    return false;
+    }
+    // if(!regPw.test($("#CUST_PW_AFT").val())) {
+    // swal({
+    //   button: "확인",
+    //   title: "안내",
+    //   text: "비밀번호는 숫자+영문+특수문자 조합으로 8~16자리를 사용해야 합니다.",
+    //   closeOnClickOutside: false
+    // });
+    // $("#CUST_PW").focus();
+    // return false;
+    // }
+    if(!/^[a-zA-Z0-9]{8,16}$/.test($("#CUST_PW").val())) {
+      swal({
+        button: "확인",
+        title: "안내",
+        text: "비밀번호는 숫자와 영문자 조합으로 8~16자리를 사용해야 합니다."
+      });
+      $("#CUST_PW").focus();
+      return false;
+    }
+    if($("#CUST_PW_AFT").val() != $("#CUST_PW_AFT2").val()) {
+      swal({
+        button: "확인",
+        title: "안내",
+        text: "새비밀번호가 일치하지 않습니다.",
+        closeOnClickOutside: false
+      });
+      $("#CUST_PW").focus();
+      return false;
+    }
+    $.ajax({
+      url : "/api/mbl_0410.jsp",
+      type : 'POST',
+      dataType : 'JSON',
+      data : datas,
+        success:function(response){
+          if(response.RET_CD == "0001") {
+            swal("비밀번호가 변경되었습니다.", {
+              icon: "success",
+              closeOnClickOutside: false,
+              buttons: "확인"
+            }).then(function() {
+              window.location = "/setting.html";
+            });
+          }else {
+            swal({
+              button: "확인",
+              title: "안내",
+              // text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG,
+              text: response.RET_MSG,
+              closeOnClickOutside: false
+            });
+          }
+        }
+    });
+    return false;
+  });
+  
+  $('#back').click(function(){
+    document.location.href="/setting.html";
+  });
+});
+</script>
+</body>
+</html>

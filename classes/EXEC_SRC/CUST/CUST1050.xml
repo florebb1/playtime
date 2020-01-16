@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='MAIN_Q'><![CDATA[
+    @SCH_S_STOR@
+    SELECT 
+           S.COMP_CD
+         , S.BRAND_CD
+         , S.BRAND_NM
+         , B.BRAND_CLASS
+         , S.STOR_CD
+         , S.STOR_NM
+    FROM STAT_MEMBER_CNT_@SCH_DATE_GUBUN@ A , S_STOR S , BRAND_CD B
+    WHERE  A.COMP_CD  = S.COMP_CD
+    AND    A.BRAND_CD = S.BRAND_CD
+    WHERE  A.COMP_CD  = B.COMP_CD
+    AND    A.BRAND_CD = B.BRAND_CD
+    AND    A.STOR_CD  = S.STOR_CD
+    AND    A.COMP_CD  = ${SCH_COMP_CD}
+    AND    A.STD_DT BETWEEN  ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+]]></query>
+</SQLResource>

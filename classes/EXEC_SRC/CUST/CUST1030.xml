@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='CUST_ETC_Q'><![CDATA[
+    SELECT  C1.MEMBER_NO
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN DECRYPT(C3.CUST_NM)
+                 ELSE DECRYPT(C1.MEMBER_NM)
+            END                                         AS MEMBER_NM
+         ,  C1.CUST_YN
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN FC_GET_FORMAT_HP_NO(DECRYPT(C3.MOBILE))
+                 ELSE FC_GET_FORMAT_HP_NO(DECRYPT(C1.MOBILE))
+            END                                                             AS MOBILE
+         ,  C3.JOIN_DT
+         ,  C3.CUST_STAT
+         ,  C3.LVL_CD
+         ,  NVL(C3.SAV_MLG, 0)                                              AS SAV_MLG
+         ,  NVL(C3.USE_MLG, 0)                                              AS USE_MLG
+         ,  NVL(C3.LOS_MLG, 0)                                              AS LOS_MLG
+         ,  NVL(C3.SAV_MLG, 0) - NVL(C3.USE_MLG, 0) - NVL(C3.LOS_MLG, 0)    AS RES_MLG
+      FROM  CS_MEMBER       C1
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CUST_ID
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.CUST_NM  ELSE C.CUST_NM  END     AS CUST_NM
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.MOBILE   ELSE C.MOBILE   END     AS MOBILE
+                     ,  C.CUST_STAT
+                     ,  C.LVL_CD
+                     ,  C.SAV_MLG
+                     ,  C.USE_MLG
+                     ,  C.LOS_MLG
+                     ,  C.JOIN_DT
+                  FROM  C_CUST          C
+                     ,  C_CUST_REST     R
+                 WHERE  C.COMP_CD   = R.COMP_CD(+)
+                   AND  C.CUST_ID   = R.CUST_ID(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CUST_ID   = ${SCH_MEMBER_NO}
+            )   C3
+     WHERE  C1.COMP_CD      = C3.COMP_CD(+)
+       AND  C1.MEMBER_NO    = C3.CUST_ID(+)
+       AND  C1.COMP_CD      = ${SCH_COMP_CD}
+       AND  C1.MEMBER_DIV   = '1'
+       AND  C1.MEMBER_NO    = ${SCH_MEMBER_NO}
+     ORDER  BY C1.MEMBER_NO
+]]></query>
+ 
+<query name='MAIN_Q'><![CDATA[ 
+    SELECT  SH.COMP_CD
+         ,  SH.BRAND_CD
+         ,  MAX(S.STOR_TP)                          AS STOR_TP
+         ,  SH.STOR_CD
+         ,  MAX(S.STOR_NM)                          AS STOR_NM
+         ,  SH.SALE_DT
+         ,  SH.POS_NO
+         ,  SH.BILL_NO
+         ,  MAX(SH.SALE_QTY)                        AS SALE_QTY
+         ,  MAX(SH.SALE_AMT)                        AS SALE_AMT
+         ,  MAX(SH.ENR_AMT + SH.DC_AMT)             AS DC_AMT
+         ,  MAX(SH.GRD_I_AMT + SH.GRD_O_AMT)        AS GRD_AMT
+         ,  SUM(NVL(M.SAV_MLG, 0))                  AS SAV_MLG
+         ,  SUM(NVL(M.USE_MLG, 0))                  AS USE_MLG
+         ,  SUM(NVL(M.LOS_MLG, 0))                  AS LOS_MLG
+         ,  SUM(NVL(M.VOID_MLG, 0))                 AS VOID_MLG
+      FROM  SALE_HD                     SH
+         ,  C_CARD_SAV_USE_MLG          M
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_TP
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )       S
+     WHERE  SH.COMP_CD      = M.COMP_CD(+)
+       AND  SH.SALE_DT      = M.SALE_DT(+)
+       AND  SH.BRAND_CD     = M.BRAND_CD(+)
+       AND  SH.STOR_CD      = M.STOR_CD(+)
+       AND  SH.POS_NO       = M.POS_NO(+)
+       AND  SH.BILL_NO      = M.BILL_NO(+)
+       AND  SH.COMP_CD      = S.COMP_CD(+)
+       AND  SH.BRAND_CD     = S.BRAND_CD(+)
+       AND  SH.STOR_CD      = S.STOR_CD(+)
+       AND  SH.COMP_CD      = ${SCH_COMP_CD}
+       AND  SH.CUST_ID      = ${SCH_MEMBER_NO}
+       AND  SH.SALE_DT      BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  SH.BRAND_CD = ${SCH_BRAND_CD}
+       AND  SH.STOR_CD  = ${SCH_STOR_CD}
+     GROUP  BY SH.COMP_CD, SH.SALE_DT, SH.BRAND_CD, SH.STOR_CD, SH.POS_NO, SH.BILL_NO
+     ORDER  BY SH.COMP_CD, SH.SALE_DT, SH.BRAND_CD, SH.STOR_CD, SH.POS_NO, SH.BILL_NO
+]]></query>
+
+</SQLResource>

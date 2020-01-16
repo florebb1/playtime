@@ -1,0 +1,166 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- 회원 조회 -->
+<query name='COUPON_LIST_Q'><![CDATA[ 
+    SELECT  NBL.COUPON_CD
+          , NBL.COUPON_NM
+          ,(
+            SELECT GRP_NM
+            FROM   DC_ITEM_GRP DIG
+            WHERE  DIG.COMP_CD  = NBL.COMP_CD
+            AND    DIG.BRAND_CD = NBL.BRAND_CD
+            AND    DIG.DC_DIV   = NBL.DC_DIV
+            AND    DIG.GRP_SEQ  = NBL.GRP_SEQ
+            AND    ROWNUM       = 1
+           ) GRP_NM
+          , NBL.GRP_SEQ
+          , NBL.CPN_CNT
+          , NBL.USE_CNT
+          , NBL.EXP_CNT
+    FROM   (
+            SELECT  CM.COMP_CD
+                  , CM.BRAND_CD
+                  , CC.COUPON_CD
+                  , CM.COUPON_NM
+                  , CM.DC_DIV
+                  , CC.GRP_SEQ
+                  , SUM(1)                                              AS CPN_CNT
+                  , SUM(CASE WHEN CC.USE_STAT = '10' THEN 1 ELSE 0 END) AS USE_CNT
+                  , SUM(CASE WHEN CC.USE_STAT = '33' THEN 1 ELSE 0 END) AS EXP_CNT
+            FROM    C_COUPON_CUST     CC
+                  , C_COUPON_MST      CM
+            WHERE   CC.COMP_CD   = CM.COMP_CD
+            AND     CC.COUPON_CD = CM.COUPON_CD
+            AND     CC.COMP_CD   = ${SCH_COMP_CD}
+            AND    (
+                    1 = CASE WHEN ${SCH_SEARCH_DIV} = '01' AND CC.CERT_FDT BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE} THEN 1 ELSE 0 END
+                    OR
+                    1 = CASE WHEN ${SCH_SEARCH_DIV} = '02' AND CC.USE_DT   BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE} THEN 1 ELSE 0 END
+                   )
+            AND     CC.USE_STAT != '32'  -- 폐기제외
+            AND    (${SCH_COUPON_CD} IS NULL OR CC.COUPON_CD = ${SCH_COUPON_CD})
+            AND    (${SCH_BRAND_CD}  IS NULL OR CC.BRAND_CD  = ${SCH_BRAND_CD} )
+            GROUP BY
+                    CM.COMP_CD
+                  , CM.BRAND_CD
+                  , CC.COUPON_CD
+                  , CM.COUPON_NM
+                  , CM.DC_DIV
+                  , CC.GRP_SEQ
+           ) NBL
+    ORDER BY 
+            NBL.COUPON_CD
+          , NBL.GRP_SEQ
+]]></query>
+
+<query name='COUPON_DTL_LIST_Q'><![CDATA[ 
+    SELECT  CC.CUST_ID
+          , DECRYPT(CT.CUST_NM)                     AS CUST_NM
+          ,(
+            SELECT GRP_NM
+            FROM   DC_ITEM_GRP DIG
+            WHERE  DIG.COMP_CD  = CM.COMP_CD
+            AND    DIG.BRAND_CD = CM.BRAND_CD
+            AND    DIG.DC_DIV   = CM.DC_DIV
+            AND    DIG.GRP_SEQ  = CC.GRP_SEQ
+            AND    ROWNUM       = 1
+           ) GRP_NM
+          , CC.CERT_NO
+          , FN_GET_FORMAT_HP_NO(DECRYPT(CT.MOBILE)) AS MOBILE
+          , CC.CERT_FDT
+          , CC.CERT_TDT
+          , CC.USE_STAT
+          , CM1.CODE_NM
+          , CC.USE_DT
+    FROM    C_COUPON_CUST CC
+          , C_COUPON_MST  CM
+          , C_CUST        CT
+          ,(
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+            FROM    COMMON C
+                 , ( 
+                    SELECT  COMP_CD
+                         ,  CODE_CD
+                         ,  CODE_NM
+                    FROM    LANG_COMMON
+                    WHERE   COMP_CD   = ${SCH_COMP_CD}
+                    AND     CODE_TP     = '01615'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   ) L
+             WHERE  C.COMP_CD = L.COMP_CD(+)
+               AND  C.CODE_CD = L.CODE_CD(+)
+               AND  C.COMP_CD = ${SCH_COMP_CD}
+               AND  C.CODE_TP = '01615'
+               AND  C.USE_YN  = 'Y'
+            ) CM1
+    WHERE   CC.COMP_CD   = CT.COMP_CD
+    AND     CC.CUST_ID   = CT.CUST_ID
+    AND     CC.COMP_CD   = CM.COMP_CD
+    AND     CC.COUPON_CD = CM.COUPON_CD
+    AND     CC.COMP_CD   = CM1.COMP_CD(+)
+    AND     CC.USE_STAT  = CM1.CODE_CD(+)
+    AND     CC.COMP_CD   = ${SCH_COMP_CD}
+    AND     CC.COUPON_CD = ${SCH_COUPON_CD}
+    AND     CC.CERT_FDT >= ${SCH_GFR_DATE}
+    AND     CC.CERT_FDT <= ${SCH_GTO_DATE}
+    AND     CC.USE_STAT != '32'  -- 폐기제외
+    AND    (${SCH_BRAND_CD} IS NULL OR CC.BRAND_CD = ${SCH_BRAND_CD})
+    ORDER BY 
+            2
+          , CC.CUST_ID
+]]></query>
+
+<!-- 쿠폰검색 -->
+<query name='COUPON_MST_Q'><![CDATA[
+    SELECT CC.COMP_CD
+         , CC.COUPON_CD
+         , CC.COUPON_NM
+         , CC.DC_DIV
+         , DC.DC_NM
+         , CC.CERT_YN
+         , CC.START_DT
+         , CC.CLOSE_DT
+         , CC.ISSUE_DT
+         , TO_CHAR(TO_DATE(ISSUE_DT,'YYYYMMDD')+30, 'YYYYMMDD') as ISSUE_DT_30
+         , CC.COUPON_STAT     
+      FROM C_COUPON_MST CC
+         , DC           DC
+         ,(
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+            FROM    COMMON C
+                 , ( 
+                    SELECT  COMP_CD
+                         ,  CODE_CD
+                         ,  CODE_NM
+                    FROM    LANG_COMMON
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     CODE_TP     = '01775'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   ) L
+             WHERE  C.COMP_CD = L.COMP_CD(+)
+               AND  C.CODE_CD = L.CODE_CD(+)
+               AND  C.COMP_CD = ${SCH_COMP_CD}
+               AND  C.CODE_TP = '01775'
+               AND  C.USE_YN  = 'Y'
+             ) CM
+    WHERE   CC.COMP_CD    = DC.COMP_CD
+    AND     CC.BRAND_CD   = DC.BRAND_CD
+    AND     CC.DC_DIV     = DC.DC_DIV
+    AND     CC.COMP_CD    = CM.COMP_CD
+    AND     CC.CERT_YN    = CM.CODE_CD
+    AND     CC.COMP_CD    = ${SCH_COMP_CD}
+    AND     CC.BRAND_CD   = ${SCH_BRAND_CD}
+    AND     (${SCH_COUPON_TXT} IS NULL OR CC.COUPON_NM LIKE '%'||${SCH_COUPON_TXT}||'%')
+    AND     CC.USE_YN     = 'Y'
+    AND     CC.COUPON_STAT IN ('1','2')
+    ORDER BY CC.COUPON_CD 
+]]></query>
+
+</SQLResource>

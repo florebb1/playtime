@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='COMPANY_Q'><![CDATA[
+    SELECT  C.COMP_CD 
+         ,  C.COMP_NM
+         ,  L.LANG_NM
+         ,  C.NATION_CD
+         ,  C.BUSI_NO
+         ,  C.BUSI_NM
+         ,  C.BUSI_TP
+         ,  C.BUSI_CT
+         ,  C.TEL_NO
+         ,  C.E_MAIL
+         ,  C.ZIP_CD
+         ,  C.ADDR
+         ,  C.ADDR2
+         ,  C.MULTI_LANGUAGE_YN
+         ,  C.LANGUAGE_TP
+         ,  C.USE_YN
+         ,  C.INST_DT
+         ,  C.INST_USER
+      FROM  COMPANY     C
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  TABLE_NM    = 'COMPANY'
+                   AND  COL_NM      = 'COMP_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  C.COMP_CD               = L.COMP_CD(+)
+       AND  LPAD(C.COMP_CD, 3, ' ') = L.PK_COL(+)
+       AND  C.COMP_CD               = ${SCH_COMP_CD}
+       AND  (${SCH_USE_YN}   IS NULL OR C.USE_YN = ${SCH_USE_YN}) 
+       AND  (${SCH_COMP_TXT} IS NULL OR (C.COMP_CD LIKE '%'||${SCH_COMP_TXT}||'%' OR NVL(L.LANG_NM, C.COMP_NM) LIKE '%'||${SCH_COMP_TXT}||'%'))
+]]></query> 
+    
+<query name='COMPANY_U'><![CDATA[ 
+    MERGE INTO COMPANY
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  COMP_NM     = ${COMP_NM}
+             ,  NATION_CD   = ${NATION_CD}
+             ,  BUSI_NO     = ${BUSI_NO}
+             ,  BUSI_NM     = ${BUSI_NM}
+             ,  BUSI_TP     = ${BUSI_TP}
+             ,  BUSI_CT     = ${BUSI_CT}
+             ,  TEL_NO      = ${TEL_NO}
+             ,  ZIP_CD      = ${ZIP_CD}
+             ,  E_MAIL      = ${E_MAIL}
+             ,  ADDR        = ${ADDR}
+             ,  ADDR2       = ${ADDR2}
+             ,  MULTI_LANGUAGE_YN = ${MULTI_LANGUAGE_YN}
+             ,  LANGUAGE_TP = ${LANGUAGE_TP}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  COMP_NM
+             ,  NATION_CD
+             ,  BUSI_NO
+             ,  BUSI_NM
+             ,  BUSI_TP
+             ,  BUSI_CT
+             ,  TEL_NO
+             ,  E_MAIL
+             ,  ZIP_CD
+             ,  ADDR
+             ,  ADDR2
+             ,  MULTI_LANGUAGE_YN 
+             ,  LANGUAGE_TP
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (    
+                ${COMP_CD}
+             ,  ${COMP_NM}
+             ,  ${NATION_CD}
+             ,  ${BUSI_NO}
+             ,  ${BUSI_NM}
+             ,  ${BUSI_TP}
+             ,  ${BUSI_CT}
+             ,  ${TEL_NO}
+             ,  ${E_MAIL}
+             ,  ${ZIP_CD}
+             ,  ${ADDR}
+             ,  ${ADDR2}
+             ,  ${MULTI_LANGUAGE_YN}
+             ,  ${LANGUAGE_TP}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='COMPANY_LANG_U'><![CDATA[ 
+    MERGE INTO LANG_TABLE
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  TABLE_NM    = ${TABLE_NM}
+           AND  COL_NM      = ${COL_NM}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+           AND  PK_COL      = ${PK_COL}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (    
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>

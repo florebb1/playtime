@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- 회원 조회 -->
+<query name='CUST_CNT_CRG_LIST_Q'><![CDATA[
+    WITH STD AS
+    (
+        SELECT  ${SCH_COMP_CD}                                                          AS COMP_CD
+             ,  TO_CHAR(TO_DATE(${SCH_GFR_DATE}, 'YYYYMMDD') + ROWNUM - 1, 'YYYYMMDD')  AS STD_YMD
+          FROM  TAB
+         WHERE  ROWNUM <= (TO_DATE(${SCH_GTO_DATE}, 'YYYYMMDD') + 1 - TO_DATE(${SCH_GFR_DATE}, 'YYYYMMDD'))
+    )
+    SELECT  CST.STD_YMD
+          , NVL(CST.JOIN_CNT, 0) AS JOIN_CNT
+          , NVL(EXP.EXP_CNT , 0) AS EXP_CNT
+          , NVL(CST.SKT_CNT , 0) AS SKT_CNT
+          , NVL(CST.KTF_CNT , 0) AS KTF_CNT
+          , NVL(CST.LGD_CNT , 0) AS LGT_CNT
+          , NVL(CST.SPC_SKT_CNT, 0) AS SPC_SKT_CNT
+          , NVL(CST.SPC_KTF_CNT, 0) AS SPC_KTF_CNT
+          , NVL(CST.SPC_LGD_CNT, 0) AS SPC_LGT_CNT
+          , NVL(CRG.TOT_CRG_AMT, 0) AS TOT_CRG_AMT
+          , NVL(USE.TOT_USE_AMT, 0) AS TOT_USE_AMT
+          , NVL(CRG.MEM_CRG_AMT, 0) - NVL(CRG.NEW_CRG_AMT, 0) AS MEM_CRG_AMT
+          , NVL(USE.MEM_USE_AMT, 0) - NVL(USE.NEW_USE_AMT, 0) AS MEM_USE_AMT
+          , NVL(CRG.NEW_CRG_AMT, 0) AS NEW_CRG_AMT
+          , NVL(USE.NEW_USE_AMT, 0) AS NEW_USE_AMT
+          , NVL(CRG.NON_CRG_AMT, 0) AS NON_CRG_AMT
+          , NVL(USE.NON_USE_AMT, 0) AS NON_USE_AMT
+    FROM   (
+            SELECT  STD.COMP_CD
+                  , STD.STD_YMD
+                  , SUM(CASE WHEN STD.STD_YMD = CST.JOIN_DT THEN 1 ELSE 0 END) AS JOIN_CNT
+                  , SUM(CASE WHEN MOBILE_KIND = '01' THEN 1 ELSE 0 END) AS SKT_CNT
+                  , SUM(CASE WHEN MOBILE_KIND = '02' THEN 1 ELSE 0 END) AS KTF_CNT
+                  , SUM(CASE WHEN MOBILE_KIND = '03' THEN 1 ELSE 0 END) AS LGD_CNT
+                  , SUM(CASE WHEN MOBILE_KIND = '04' THEN 1 ELSE 0 END) AS SPC_SKT_CNT
+                  , SUM(CASE WHEN MOBILE_KIND = '05' THEN 1 ELSE 0 END) AS SPC_KTF_CNT
+                  , SUM(CASE WHEN MOBILE_KIND = '06' THEN 1 ELSE 0 END) AS SPC_LGD_CNT
+            FROM    C_CUST              CST,
+                    STD                 STD
+            WHERE   STD.COMP_CD = CST.COMP_CD(+)
+            AND     STD.STD_YMD = CST.JOIN_DT(+)
+            GROUP   BY
+                    STD.COMP_CD
+                ,   STD.STD_YMD
+           ) CST
+          ,(
+            SELECT  STD.COMP_CD
+                  , STD.STD_YMD
+                  , COUNT(*)         AS EXP_CNT
+            FROM    C_CUST              CST,
+                    STD                 STD
+            WHERE   STD.COMP_CD = CST.COMP_CD
+            AND     STD.STD_YMD = SUBSTR(CST.LEAVE_DT, 1, 8)
+            GROUP   BY
+                    STD.COMP_CD
+                ,   STD.STD_YMD
+            ) EXP
+          ,(
+            SELECT  /*+ INDEX(HIS IDX03_C_CARD_CHARGE_HIS)
+                        INDEX(CRD PK_C_CARD)              */
+                    STD.COMP_CD
+                  , STD.STD_YMD
+                  , SUM(HIS.CRG_AMT) AS TOT_CRG_AMT
+                  , SUM(CASE WHEN CRD.CUST_ID IS NOT NULL AND HIS.CRG_DT >= NVL(CST.JOIN_DT, '99991231')                           THEN HIS.CRG_AMT ELSE 0 END) AS MEM_CRG_AMT
+                  , SUM(CASE WHEN CRD.CUST_ID IS NOT NULL AND NVL(CST.JOIN_DT, '99991231') BETWEEN ${SCH_GFR_DATE} AND STD.STD_YMD THEN HIS.CRG_AMT ELSE 0 END) AS NEW_CRG_AMT
+                  , SUM(CASE WHEN CRD.CUST_ID IS NULL     OR  HIS.CRG_DT <  NVL(CST.JOIN_DT, '99991231')                           THEN HIS.CRG_AMT ELSE 0 END) AS NON_CRG_AMT
+            FROM    C_CARD_CHARGE_HIS   HIS
+                  , C_CARD              CRD
+                  , C_CUST              CST
+                  , STD                 STD
+            WHERE   STD.COMP_CD = HIS.COMP_CD
+            AND     STD.STD_YMD = HIS.CRG_DT
+            AND     HIS.COMP_CD = CRD.COMP_CD
+            AND     HIS.CARD_ID = CRD.CARD_ID
+            AND     CRD.COMP_CD = CST.COMP_CD(+)
+            AND     CRD.CUST_ID = CST.CUST_ID(+)
+            AND     HIS.CRG_FG IN ('1','2')
+            GROUP   BY
+                    STD.COMP_CD
+                ,   STD.STD_YMD
+            ) CRG
+           ,(
+            SELECT  /*+ INDEX(HIS IDX02_C_CARD_USE_HIS)
+                        INDEX(CRD PK_C_CARD)           */
+                    STD.COMP_CD
+                  , STD.STD_YMD
+                  , SUM(HIS.USE_AMT) AS TOT_USE_AMT  
+                  , SUM(CASE WHEN CRD.CUST_ID IS NOT NULL AND HIS.USE_DT >= NVL(CST.JOIN_DT, '99991231')                           THEN HIS.USE_AMT ELSE 0 END) MEM_USE_AMT
+                  , SUM(CASE WHEN CRD.CUST_ID IS NOT NULL AND NVL(CST.JOIN_DT, '99991231') BETWEEN ${SCH_GFR_DATE} AND STD.STD_YMD THEN HIS.USE_AMT ELSE 0 END) NEW_USE_AMT
+                  , SUM(CASE WHEN CRD.CUST_ID IS NULL     OR  HIS.USE_DT <  NVL(CST.JOIN_DT, '99991231')                           THEN HIS.USE_AMT ELSE 0 END) NON_USE_AMT
+            FROM    C_CARD_USE_HIS      HIS
+                  , C_CARD              CRD
+                  , C_CUST              CST
+                  , STD                 STD
+            WHERE   STD.COMP_CD = HIS.COMP_CD
+            AND     STD.STD_YMD = HIS.USE_DT
+            AND     HIS.COMP_CD = CRD.COMP_CD
+            AND     HIS.CARD_ID = CRD.CARD_ID
+            AND     CRD.COMP_CD = CST.COMP_CD(+)
+            AND     CRD.CUST_ID = CST.CUST_ID(+)
+            GROUP   BY
+                    STD.COMP_CD
+                ,   STD.STD_YMD
+            ) USE
+    WHERE   CST.COMP_CD = EXP.COMP_CD(+)
+    AND     CST.STD_YMD = EXP.STD_YMD(+)
+    AND     CST.COMP_CD = CRG.COMP_CD(+)
+    AND     CST.STD_YMD = CRG.STD_YMD(+)
+    AND     CST.COMP_CD = USE.COMP_CD(+)
+    AND     CST.STD_YMD = USE.STD_YMD(+)
+    ORDER BY 
+            CST.STD_YMD
+]]></query>
+
+</SQLResource>

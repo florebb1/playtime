@@ -1,0 +1,371 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='GIFT_MST_Q'><![CDATA[
+    WITH W_STORE AS 
+   (
+    SELECT  S.COMP_CD
+          ,  S.BRAND_CD
+          ,  S.STOR_CD
+          ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+       FROM  STORE   S
+          ,  (
+                 SELECT  COMP_CD
+                      ,  BRAND_CD
+                      ,  STOR_CD
+                      ,  STOR_NM
+                   FROM  LANG_STORE
+                  WHERE  COMP_CD     = ${SCH_COMP_CD}
+                    AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND  USE_YN      = 'Y'
+             )       L
+      WHERE  S.COMP_CD   = L.COMP_CD(+)
+        AND  S.BRAND_CD  = L.BRAND_CD(+)
+        AND  S.STOR_CD   = L.STOR_CD(+)
+        AND  S.COMP_CD   = ${SCH_COMP_CD}
+   )
+    SELECT  GM.COMP_CD
+         ,  GM.GIFT_CD
+         ,  MAX(NVL(L.LANG_NM, GCM.GIFT_NM))    AS GIFT_NM
+         ,  GM.GIFT_NO
+         ,  MAX(GM.GIFT_STAT_CD)                AS GIFT_STAT_CD
+         ,  MAX(C1.CODE_NM)                     AS GIFT_STAT_NM
+         ,  MAX(GM.PRICE)                       AS PRICE
+         ,  GS.SALE_DT                          AS SALE_DT
+         ,  MAX(GS.SALE_SEQ)                    AS SALE_SEQ
+         ,  MAX(GS.STOR_CD)                     AS STOR_CD
+         ,  MAX(GS.STOR_NM)                     AS STOR_NM
+         ,  MAX(GS.CUSTOMER)                    AS CUSTOMER
+         ,  MAX(GS.DC_RATE)                     AS DC_RATE
+         ,  MAX(GS.DC_AMT)                      AS DC_AMT
+         ,  MAX(GS.GRD_AMT)                     AS GRD_AMT
+         ,  MAX(GS.REMARK)                      AS REMARK
+         ,  MAX(GM.S_APPR_DT)                   AS APPR_DT
+         ,  MAX(GM.S_APPR_TM)                   AS APPR_TM
+         ,  MAX(GM.S_STOR_CD)                   AS S_STOR_CD
+         ,  MAX(CASE WHEN GM.S_STOR_CD IS NOT NULL THEN '[' || GM.S_STOR_CD || ']' || ' ' || S.STOR_NM  
+                 ELSE ''
+            END)                                AS S_STOR_NM
+         ,  MAX(GS.BILL_NO)                     AS BILL_NO
+         ,  MAX(GSL.PRC_STAT)                   AS PRC_STAT
+         ,  MAX(C2.CODE_NM)                     AS PRC_STAT_NM
+         ,  MAX(GR.RTN_DT)                      AS RTN_DT
+         ,  MAX(GR.RTN_STOR_CD)                 AS RTN_STOR_CD
+         ,  MAX(GR.RTN_STOR_NM)                 AS RTN_STOR_NM
+         ,  MAX(GR.RTN_REMARKS)                 AS RTN_REMARKS
+         ,  MAX(GR.RTN_USER_NM)                 AS RTN_USER_NM
+         ,  MAX(CASE WHEN GM.GIFT_STAT_CD IN ('50', '51', '99') THEN GM.REMARK ELSE '' END)  AS ACD_REMARK
+    FROM    GIFT_MST    GM
+         , (
+            SELECT  /*+ LEADING(S) */
+                    GSH.COMP_CD
+                 ,  GSH.SALE_DT
+                 ,  GSH.SALE_SEQ
+                 ,  ''              AS BILL_NO
+                 ,  GSH.STOR_CD
+                 ,  S.STOR_NM
+                 ,  GSH.CUSTOMER
+                 ,  GSD.GIFT_NO
+                 ,  GSH.DC_RATE
+                 ,  ROUND(MST.PRICE * GSH.DC_RATE / 100, 0) AS DC_AMT
+                 ,  MST.PRICE - ROUND(MST.PRICE * GSH.DC_RATE / 100, 0) AS GRD_AMT
+                 ,  GSH.REMARK
+                 ,  GSH.INST_DT
+            FROM    GIFT_SALE_HD    GSH
+                 ,  GIFT_SALE_DT    GSD
+                 ,  GIFT_MST        MST
+                 ,  W_STORE         S
+            WHERE   GSH.COMP_CD     = GSD.COMP_CD
+            AND     GSH.SALE_DT     = GSD.SALE_DT
+            AND     GSH.SALE_SEQ    = GSD.SALE_SEQ
+            AND     GSD.COMP_CD     = MST.COMP_CD
+            AND     GSD.GIFT_NO     = MST.GIFT_NO
+            AND     GSH.COMP_CD     = S.COMP_CD
+            AND     GSH.BRAND_CD    = S.BRAND_CD
+            AND     GSH.STOR_CD     = S.STOR_CD
+            AND     GSH.COMP_CD     = ${SCH_COMP_CD}
+            AND     GSH.CONFIRM_YN  = 'Y'
+            AND     GSH.SALE_TP     IN ('20', '30')
+            UNION ALL
+            SELECT  /*+ LEADING(S GLG) */
+                    GLG.COMP_CD
+                 ,  GLG.SALE_DT
+                 ,  ''              AS SALE_SEQ
+                 ,  GLG.BILL_NO
+                 ,  GLG.STOR_CD
+                 ,  S.STOR_NM
+                 ,  DECRYPT(MEMBER_NM) AS CUST_NM
+                 ,  GLG.GIFT_NO
+                 ,  CASE WHEN MST.PRICE = 0 THEN 0 ELSE (MST.PRICE - GLG.APPR_AMT) / MST.PRICE * 100 END AS DC_RATE
+                 ,  MST.PRICE - GLG.APPR_AMT AS DC_AMT
+                 ,  GLG.APPR_AMT             AS GRD_AMT 
+                 ,  NULL AS REMARK
+                 ,  TO_DATE(GLG.APPR_DT||GLG.APPR_TM, 'YYYYMMDDHH24MISS') INST_DT
+            FROM    W_STORE         S
+                 ,  GIFT_LOG        GLG
+                 ,  CS_MEMBER       CSM
+                 ,  GIFT_MST        MST
+            WHERE   GLG.COMP_CD     = S.COMP_CD
+            AND     GLG.BRAND_CD    = S.BRAND_CD
+            AND     GLG.STOR_CD     = S.STOR_CD
+            AND     GLG.COMP_CD     = CSM.COMP_CD  (+)
+            AND     GLG.CUST_ID     = CSM.MEMBER_NO(+)
+            AND     GLG.COMP_CD     = MST.COMP_CD
+            AND     GLG.GIFT_NO     = MST.GIFT_NO
+            AND     GLG.COMP_CD     = ${SCH_COMP_CD}
+          --AND     GLG.GIFT_DIV    = '2'
+            AND     GLG.USE_YN      = 'Y'
+            AND     GLG.SALE_DIV    = '1'
+            )           GS
+         ,  (
+                SELECT  GU.COMP_CD
+                     ,  GU.SALE_DT
+                     ,  GU.SALE_SEQ
+                     ,  GU.GIFT_NO
+                     ,  GU.RTN_DT
+                     ,  GU.BRAND_CD     AS RTN_BRAND_CD
+                     ,  GU.STOR_CD      AS RTN_STOR_CD
+                     ,  S.STOR_NM       AS RTN_STOR_NM
+                     ,  GU.REMARKS      AS RTN_REMARKS
+                     ,  NVL(HU.USER_NM, SU.USER_NM) AS RTN_USER_NM
+                  FROM (
+                        SELECT  GU.COMP_CD
+                             ,  GU.SALE_DT
+                             ,  GU.SALE_SEQ
+                             ,  GU.GIFT_NO
+                             ,  GU.RTN_DT
+                             ,  GU.BRAND_CD
+                             ,  GU.STOR_CD
+                             ,  GU.REMARKS
+                             ,  INST_USER
+                        FROM    GIFT_UNSOLD     GU
+                             ,  W_STORE         S
+                        WHERE   GU.COMP_CD = S.COMP_CD
+                        AND     GU.STOR_CD = S.STOR_CD
+                        AND     GU.COMP_CD = ${SCH_COMP_CD}
+                        UNION ALL
+                        SELECT  GLG.COMP_CD
+                             ,  GLG.SALE_DT
+                             ,  GLG.BILL_NO
+                             ,  GLG.GIFT_NO
+                             ,  SHD.RTN_DT
+                             ,  GLG.BRAND_CD
+                             ,  GLG.STOR_CD
+                             ,  '' AS REMARKS
+                             , SHD.CASHIER_ID AS INST_USER
+                        FROM    W_STORE         S
+                             , (  
+                                SELECT  DISTINCT
+                                        SHD.COMP_CD
+                                     ,  SHD.VOID_BEFORE_DT SALE_DT
+                                     ,  SHD.BRAND_CD
+                                     ,  SHD.STOR_CD
+                                     ,  SHD.POS_NO
+                                     ,  SHD.VOID_BEFORE_NO AS BILL_NO
+                                     ,  SHD.SALE_DT        AS RTN_DT
+                                     ,  SHD.CASHIER_ID
+                                FROM    W_STORE         S
+                                     ,  GIFT_LOG        GLG
+                                     ,  SALE_HD         SHD
+                                WHERE   GLG.COMP_CD     = SHD.COMP_CD
+                                AND     GLG.SALE_DT     = SHD.SALE_DT
+                                AND     GLG.BRAND_CD    = SHD.BRAND_CD
+                                AND     GLG.STOR_CD     = SHD.STOR_CD
+                                AND     GLG.POS_NO      = SHD.POS_NO
+                                AND     GLG.BILL_NO     = SHD.BILL_NO
+                                AND     GLG.COMP_CD     = S.COMP_CD
+                                AND     GLG.BRAND_CD    = S.BRAND_CD
+                                AND     GLG.STOR_CD     = S.STOR_CD
+                                AND     GLG.COMP_CD     = ${SCH_COMP_CD}
+                                AND     GLG.SALE_DIV    = '2'
+                                AND     GLG.USE_YN      = 'Y'
+                              ) SHD
+                             ,  GIFT_LOG        GLG
+                        WHERE   GLG.COMP_CD     = SHD.COMP_CD
+                        AND     GLG.SALE_DT     = SHD.SALE_DT
+                        AND     GLG.BRAND_CD    = SHD.BRAND_CD
+                        AND     GLG.STOR_CD     = SHD.STOR_CD
+                        AND     GLG.POS_NO      = SHD.POS_NO
+                        AND     GLG.BILL_NO     = SHD.BILL_NO
+                        AND     GLG.COMP_CD     = S.COMP_CD
+                        AND     GLG.BRAND_CD    = S.BRAND_CD
+                        AND     GLG.STOR_CD     = S.STOR_CD
+                        AND     GLG.COMP_CD     = ${SCH_COMP_CD}
+                      --AND     GLG.GIFT_DIV    = '2'
+                        AND     GLG.USE_YN      = 'Y'
+                        AND     GLG.SALE_DIV    = '1'
+                       ) GU
+                     ,  W_STORE         S
+                     ,  (
+                            SELECT  HU.COMP_CD
+                                 ,  HU.USER_ID
+                                 ,  NVL(L.LANG_NM, HU.USER_NM)   AS USER_NM
+                              FROM  HQ_USER     HU
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  PK_COL
+                                             ,  LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  TABLE_NM    = 'HQ_USER'
+                                           AND  COL_NM      = 'USER_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )  L
+                             WHERE  L.COMP_CD(+)    = HU.COMP_CD
+                              AND  L.PK_COL(+)     = LPAD(HU.USER_ID, 15, ' ')
+                              AND  HU.COMP_CD      = ${SCH_COMP_CD}
+                        )   HU
+                     ,  (
+                            SELECT  SU.COMP_CD
+                                 ,  SU.BRAND_CD
+                                 ,  SU.STOR_CD
+                                 ,  SU.USER_ID
+                                 ,  NVL(L.LANG_NM, SU.USER_NM)   AS USER_NM
+                              FROM  STORE_USER  SU
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  PK_COL
+                                             ,  LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  TABLE_NM    = 'STORE_USER'
+                                           AND  COL_NM      = 'USER_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )  L
+                             WHERE  L.COMP_CD(+)    = SU.COMP_CD
+                               AND  L.PK_COL(+)     = LPAD(SU.BRAND_CD, 4, ' ')||LPAD(SU.STOR_CD, 10, ' ')||LPAD(SU.USER_ID, 15, ' ')
+                               AND  SU.COMP_CD      = ${SCH_COMP_CD}
+                        )   SU
+                 WHERE  GU.COMP_CD     = S.COMP_CD
+                   AND  GU.BRAND_CD    = S.BRAND_CD
+                   AND  GU.STOR_CD     = S.STOR_CD
+                   AND  GU.COMP_CD     = HU.COMP_CD(+)
+                   AND  GU.INST_USER   = HU.USER_ID(+)
+                   AND  GU.COMP_CD     = SU.COMP_CD(+)
+                   AND  GU.BRAND_CD    = SU.BRAND_CD(+)
+                   AND  GU.STOR_CD     = SU.STOR_CD(+)
+                   AND  GU.INST_USER   = SU.USER_ID(+)
+            )           GR
+         ,  GIFT_CODE_MST   GCM
+         ,  (
+                SELECT  COMP_CD
+                     ,  APPR_NO
+                     ,  SALE_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  POS_NO
+                     ,  BILL_NO
+                     ,  PRC_STAT
+                  FROM  GIFT_SVR_LOG
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  APPR_PATH   = '1'
+            )               GSL
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'GIFT_CODE_MST'
+                   AND  COL_NM      = 'GIFT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )           L
+         ,  W_STORE       S
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON  C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '00185'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )       L
+                 WHERE  C.COMP_CD = L.COMP_CD(+)
+                   AND  C.CODE_TP = L.CODE_TP(+)
+                   AND  C.CODE_CD = L.CODE_CD(+)
+                   AND  C.COMP_CD = ${SCH_COMP_CD}
+                   AND  C.CODE_TP = '00185'
+                   AND  C.USE_YN  = 'Y'
+            )       C1
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON  C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_TP
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '17555'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )       L
+                 WHERE  C.COMP_CD = L.COMP_CD(+)
+                   AND  C.CODE_TP = L.CODE_TP(+)
+                   AND  C.CODE_CD = L.CODE_CD(+)
+                   AND  C.COMP_CD = ${SCH_COMP_CD}
+                   AND  C.CODE_TP = '17555'
+                   AND  C.USE_YN  = 'Y'
+            )       C2
+     WHERE  GM.COMP_CD      = GS.COMP_CD
+       AND  GM.GIFT_NO      = GS.GIFT_NO
+       AND  GM.COMP_CD      = GCM.COMP_CD
+       AND  GM.GIFT_CD      = GCM.GIFT_CD
+       AND  GS.COMP_CD      = GR.COMP_CD(+)
+       AND  GS.SALE_DT      = GR.SALE_DT(+)
+       AND  GS.SALE_SEQ     = GR.SALE_SEQ(+)
+       AND  GS.GIFT_NO      = GR.GIFT_NO(+)
+       AND  GM.S_SALE_DT    = GSL.SALE_DT(+)
+       AND  GM.S_BRAND_CD   = GSL.BRAND_CD(+)
+       AND  GM.S_STOR_CD    = GSL.STOR_CD(+)
+       AND  GM.S_POS_NO     = GSL.POS_NO(+)
+       AND  GM.S_APPR_NO    = GSL.APPR_NO(+)
+       AND  GM.COMP_CD      = C1.COMP_CD(+)
+       AND  GM.GIFT_STAT_CD = C1.CODE_CD(+)
+       AND  GSL.COMP_CD     = C2.COMP_CD(+)
+       AND  GSL.PRC_STAT    = C2.CODE_CD(+)
+       AND  L.COMP_CD(+)    = GCM.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(GCM.GIFT_CD, 2, ' ')
+       AND  GM.COMP_CD      = S.COMP_CD
+       AND  GM.S_BRAND_CD   = S.BRAND_CD
+       AND  GM.S_STOR_CD    = S.STOR_CD
+       AND  GM.COMP_CD      = ${SCH_COMP_CD}
+       AND  DECODE(${SCH_VIEW_TYPE}, 'S', GS.SALE_DT, GM.S_SALE_DT) BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  (${SCH_GIFT_CD} IS NULL OR GM.GIFT_CD = ${SCH_GIFT_CD})
+       AND  (${SCH_GIFT_NO} IS NULL OR GM.GIFT_NO LIKE '%'||${SCH_GIFT_NO}||'%')
+       AND  (${SCH_GIFT_STAT_CD} IS NULL OR GM.GIFT_STAT_CD = ${SCH_GIFT_STAT_CD})
+       AND  (
+                (
+                    ${SCH_USER_DIV} = 'H'
+                    AND
+                    (${SCH_BRAND_CD} IS NULL OR DECODE(${SCH_VIEW_TYPE}, 'S', GM.BRAND_CD, GM.S_BRAND_CD) = ${SCH_BRAND_CD})
+                    AND
+                    (${SCH_STOR_CD}  IS NULL OR DECODE(${SCH_VIEW_TYPE}, 'S', GM.STOR_CD, GM.S_STOR_CD) = ${SCH_STOR_CD})
+                )
+                OR
+                (
+                    ${SCH_USER_DIV} = 'S'
+                    AND
+                    DECODE(${SCH_VIEW_TYPE}, 'S', GM.BRAND_CD, GM.S_BRAND_CD) = ${SCH_BRAND_CD}
+                    AND
+                    DECODE(${SCH_VIEW_TYPE}, 'S', GM.STOR_CD, GM.S_STOR_CD)  = ${SCH_STOR_CD}
+                )
+            )
+     GROUP  BY GM.COMP_CD, GM.GIFT_CD, GM.GIFT_NO, GS.SALE_DT
+     ORDER  BY GM.GIFT_CD, GM.GIFT_NO, GS.SALE_DT
+]]></query>
+
+</SQLResource>

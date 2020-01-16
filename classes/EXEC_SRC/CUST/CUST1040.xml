@@ -1,0 +1,241 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='MAIN_Q'><![CDATA[ 
+    SELECT  MS.COMP_CD
+         ,  MS.PROGRAM_ID
+         ,  MS.MBS_NO
+         ,  M.MBS_NM
+         ,  MS.CERT_NO
+         ,  SUBSTR(MS.CERT_NO, 1, 8)||'*****'||SUBSTR(MS.CERT_NO, 14, 2)        AS CERT_NO_DISP
+         ,  MS.MEMBER_NO
+         ,  MS.MBS_DIV
+         ,  MS.MBS_STAT
+         ,  MS.CHARGE_YN
+         ,  MS.CERT_FDT
+         ,  MS.CERT_TDT
+      FROM  CS_MEMBERSHIP_SALE   MS
+         ,  CS_MEMBERSHIP        M
+     WHERE  MS.COMP_CD      = M.COMP_CD(+)
+       AND  MS.PROGRAM_ID   = M.PROGRAM_ID(+)
+       AND  MS.MBS_NO       = M.MBS_NO(+)
+       AND  MS.COMP_CD      = ${SCH_COMP_CD}
+       AND  MS.MEMBER_NO    = ${SCH_MEMBER_NO}
+       AND  MS.USE_YN       = 'Y'
+       AND  (${SCH_BRAND_CD} IS NULL OR MS.SALE_BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_CD}  IS NULL OR MS.SALE_STOR_CD  = ${SCH_STOR_CD})
+     ORDER  BY MS.CERT_TDT  DESC
+         ,  MS.CERT_NO      DESC
+]]></query>
+
+<query name='MBS_Q'><![CDATA[ 
+    SELECT  MS.COMP_CD
+         ,  MS.PROGRAM_ID
+         ,  P.PROGRAM_NM
+         ,  MS.MBS_NO
+         ,  M.MBS_NM
+         ,  MS.CERT_NO
+         ,  SUBSTR(MS.CERT_NO, 1, 8)||'*****'||SUBSTR(MS.CERT_NO, 14, 2)        AS CERT_NO_DISP
+         ,  MS.MEMBER_NO
+         ,  MS.MOBILE
+         ,  MS.MBS_DIV
+         ,  MS.MBS_STAT
+         ,  MS.MBS_STAT             AS ORG_MBS_STAT
+         ,  MS.CHARGE_YN
+         ,  MS.CERT_FDT
+         ,  MS.CERT_TDT
+         ,  MS.SALE_DIV
+         ,  P.BASE_USE_TM
+         ,  MS.ENTR_PRC
+         ,  MS.SALE_AMT
+         ,  MS.DC_AMT
+         ,  MS.GRD_AMT
+         ,  MS.SALE_BRAND_CD
+         ,  MS.SALE_STOR_CD
+         ,  S.STOR_NM               AS SALE_STOR_NM
+         ,  MS.USE_DIV
+         ,  MS.OFFER_TM
+         ,  MS.USE_TM
+         ,  MS.OFFER_CNT
+         ,  MS.USE_CNT
+         ,  MS.OFFER_AMT
+         ,  MS.USE_AMT
+         ,  MS.OFFER_MCNT
+         ,  MS.USE_MCNT
+         ,  MS.REFUND_YN
+         ,  TO_CHAR(TO_DATE(MS.REFUND_REQ_DT , 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')    AS REFUND_REQ_DT
+         ,  TO_CHAR(TO_DATE(MS.REFUND_APPR_DT, 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')    AS REFUND_APPR_DT
+         ,  MS.REFUND_USER
+         ,  NVL(U.USER_NM, MS.REFUND_USER)                                                      AS REFUND_USER_NM
+         ,  TO_CHAR(TO_DATE(MS.REFUND_DT     , 'YYYYMMDDHH24MISS'), 'YYYY/MM/DD HH24:MI:SS')    AS REFUND_DT
+         ,  CASE WHEN MS.MBS_STAT= '92' THEN     -- 환불완료금액
+                      MS.REFUND_AMT             
+                 WHEN MS.MBS_DIV = '1' THEN      -- 시간권의 환불금액 계산
+                      CASE WHEN TRUNC(MS.GRD_AMT - (MS.ENTR_PRC * (MS.USE_TM / P.BASE_USE_TM)), -2) <= 0 THEN 0     -- 사용시간금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(MS.GRD_AMT - (MS.ENTR_PRC * (MS.USE_TM / P.BASE_USE_TM)), -2)                 -- 환불금액 10원단위 절삭
+                      END 
+                 WHEN MS.MBS_DIV = '2' THEN           -- 횟수권의 환불금액 계산
+                      CASE WHEN TRUNC(MS.GRD_AMT - (MS.ENTR_PRC * MS.USE_CNT), -2) <= 0 THEN 0                      -- 사용횟수금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(MS.GRD_AMT - (MS.ENTR_PRC * MS.USE_CNT), -2)                                  -- 환불금액 10원단위 절삭
+                      END 
+                 WHEN MS.MBS_DIV = '3' THEN           -- 금액권의 환불금액 계산
+                      CASE WHEN TRUNC(MS.GRD_AMT - MS.USE_AMT, -2) <= 0 THEN 0                                      -- 사용금액이 구매금액을 초과하는 경우 환불금액은 0
+                           ELSE TRUNC(MS.GRD_AMT - MS.USE_AMT, -2)                                                  -- 환불금액 10원단위 절삭
+                      END 
+                 ELSE 0                         
+            END                                                                                 AS REFUND_AMT       -- 환불금액
+      FROM  CS_MEMBERSHIP_SALE   MS
+         ,  CS_MEMBERSHIP        M
+         ,  (
+                SELECT  P.COMP_CD
+                     ,  P.PROGRAM_ID
+                     ,  NVL(L.LANG_NM, P.PROGRAM_NM)    AS PROGRAM_NM
+                     ,  P.BASE_USE_TM
+                  FROM  CS_PROGRAM      P
+                     ,  LANG_TABLE      L
+                 WHERE  L.COMP_CD(+)    = P.COMP_CD     
+                   AND  L.PK_COL(+)     = LPAD(P.PROGRAM_ID, 30, ' ')
+                   AND  P.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.TABLE_NM(+)   = 'CS_PROGRAM'
+                   AND  L.COL_NM(+)     = 'PROGRAM_NM'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )   P
+        ,   (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)       AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )   S
+         ,  (
+                SELECT  U.COMP_CD
+                     ,  U.USER_ID
+                     ,  U.USER_NM
+                  FROM  HQ_USER     U
+                 WHERE  U.COMP_CD       = ${SCH_COMP_CD}
+            )   U
+     WHERE  MS.COMP_CD      = M.COMP_CD(+)
+       AND  MS.PROGRAM_ID   = M.PROGRAM_ID(+)
+       AND  MS.MBS_NO       = M.MBS_NO(+)
+       AND  MS.COMP_CD      = P.COMP_CD(+)
+       AND  MS.PROGRAM_ID   = P.PROGRAM_ID(+)
+       AND  MS.COMP_CD      = S.COMP_CD(+)
+       AND  MS.SALE_BRAND_CD= S.BRAND_CD(+)
+       AND  MS.SALE_STOR_CD = S.STOR_CD(+)
+       AND  MS.COMP_CD      = U.COMP_CD(+)
+       AND  MS.REFUND_USER  = U.USER_ID(+)
+       AND  MS.COMP_CD      = ${SCH_COMP_CD}
+       AND  MS.PROGRAM_ID   = ${SCH_PROGRAM_ID}
+       AND  MS.MBS_NO       = ${SCH_MBS_NO}
+       AND  MS.CERT_NO      = ${SCH_CERT_NO}
+]]></query>
+
+<query name='HIS_Q'><![CDATA[ 
+    SELECT  HIS.COMP_CD
+         ,  HIS.SALE_BRAND_CD
+         ,  HIS.SALE_STOR_CD
+         ,  S.STOR_NM                                   AS SALE_STOR_NM
+         ,  NVL(EDT.ENTRY_DT, HIS.APPR_DT)              AS ENTRY_DT
+         ,  SUBSTR(EDT.ENTRY_FTM, 1, 4)                 AS ENTRY_FTM
+         ,  SUBSTR(EDT.ENTRY_TTM, 1, 4)                 AS ENTRY_TTM
+         ,  EDT.USE_TM + EDT.ADD_TM                     AS ENTRY_USE_TM
+         ,  HIS.PROGRAM_ID
+         ,  HIS.MBS_NO
+         ,  HIS.CERT_NO
+         ,  HIS.APPR_SEQ
+         ,  HIS.APPR_DT
+         ,  HIS.APPR_TM
+         ,  HIS.SALE_USE_DIV
+         ,  HIS.SALE_DIV
+         ,  HIS.CHILD_NO
+         ,  DECRYPT(NVL(EDT.ENTRY_NM, HIS.CHILD_NM))    AS CHILD_NM
+         ,  HIS.SEX_DIV
+         ,  HIS.AGES
+         ,  HIS.USE_TM
+         ,  HIS.USE_CNT
+         ,  HIS.USE_AMT
+         ,  HIS.USE_MCNT
+         ,  HIS.GRD_AMT
+         ,  HIS.REMARKS
+         ,  NVL(HU.USER_NM, HIS.UPD_USER)               AS UPD_USER
+      FROM  (
+                SELECT  HIS.COMP_CD
+                     ,  HIS.SALE_BRAND_CD
+                     ,  HIS.SALE_STOR_CD
+                     ,  HIS.PROGRAM_ID
+                     ,  HIS.MBS_NO
+                     ,  SUBSTR(HIS.CERT_NO, 1, 8)||'****'||SUBSTR(HIS.CERT_NO, 14, 2) AS CERT_NO
+                     ,  HIS.APPR_SEQ
+                     ,  HIS.APPR_DT
+                     ,  HIS.APPR_TM
+                     ,  HIS.SALE_USE_DIV
+                     ,  HIS.SALE_DIV
+                     ,  HIS.CHILD_NO
+                     ,  CHD.CHILD_NM
+                     ,  CHD.SEX_DIV
+                     ,  CHD.AGES
+                     ,  HIS.USE_TM
+                     ,  HIS.USE_CNT
+                     ,  HIS.USE_AMT
+                     ,  HIS.USE_MCNT
+                     ,  HIS.GRD_AMT
+                     ,  SDT.ENTRY_NO
+                     ,  SDT.ENTRY_SEQ
+                     ,  HIS.REMARKS
+                     ,  HIS.UPD_USER
+                  FROM  CS_MEMBERSHIP_SALE_HIS HIS
+                     ,  CS_MEMBER_CHILD        CHD
+                     ,  SALE_DT                SDT
+                 WHERE  HIS.COMP_CD      = CHD.COMP_CD  (+)
+                   AND  HIS.MEMBER_NO    = CHD.MEMBER_NO(+)
+                   AND  HIS.CHILD_NO     = CHD.CHILD_NO (+)
+                   AND  HIS.COMP_CD      = SDT.COMP_CD  (+)
+                   AND  HIS.APPR_DT      = SDT.SALE_DT  (+)
+                   AND  HIS.SALE_BRAND_CD= SDT.BRAND_CD (+) 
+                   AND  HIS.SALE_STOR_CD = SDT.STOR_CD  (+)
+                   AND  HIS.SALE_POS_NO  = SDT.POS_NO   (+)
+                   AND  HIS.SALE_BILL_NO = SDT.BILL_NO  (+)
+                   AND  HIS.SALE_SEQ     = SDT.SEQ      (+)
+                   AND  HIS.COMP_CD      = ${SCH_COMP_CD}
+                   AND  HIS.PROGRAM_ID   = ${SCH_PROGRAM_ID}
+                   AND  HIS.MBS_NO       = ${SCH_MBS_NO}
+                   AND  HIS.CERT_NO      = ${SCH_CERT_NO}
+            ) HIS
+         ,  CS_ENTRY_DT            EDT
+         ,  HQ_USER                HU
+         ,  STORE                   S
+     WHERE  HIS.COMP_CD      = EDT.COMP_CD  (+)
+       AND  HIS.ENTRY_NO     = EDT.ENTRY_NO (+)
+       AND  HIS.ENTRY_SEQ    = EDT.ENTRY_SEQ(+)
+       AND  HIS.COMP_CD      = HU.COMP_CD   (+)
+       AND  HIS.UPD_USER     = HU.USER_ID   (+)
+       AND  HIS.COMP_CD      = S.COMP_CD    (+)
+       AND  HIS.SALE_BRAND_CD= S.BRAND_CD   (+)
+       AND  HIS.SALE_STOR_CD = S.STOR_CD    (+)
+       AND  'Y'              = EDT.USE_YN   (+)
+     ORDER  BY HIS.APPR_DT
+         ,  HIS.APPR_TM
+         ,  EDT.ENTRY_NO
+         ,  EDT.ENTRY_SEQ
+]]></query>
+
+<query name='CS_MEMBERSHIP_SALE_U'><![CDATA[
+    UPDATE  CS_MEMBERSHIP_SALE 
+       SET  MBS_STAT    = ${MBS_STAT}
+         ,  CERT_TDT    = ${CERT_TDT}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  PROGRAM_ID  = ${PROGRAM_ID}
+       AND  MBS_NO      = ${MBS_NO}
+       AND  CERT_NO     = ${CERT_NO}
+]]></query>
+
+</SQLResource>

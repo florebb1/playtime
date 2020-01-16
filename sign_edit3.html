@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" type="text/css" href="/css/style.css">
+<!-- fontawesome -->
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<!-- nanumsquare -->
+<link rel="stylesheet" type="text/css" href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<!-- Bootstrap -->
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+<style>
+    body {
+        margin: 0px;
+        color: #000;
+    }
+    .text-left {
+        text-align:left;
+    }
+    input {
+        width: 100%;
+        height: 45px;
+        font-size: 13px;
+        border-radius: 10px;
+        border:1px solid #ddd;
+    }
+    select {
+        width: 100%;
+        height:45px;
+        font-size: 13px;
+        border-radius: 10px;
+        border:1px solid #ddd;
+        -webkit-appearance: none;
+        background-color: white;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAJCAYAAAA/33wPAAAAvklEQVQoFY2QMQqEMBBFv7ERa/EMXkGw11K8QbDXzuN4BHv7QO6ifUgj7v4UAdlVM8Uwf+b9YZJISnlqrfEUZVlinucnBGKaJgghbiHOyLyFKIoCbdvecpyReYvo/Ma2bajrGtbaC58kCdZ1RZ7nl/4/4d5EsO/7nzl7IUtodBexMMagaRrs+06JLMvcNWmaOv2W/C/TMAyD58dxROgSmvxFFMdxoOs6lliWBXEcuzokXRbRoJRyvqqqQvye+QDMDz1D6yuj9wAAAABJRU5ErkJggg==);
+        background-position : right center;
+        background-repeat: no-repeat;
+        padding-right: 1.5em;
+    }
+    .content  {
+        line-height: 30px;
+        text-align: center;
+        color: #000;
+        margin: 10rem 0;
+    }
+    .button {
+        height: 100%;
+        background-color: #808080;
+        border-color: #fff;
+        border-radius:10px;
+        color: #fff;
+        border: none;
+    }
+    .blank {
+        height: 20px;
+    }
+    .footer {
+        position:relative;
+        bottom:0;
+        height:90px;
+        width: 100%;
+        text-align: center;
+        background-color: #FFCA02;
+        border: none;
+        color: #fff;
+        font-size: 22px;
+    }
+    .active {
+        background-color:#FFCA02 !important;
+    }
+    .check {
+        color:#fff !important;
+    }
+    div.select_box {
+        position: relative;
+        height: 45px;
+        border: 1px solid #E9DDDD;
+        border-radius: 10px;
+    }
+    div.select_box label {
+        position: absolute;
+        color: #8e8e8e;
+        top: 13px;
+        left: 12px;
+        letter-spacing: 1px;
+    }
+    div.select_box select.color {
+        width: 100%;
+        height: 40px;
+        min-height: 40px;
+        line-height: 40px;
+        padding: 0 10px;
+        opacity: 0;
+    }
+    .swal-modal {
+        border-radius: 10px;
+        margin: 0 10px;
+        /* width: calc(100% - 100px) !important; */
+    }
+    .swal-title {
+        background-color: #FFCA02;
+        color: #FFF;
+        margin: 0px !important;
+        font-size: 18px;
+        margin-bottom: 0px;
+        padding-top: 15px;
+        border-top-right-radius: 10px;
+        border-top-left-radius: 10px;
+    }
+    .swal-text { 
+        background-color: #FFF;
+        padding-top: 17px;
+        display: block;
+        margin: 22px;
+        text-align: center;
+        color: #000;
+        font-size: 15px;
+    }
+    .swal-footer {
+        text-align: center;
+        color: #FFF;
+        background-color: #fff;
+    }
+    .swal-button:not([disabled]):hover {
+        background-color: #FFCA02;
+    }
+    .swal-button:not([disabled]):hover {
+        background-color: #FFCA02;
+    }
+    .swal-button:active {
+        background-color: #FFCA02;
+    }
+    .swal-button {
+        background-color: #FFCA02;
+        color: #fff;
+        border: none;
+        box-shadow: none;
+        border-radius: 5px;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 10px 24px;
+        margin: 0;
+        cursor: pointer;
+        width: 100px;
+        height: 40px;
+    }
+    .mandatory-input {
+        font-size: 12px;
+        color:#ff0000;
+        font-weight:normal;
+        margin-left:5px;
+        vertical-align:baseline;
+    }
+    .mandatory-input > img {
+        width:12px;
+        height:12px;
+        margin-right:3px;
+    }
+    .section-box-a {
+        border:1px solid rgba(0, 0, 0, 0.3);
+        padding:20px;
+        border-radius:10px;
+        margin-bottom:30px;
+        position: relative;
+    }
+    .section-box-a:after {
+        position: absolute;
+        top:-10px;
+        left:16px;
+        content:'수정하실 회원정보를 입력해주세요';
+        clear: both;
+        width:190px;
+        background-color:#ffffff;
+        height:20px;
+        color:#000;
+    }
+    .section-box-b {
+        border:1px solid rgba(0, 5, 255, 0.3);
+        padding:20px 0;
+        border-radius:10px;
+        position: relative;
+    }
+    .section-box-b:after {
+        position: absolute;
+        top:-10px;
+        left:16px;
+        content:'선택항목';
+        clear: both;
+        width:170px;
+        background-color:#ffffff;
+        height:20px;
+        color:#005fff;
+    }
+    /* 아이폰 5 & 5S 세로 ------ */
+    @media only screen and (min-device-width: 320px) and (max-device-height: 568px) and (-webkit-device-pixel-ratio: 2) {
+        input {
+            font-size: 10px !important;
+        }
+        .select_box > label {
+            font-size: 10px !important;
+        }
+        #wrap {
+            margin: 5px -15px !important;
+            min-width: 300px;
+        }
+    }
+    
+</style>
+</head>
+<body>
+    <div style="margin:0 8%;">
+        <!-- top space -->
+        <div style="text-align:right; margin: 3rem 0; font-size:25px;" onclick="location.href='/mypage.html';"><i class="fas fa-times" id="back"></i></div>
+
+            <!-- logo -->
+            <div style="text-align: center;">
+                <img src="/images/logo.png" style="width:160px;">
+            </div>
+            <!-- font -->
+            <div class="nsrB content" style="font-size:22px; margin: 3rem 0;">회원정보를<br>수정할 수 있습니다.</div>
+
+            <div class="section-box-a" style="margin: 3rem 0;">
+            
+                <form id="editForm" method="post" action="api/">
+                    <input type="hidden" name="USER_ID" value="MOBILE">
+                    <!-- 등록구분 -->
+                    <input type="hidden" id="REG_DIV" name="REG_DIV" value="U">
+                    <!-- 고객id -->
+                    <input type="hidden" id="CUST_ID" name="CUST_ID">
+                    <!-- 푸쉬 알림 -->
+                    <input type="hidden" name="PUSH_RCV_YN" value="Y">
+                    <!-- 이메일 수신 동의 -->
+                    <input type="hidden" name="EMAIL_RCV_YN" value="Y">
+                    <!-- 접속구분 -->
+                    <input type="hidden" name="LOGIN_DIV" value="A">
+                    <!-- 본인인증 DI정보 -->
+                    <input type="hidden" id="DI_STR" name="DI_STR">
+                    <!-- 사용자 성별 -->
+                    <input type="hidden" id="SEX_DIV" name="SEX_DIV">
+                    <!-- 사용자 생년월일 -->
+                    <input type="hidden" id="BIRTH_DT" name="BIRTH_DT">
+                    <!-- sms 수신 동의 -->
+                    <input type="hidden" name="SMS_RCV_YN" id="SMS_RCV_YN" value="N">
+                    <!-- 가입브랜드 코드 -->
+                    <input type="hidden" name="BRAND_CD" value="101">
+                    <!-- 가입매장 코드 -->
+                    <input type="hidden" name="STOR_CD" value="1019999">
+                    <!-- 아이디 조합 -->
+                    <input type="hidden" id="CUST_WEB_ID" name="CUST_WEB_ID">
+
+
+                    <label style="text-align:left; width: 100%; margin: 0 3%;">이름/성별</label>
+                    <div style="height:45px;">
+                        <div style="float:left; width:61%; height:100%;">
+                            <input class="nsR" style="color:#000; padding-left:10px; background-color:#f3f3f3;" type="text" id="CUST_NM" name="CUST_NM" readonly="readonly">
+                        </div>
+                        <div style="float:left; width:3%; height:100%;">
+                        </div>
+                        <div class="input-group" style="height:100%;">
+                            <div class="input-group-addon nsR sex1" style="border-top-left-radius:10px; border-bottom-left-radius:10px; background-color:#fff; font-size:13px;">남</div>
+                            <div class="input-group-addon nsR sex2" style="border-top-right-radius:10px; border-bottom-right-radius:10px; background-color:#fff; font-size:13px;">여</div>
+                        </div>
+                    </div>
+                    
+                    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%;">생년월일</label>
+                    <div style="height:45px;">
+                        <div style="float:left; width:40%; height:100%;">
+                            <input class="nsR year" style="text-align:center; background-color:#f3f3f3;" type="text" name="birthYear" readonly="readonly">
+                        </div>
+                        <div style="float:left; width:3%; height:100%;">
+                        </div>
+                        <div style="float:left; width:27%; height:100%;">
+                            <input class="nsR month" style="text-align:center; background-color:#f3f3f3;" type="text" name="birthMonth" readonly="readonly">
+                        </div>
+                        <div style="float:left; width:3%; height:100%;">
+                        </div>
+                        <div class="input-group" style="float:left; width:27%; height:100%; ">
+                            <input class="nsR day" style="text-align:center; background-color:#f3f3f3;" type="text" name="birthDay" readonly="readonly">
+                        </div>
+                    </div>
+                    
+                    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%;">휴대전화 번호</label>
+                    <input class="nsR" style="padding-left:10px; background-color:#f3f3f3;" type="text" id="MOBILE" name="MOBILE" readonly="readonly">
+                    
+                    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%;">이메일</label>
+                    <input class="nsR" style="padding-left:10px;" type="text" id="EMAIL" name="EMAIL" placeholder="e-mail 주소를 입력해 주세요.">
+                    
+                    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%;">우편번호/주소</label>
+                    <div style="height:45px;">
+                        <div style="float:left; width:36%; height:100%;">
+                            <input type="text" style="padding-left:10px; background-color: #f3f3f3;" id="ZIP_CD" name="ZIP_CD" placeholder="우편번호 찾기" readonly="readonly">
+                        </div>
+                        <div style="float:left; width:3%; height:100%;">
+                        </div>
+                        <div class="input-group" style="height:100%; width: 61%;">
+                            <input type="text" style="padding-left:10px; background-color: #f3f3f3;" id="ADDR1" name="ADDR1" readonly="readonly">
+                            <input id="SIDO_NM" type="hidden" name="SIDO_NM" value="">
+                            <input id="REGION_NM" type="hidden" name="REGION_NM" value="">
+                        </div>
+                    </div>
+
+                    <div id="wrap" style="display:none; border:1px solid;width:100%; height:466px;; margin:5px 0;position:relative;">
+                        <img src="//t1.daumcdn.net/postcode/resource/images/close.png" id="btnFoldWrap" style="cursor:pointer;position:absolute;right:0px;top:-1px;z-index:1" onclick="foldDaumPostcode()" alt="접기 버튼">
+                    </div>
+                    
+                    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%;">상세주소</label>
+                    <div>
+                        <input type="text" style="padding-left:10px;" id="ADDR2" name="ADDR2" placeholder="나머지 주소를 입력해 주세요.">
+                    </div>
+                    
+                    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%;">자녀수</label>
+                    <div>
+                        <input type="number" style="padding-left:10px;" id="CHILD_CNT" name="CHILD_CNT" placeholder="자녀수를 입력해주세요.">
+                    </div>
+                    
+                    <label style="text-align:left; width: 100%; margin:20px 3% 0 3%;">아이와의 관계</label>
+                    <div class="select_box nsR">
+                        <label for="color">자녀분과의 관계를 선택해주세요.</label>
+                        <select id="CHILD_REL_CD" name="CHILD_REL_CD" class="color" title="select color">
+                            <option value="" disabled>관계 선택</option>
+                        </select>
+                    </div>
+                    <input type="hidden" style="margin-top:20px; padding-left:10px;" id="CHILD_REL_NM" name="CHILD_REL_NM" placeholder="관계를 입력해주세요.">
+                </form>
+                
+            </div>
+        </div>
+    </div>
+
+    <button id="signUpBtn" type="button" class="footer nsrEB">수정완료</button>
+
+    
+    <!-- iOS에서는 position:fixed 버그가 있음, 적용하는 사이트에 맞게 position:absolute 등을 이용하여 top,left값 조정 필요 -->
+    <div id="layer" style="display:none; position:fixed; overflow:hidden; z-index:1; -webkit-overflow-scrolling:touch;">
+        <img src="//t1.daumcdn.net/localimg/localimages/07/postcode/320/close.png" id="btnCloseLayer" style="cursor:pointer;position:absolute;right:-3px;top:-3px;z-index:1" onclick="closeDaumPostcode()" alt="닫기 버튼">
+    </div>
+
+    <script src="//code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+    <script src="/js/sweetalert.min.js"></script>
+    <script src="//ssl.daumcdn.net/dmaps/map_js_init/postcode.v2.js"></script>
+    <script type="text/javascript" src="//jsgetip.appspot.com"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            // 이메일 정규표현식
+            var regExp = /^[\w\-]+@(?:(?:[\w\-]{2,}\.)+[a-zA-Z]{2,})$/;
+            // 비밀번호 정규표현식
+            var regPw = /^[A-Za-z0-9+]{8,16}$/; 
+            var CHILD_REL_CD = "";
+            // 쿠키정보
+            var user = getCookie('user');
+            $('#CUST_ID').val(user);
+            var webid = getCookie('web_id');
+            $('#CUST_WEB_ID').val(webid);
+                    
+                    
+            // 사용자 검색
+            var datas = $("#editForm").serialize();
+            $.ajax({
+                url : "/api/mbl_0500.jsp",
+                type : 'POST',
+                dataType : 'JSON',
+                data : datas,
+                success:function(response){
+                    if(response.RET_CD == "0001") {
+                        $('#CUST_NM').val(response.RESULT[0].CUST_NM);
+                        if(response.RESULT[0].SEX_DIV == 'M') {
+                            $('#SEX_DIV').val("M");
+                            $('.sex1').addClass('active');
+                        }else {
+                            $('#SEX_DIV').val("F");
+                            $('.sex2').addClass('active');  
+                        }
+                        var birth = response.RESULT[0].BIRTH_DT;
+                        var yyyy = birth.substr(0, 4);
+                        var mm = birth.substr(4, 2);
+                        var dd = birth.substr(6, 2);
+                        $('#BIRTH_DT').val(birth);
+                        $('input[name=birthYear]').val(yyyy);
+                        $('input[name=birthMonth]').val(mm);
+                        $('input[name=birthDay]').val(dd);
+                        $('#MOBILE').val(response.RESULT[0].MOBILE);
+                        $('#DI_STR').val(response.RESULT[0].DI_STR);
+                        $('#ZIP_CD').val(response.RESULT[0].ZIP_CD);
+                        $('#ADDR1').val(response.RESULT[0].ADDR1);
+                        $('#ADDR2').val(response.RESULT[0].ADDR2);
+                        $('#SIDO_NM').val(response.RESULT[0].SIDO_NM);
+                        $('#REGION_NM').val(response.RESULT[0].REGION_NM);
+                        $('#EMAIL').val(response.RESULT[0].EMAIL);
+                        $('#EMAIL_RCV_YN').val(response.RESULT[0].EMAIL_RCV_YN);
+                        $('#SMS_RCV_YN').val(response.RESULT[0].SMS_RCV_YN);
+                        $('#PUSH_RCV_YN').val(response.RESULT[0].PUSH_RCV_YN);
+                        $('#CHILD_CNT').val(response.RESULT[0].CHILD_CNT);
+                        $('#CHILD_REL_CD').val(response.RESULT[0].CHILD_REL_CD);
+                        $('#CHILD_REL_NM').val(response.RESULT[0].CHILD_REL_NM);
+                        if(response.RESULT[0].BRAND_CD != "") {
+                            $('#BRAND_CD').val(response.RESULT[0].BRAND_CD);
+                        }
+                        if(response.RESULT[0].STOR_CD !== undefined) {
+                            $('#STOR_CD').val(response.RESULT[0].STOR_CD);
+                        }
+                        var CHILD_REL_CD = response.RESULT[0].CHILD_REL_CD;
+                        
+                        $.ajax({
+                            url : "/api/mbl_0710.jsp",
+                            type : 'POST',
+                            dataType : 'JSON',
+                            success:function(response){
+                                if(response.RET_CD == "0001") {
+                                    var result = "";
+                                    for(var i = 0; i < response.RESULT.length; i++) {
+                                        if(CHILD_REL_CD == response.RESULT[i].CODE_CD){
+                                            var selected = "selected";
+                                        }else{
+                                            var selected = "";
+                                        }
+                                        result += "<option data-code='"+response.RESULT[i].CODE_CD+"' data-text='"+response.RESULT[i].CODE_NM+"' "+selected+">"
+                                            + response.RESULT[i].CODE_NM
+                                            + "</option>";
+                                    }
+                                    $("#relation").append(result);
+                                    $("#relation").trigger("change");
+                                }else {
+                                    swal({
+                                        button: "확인",
+                                        title: "안내",
+                                        text: response.RET_MSG,
+                                        closeOnClickOutside: false
+                                    });
+                                }
+                            }
+                        });        
+                    }else {
+                        swal({
+                            button: "확인",
+                            title: "안내",
+                            text: '계정정보를 가져오는데 실패하였습니다.'
+//                             closeOnClickOutside: false,
+                        }).then(function() {
+                            document.location.href = "/mypage.html";
+                        });
+
+                    }
+                }
+            });
+            
+            // 공통코드 api 조회
+            $.ajax({
+                url : "/api/mbl_0710.jsp",
+                type : 'POST',
+                dataType : 'JSON',
+                success:function(response){
+                    if(response.RET_CD == "0001") {                     
+                        var result = "";
+                        for(var i = 0; i < response.RESULT.length; i++) {
+                            result += "<option value='"+response.RESULT[i].CODE_CD+"' data-text='"+response.RESULT[i].CODE_NM+"'>"+response.RESULT[i].CODE_NM+"</option>";
+                        }
+                        $("#CHILD_REL_CD").append(result);
+                    }
+                }
+            });
+            
+            // 우번번호 검색 클릭
+            $("#ZIP_CD").click(function(){
+                if($("#wrap").css("display") == "none") {
+                    sample3_execDaumPostcode();
+                }
+            });
+            
+            
+            // 아이와의 관계 기타 toggle
+            $("#CHILD_REL_CD").change(function(){
+                var code = $(this).val();
+                var selected = $(this).find('option:selected');
+                var name = selected.data('text');
+                $(this).prev().text(name);
+                if(code == "99") {
+                    $("input[name=CHILD_REL_NM]").attr("type", "text");
+                    $("input[name=CHILD_REL_NM]").val("");
+                }else {
+                    $("input[name=CHILD_REL_NM]").attr("type", "hidden");
+                    $("input[name=CHILD_REL_NM]").val(name);
+                }
+            });
+            
+            // 수정 버튼 클릭
+            var able = true;
+            $("#signUpBtn").click(function(){    
+                var timestamp = new Date().getTime();
+                var email = $("#CUST_WEB_ID").val();            
+
+                //validation 추가
+                if($('#EMAIL').val() == "") {
+                    swal({
+                        button: "확인",
+                        title: "안내",
+                        text: '이메일 주소를 입력해 주세요.'
+//                         closeOnClickOutside: false
+                    })
+                    return false;
+                }else if(!regExp.test($('#EMAIL').val())) {
+                    swal({
+                        button: "확인",
+                        title: "안내",
+                        text: '잘못된 이메일형식의 주소입니다.'
+//                         closeOnClickOutside: false
+                    })
+                    return false;
+                }else if($("#ZIP_CD").val() == "") {
+                  swal({
+                    button: "확인",
+                    title: "안내",
+                    text: "우편번호를 입력해 주세요."
+//                     closeOnClickOutside: false
+                  });
+                  return false;
+                }else if($("#ADDR1").val() == "") {
+                  swal({
+                    button: "확인",
+                    title: "안내",
+                    text: "우편주소를 입력해 주세요."
+//                     closeOnClickOutside: false
+                  });
+                  return false;
+                }
+                
+                if(able == true) {
+                    var datas = $("#editForm").serialize();
+                    console.log(datas);
+                    able = false;
+                    $.ajax({
+                        url : "/api/mbl_0200.jsp",
+                        type : 'POST',
+                        dataType : 'JSON',
+                        data : datas,
+                        success:function(response){
+                            if(response.RET_CD == "0001") {
+                                document.location.href="/sign_up2-b.html?CUST_ID="+response.RESULT[0].CUST_ID+"&Classification=edit";
+                            }else {
+                                swal({
+                                    button: "확인",
+                                    title: "안내",
+                                    text: response.RET_MSG
+//                                     closeOnClickOutside: false
+                                }).then(function() {
+                                    able = true;
+                                    return false;
+                                });
+                            }
+                        }
+                    });           
+                }else {
+                    swal({
+                        button: "확인",
+                        title: "안내",
+                        text: '이미 처리중입니다.\n잠시후 다시 시도해주세요.'
+//                         closeOnClickOutside: false
+                    });
+                }
+            });
+            
+        });
+    </script>
+    <script type="text/javascript">
+        function setCookie(name, value, days) {
+          var d = new Date;
+          d.setTime(d.getTime() + 24*60*60*1000*days);
+          document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+        }
+        function getCookie(name) {
+          var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+          return v ? v[2] : null;
+        }
+        function numberWithCommas(x) {
+          return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        function getParameterByName(name) {
+          name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+          var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+          return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+        String.prototype.trim = function() {
+            return this.replace(/(^\s*)|(\s*$)/gi, "");
+        }
+        
+        
+        // 우편번호 찾기 찾기 화면을 넣을 element
+        var element_wrap = document.getElementById('wrap');
+    
+        function foldDaumPostcode() {
+            // iframe을 넣은 element를 안보이게 한다.
+            element_wrap.style.display = 'none';
+        }
+    
+        function sample3_execDaumPostcode() {
+            // 현재 scroll 위치를 저장해놓는다.
+            var currentScroll = Math.max(document.body.scrollTop, document.documentElement.scrollTop);
+            
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    // 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+    
+                    // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+                    // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+                    var addr = ''; // 주소 변수
+                    var extraAddr = ''; // 참고항목 변수
+    
+                    //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+                    if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                        addr = data.roadAddress;
+                    } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                        addr = data.jibunAddress;
+                    }
+    
+                    // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
+                    if(data.userSelectedType === 'R'){
+                        // 법정동명이 있을 경우 추가한다. (법정리는 제외)
+                        // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
+                        if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+                            extraAddr += data.bname;
+                        }
+                        // 건물명이 있고, 공동주택일 경우 추가한다.
+                        if(data.buildingName !== '' && data.apartment === 'Y'){
+                            extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                        }
+                        // 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
+                        if(extraAddr !== ''){
+                            extraAddr = ' (' + extraAddr + ')';
+                        }
+                        // 조합된 참고항목을 해당 필드에 넣는다.
+//                          document.getElementById("sample3_extraAddress").value = extraAddr;
+                    
+                    } else {
+//                          document.getElementById("sample3_extraAddress").value = '';
+                    }
+    
+                    // 우편번호와 주소 정보를 해당 필드에 넣는다.
+                    $("#SIDO_NM").val(data.sido);
+                    $("#REGION_NM").val(data.sigungu);
+                    $("#ZIP_CD").val(data.zonecode);
+                    $("#ADDR1").val(addr);
+                    // 커서를 상세주소 필드로 이동한다.
+                    $("#ADDR2").focus();
+    
+                    // iframe을 넣은 element를 안보이게 한다.
+                    // (autoClose:false 기능을 이용한다면, 아래 코드를 제거해야 화면에서 사라지지 않는다.)
+                    element_wrap.style.display = 'none';
+    
+                    // 우편번호 찾기 화면이 보이기 이전으로 scroll 위치를 되돌린다.
+                    document.body.scrollTop = currentScroll;
+                },
+                // 우편번호 찾기 화면 크기가 조정되었을때 실행할 코드를 작성하는 부분. iframe을 넣은 element의 높이값을 조정한다.
+                onresize : function(size) {
+                    element_wrap.style.height = size.height+'px';
+                },
+                width : '100%',
+                height : '100%'
+            }).embed(element_wrap);
+    
+            // iframe을 넣은 element를 보이게 한다.
+            element_wrap.style.display = 'block';
+        }
+
+    
+        function getDays(month,setday){
+          var html = "";
+          if(month == "02"){
+            for(var i =1;i<30;i++){
+              if(i < 10){
+                var day = "0"+i;
+              }else{
+                var day = i;
+              }
+              if(setday == day){
+                var selected = "selected";
+              }else{
+                var selected = "";
+              }
+              html += "<option value='"+i+"' "+selected+">"+i+"일</option>";
+            }
+          }else if(month == "01" || month == "03" || month == "05" || month == "07" || month == "08" || month == "10" || month == "12"){
+            for(var i =1;i<32;i++){
+              if(i < 10){
+                var day = "0"+i;
+              }else{
+                var day = i;
+              }
+              if(setday == day){
+                var selected = "selected";
+              }else{
+                var selected = "";
+              }
+              html += "<option value='"+day+"' "+selected+">"+i+"일</option>";
+            }
+          }else{
+            for(var i =1;i<31;i++){
+              if(i < 10){
+                var day = "0"+i;
+              }else{
+                var day = i;
+              }
+              if(setday == day){
+                var selected = "selected";
+              }else{
+                var selected = "";
+              }
+              html += "<option value='"+i+"' "+selected+">"+i+"일</option>";
+            }
+          }
+          return html;
+        }
+    </script>
+    <script src="/js/custom.js"></script>
+</body>
+</html>

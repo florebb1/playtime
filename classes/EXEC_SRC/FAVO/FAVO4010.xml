@@ -1,0 +1,490 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='BRAND_CLASS_Q'><![CDATA[ 
+    SELECT  S.BRAND_CLASS       AS CODE_CD
+         ,  MAX(C.CODE_NM)      AS CODE_NM
+      FROM  THE (
+                SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL
+            )   S
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON  C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '01845'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '01845'
+                   AND  C.USE_YN    = 'Y' 
+            )   C
+     WHERE  S.COMP_CD       = C.COMP_CD
+       AND  S.BRAND_CLASS   = C.CODE_CD
+     GROUP  BY  S.BRAND_CLASS
+     ORDER  BY  S.BRAND_CLASS
+]]></query>
+
+<!-- 브랜드 조회 -->
+<query name='BRAND_Q'><![CDATA[ 
+    SELECT  S.BRAND_CD          AS CODE_CD
+         ,  MAX(B.BRAND_NM)     AS CODE_NM
+      FROM  THE (
+                SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL
+            )   S
+         ,  (
+                SELECT  B.COMP_CD
+                     ,  B.BRAND_CD
+                     ,  B.BRAND_CLASS
+                     ,  NVL(L.LANG_NM, B.BRAND_NM)  AS BRAND_NM
+                  FROM  BRAND  B
+                     ,  (
+                            SELECT  *
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'BRAND'
+                               AND  COL_NM      = 'BRAND_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  B.COMP_CD                = L.COMP_CD(+)
+                   AND  LPAD(B.BRAND_CD, 4, ' ') = L.PK_COL(+)
+                   AND  B.COMP_CD   = ${SCH_COMP_CD}
+                   AND  B.USE_YN    = 'Y' 
+            )   B
+     WHERE  B.COMP_CD   = S.COMP_CD
+       AND  B.BRAND_CD  = S.BRAND_CD
+       @SCH_MUTI_BRAND_CLASS@
+     GROUP  BY S.BRAND_CD
+     ORDER  BY S.BRAND_CD
+]]></query>
+
+<!-- 직가맹 조회 -->
+<query name='STOR_TP_Q'><![CDATA[ 
+   SELECT   A1.CODE_CD                  AS CODE_CD
+      ,     NVL(B1.CODE_NM ,A1.CODE_NM) AS CODE_NM
+   FROM COMMON  A1
+      , (
+            SELECT   *
+            FROM LANG_COMMON
+            WHERE CODE_TP     = '00565'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) B1
+   WHERE A1.CODE_TP = B1.CODE_TP(+)
+     AND A1.CODE_CD = B1.CODE_CD(+)
+     AND A1.CODE_TP = '00565'
+     AND A1.COMP_CD = ${SCH_COMP_CD}
+     AND A1.USE_YN  = 'Y'
+     AND (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, A1.VAL_C1, 1) > 0)
+   ORDER BY A1.SORT_SEQ, A1.CODE_CD
+]]></query>
+
+<!-- 부서 조회 -->
+<query name='DEPT_Q'><![CDATA[ 
+   SELECT   A.DEPT_CD           AS CODE_CD
+      ,     MAX(B.DEPT_NM)      AS CODE_NM
+   FROM THE 
+        (
+            SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO )
+            FROM DUAL
+        ) A
+      , (
+            SELECT   A1.CODE_CD                    AS DEPT_CD
+               ,     NVL(B1.CODE_NM ,A1.CODE_NM)   AS DEPT_NM
+            FROM COMMON  A1
+               , (
+                     SELECT   *
+                     FROM LANG_COMMON
+                     WHERE CODE_TP     = '00600'
+                       AND LANGUAGE_TP = ${SCH_LANGUAGE}
+                       AND COMP_CD     = ${SCH_COMP_CD}
+                       AND USE_YN      = 'Y'
+                 ) B1
+            WHERE A1.CODE_TP = B1.CODE_TP(+)
+              AND A1.CODE_CD = B1.CODE_CD(+)
+              AND A1.CODE_TP = '00600'
+              AND A1.COMP_CD = ${SCH_COMP_CD}
+              AND A1.USE_YN  = 'Y' 
+        ) B
+     WHERE  A.DEPT_CD  = B.DEPT_CD
+       @SCH_MUTI_BRAND_CD@
+     GROUP BY  A.DEPT_CD
+     ORDER BY  A.DEPT_CD 
+]]></query>
+
+ <!-- 팀 조회 -->
+<query name='TEAM_Q'><![CDATA[ 
+   SELECT   A.TEAM_CD       AS CODE_CD
+      ,     MAX(B.TEAM_NM)  AS CODE_NM
+   FROM THE
+        (
+            SELECT   CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO)
+            FROM DUAL
+        ) A
+      , (
+            SELECT   A1.CODE_CD                    AS TEAM_CD
+               ,     NVL(B1.CODE_NM ,A1.CODE_NM)   AS TEAM_NM
+            FROM COMMON  A1
+               , (
+                     SELECT   *
+                     FROM LANG_COMMON
+                     WHERE CODE_TP     = '00605'
+                       AND LANGUAGE_TP = ${SCH_LANGUAGE}
+                       AND COMP_CD     = ${SCH_COMP_CD}
+                       AND USE_YN      = 'Y'
+                 ) B1
+            WHERE A1.CODE_TP = B1.CODE_TP(+)
+              AND A1.CODE_CD = B1.CODE_CD(+)
+              AND A1.CODE_TP = '00605'
+              AND A1.COMP_CD = ${SCH_COMP_CD}
+              AND A1.USE_YN  = 'Y'
+        ) B
+   WHERE A.TEAM_CD  = B.TEAM_CD
+     @SCH_MUTI_BRAND_CD@
+     @SCH_MUTI_DEPT_CD@
+   GROUP BY A.DEPT_CD, A.TEAM_CD
+   ORDER BY A.DEPT_CD, A.TEAM_CD
+]]></query>               
+               
+               
+ <!-- SV 조회 -->
+<query name='SV_USER_Q'><![CDATA[ 
+    SELECT  A.SV_USER_ID    AS CODE_CD
+         ,  MAX(B.USER_NM)  AS CODE_NM
+      FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+         ,  HQ_USER B
+     WHERE  A.SV_USER_ID    = B.USER_ID
+       AND  B.COMP_CD       = ${SCH_COMP_CD}
+       @SCH_MUTI_BRAND_CD@
+       @SCH_MUTI_DEPT_CD@
+       @SCH_MUTI_TEAM_CD@
+       AND  B.USE_YN        = 'Y'
+     GROUP  BY A.BRAND_CD, A.DEPT_CD, A.TEAM_CD, A.SV_USER_ID 
+     ORDER  BY A.BRAND_CD, A.DEPT_CD, A.TEAM_CD, A.SV_USER_ID
+]]></query>                             
+
+<!-- 시도 조회 -->
+<query name='SIDO_CD_Q'><![CDATA[ 
+    SELECT  R.COMP_CD
+         ,  R.NATION_CD
+         ,  R.CITY_CD
+         ,  R.REGION_CD                     AS CODE_CD
+         ,  NVL(L.LANG_NM, R.REGION_NM)     AS CODE_NM
+      FROM  REGION      R
+         ,  LANG_TABLE  L
+     WHERE  L.COMP_CD(+)    = R.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(R.NATION_CD, 3, ' ')||LPAD(R.CITY_CD, 3, ' ')||LPAD(R.REGION_CD, 6, ' ')
+       AND  R.COMP_CD       = ${SCH_COMP_CD}
+       AND  R.CITY_CD       = '000'
+       AND  R.USE_YN        = 'Y'
+       AND  L.TABLE_NM(+)   = 'REGION'
+       AND  L.COL_NM(+)     = 'REGION_NM'
+       AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+       AND  L.USE_YN(+)     = 'Y'
+     ORDER  BY R.REGION_CD
+]]></query>
+
+<!-- 지역 조회 -->
+<query name='REGION_CD_Q'><![CDATA[ 
+   SELECT   REGION_CD                                     AS CODE_CD
+      ,     DECODE(LANG_NM , NULL, REGION_NM , LANG_NM)   AS CODE_NM
+   FROM REGION
+      , (
+            SELECT   PK_COL
+               ,     LANG_NM
+            FROM LANG_TABLE
+            WHERE TABLE_NM    = 'REGION'
+              AND COL_NM      = 'REGION_NM'
+              AND LANGUAGE_TP = DECODE(${SCH_LANGUAGE}, NULL, ' ', ${SCH_LANGUAGE} )
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        )
+   WHERE NATION_CD||CITY_CD||REGION_CD = PK_COL(+)
+     AND USE_YN = 'Y'
+     AND NATION_CD = UPPER(DECODE(${SCH_NATION_CD}, NULL, ' ', ${SCH_NATION_CD} ))
+     AND COMP_CD   = ${SCH_COMP_CD}
+     @SCH_MUTI_SIDO_CD@
+   ORDER BY REGION_CD
+]]></query>
+
+<!-- 유통사 조회 -->
+<query name='DSTN_Q'><![CDATA[ 
+    SELECT  S.DSTN_COMP         AS CODE_CD
+         ,  MAX(D.STOR_NM)      AS CODE_NM
+      FROM  THE (
+                SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL
+            )   S
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE   S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  S.COMP_CD   = L.COMP_CD(+)
+                   AND  S.BRAND_CD  = L.BRAND_CD(+)
+                   AND  S.STOR_CD   = L.STOR_CD(+)
+                   AND  S.COMP_CD   = ${SCH_COMP_CD}
+                   AND  S.STOR_TP   = '40'
+                   AND  S.USE_YN    = 'Y' 
+            )   D
+     WHERE  S.COMP_CD   = D.COMP_CD
+       AND  S.DSTN_COMP = D.STOR_CD
+     GROUP  BY S.DSTN_COMP
+     ORDER  BY S.DSTN_COMP
+]]></query>
+
+<!-- 매장상태 조회 -->
+<query name='APP_DIV_Q'><![CDATA[ 
+   SELECT   A1.CODE_CD                  AS CODE_CD
+      ,     NVL(B1.CODE_NM ,A1.CODE_NM) AS CODE_NM
+   FROM COMMON  A1
+      , (
+            SELECT   *
+            FROM LANG_COMMON
+            WHERE CODE_TP     = '00650'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) B1
+   WHERE A1.CODE_TP = B1.CODE_TP(+)
+     AND A1.CODE_CD = B1.CODE_CD(+)
+     AND A1.CODE_TP = '00650'
+     AND A1.COMP_CD = ${SCH_COMP_CD}
+     AND A1.USE_YN  = 'Y'
+   ORDER BY A1.SORT_SEQ, A1.CODE_CD
+]]></query>
+
+<!-- 매장 조회 -->
+<query name='STOR_Q'><![CDATA[ 
+   SELECT   A.STOR_CD 
+      ,     B.STOR_NM
+      ,     A.STOR_TP
+      ,     A.SV_USER_ID
+      ,     HU.USER_NM      AS SV_USER_NM
+      ,     A.BRAND_CD
+   FROM THE
+        (
+            SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO )
+            FROM DUAL
+        ) A
+      , (
+            SELECT   S.BRAND_CD
+               ,     S.STOR_CD
+               ,     NVL(LS.STOR_NM, S.STOR_NM) AS STOR_NM
+               ,     S.DEPT_CD
+               ,     S.TEAM_CD
+               ,     S.SV_USER_ID
+               ,     S.DSTN_COMP
+               ,     S.STOR_TP
+               ,     S.TRAD_AREA
+               ,     S.SIDO_CD
+               ,     S.REGION_CD
+               ,     S.APP_DIV
+            FROM STORE  S
+               , COMMON C
+               , (
+                     SELECT   BRAND_CD
+                        ,     STOR_CD
+                        ,     STOR_NM
+                     FROM  LANG_STORE
+                     WHERE LANGUAGE_TP = ${SCH_LANGUAGE}
+                       AND COMP_CD     = ${SCH_COMP_CD}
+                       AND USE_YN      = 'Y'
+                 ) LS
+            WHERE S.COMP_CD  = C.COMP_CD
+              AND S.STOR_TP  = C.CODE_CD
+              AND S.BRAND_CD = LS.BRAND_CD(+)
+              AND S.STOR_CD  = LS.STOR_CD(+)
+              AND C.CODE_TP  = '00565'
+              AND S.COMP_CD  = ${SCH_COMP_CD}
+              AND S.USE_YN = 'Y'
+              AND (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+        ) B
+      , (
+            SELECT  H.COMP_CD
+                 ,  H.USER_ID
+                 ,  NVL(L.LANG_NM, H.USER_NM)   AS USER_NM
+              FROM  HQ_USER         H
+                 ,  LANG_TABLE      L
+             WHERE  L.COMP_CD(+)    = H.COMP_CD
+               AND  L.PK_COL(+)     = LPAD(H.USER_ID, 10, ' ')
+               AND  L.TABLE_NM(+)   = 'HQ_USER'
+               AND  L.COL_NM(+)     = 'USER_NM'
+               AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+               AND  L.USE_YN(+)     = 'Y'
+               AND  H.COMP_CD       = ${SCH_COMP_CD}
+        )   HU
+   WHERE A.BRAND_CD = B.BRAND_CD
+     AND A.STOR_CD  = B.STOR_CD
+     AND A.COMP_CD    = HU.COMP_CD(+)
+     AND A.SV_USER_ID = HU.USER_ID(+)
+     @SCH_MUTI_BRAND_CLASS@
+     @SCH_MUTI_BRAND_CD@
+     @SCH_MUTI_STOR_TP@
+     @SCH_MUTI_DEPT_CD@
+     @SCH_MUTI_TEAM_CD@
+     @SCH_MUTI_SV_USER_ID@
+     @SCH_MUTI_SIDO_CD@
+     @SCH_MUTI_REGION_CD@
+     @SCH_MUTI_DSTN_COMP@
+     @SCH_MUTI_APP_DIV@
+     AND (${SCH_STOR_TXT} IS NULL OR (A.STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%' OR B.STOR_NM LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+   ORDER BY A.STOR_CD
+]]></query>
+
+<!-- ================ 상품 조회==========================  -->
+<!-- 대분류 조회 -->
+<query name='L_CLASS_Q'><![CDATA[ 
+   SELECT   L_CLASS_CD                      AS CODE_CD
+      ,     NVL(B.LANG_NM, A.L_CLASS_NM)    AS CODE_NM
+   FROM ITEM_L_CLASS A
+      , (
+            SELECT   PK_COL
+               ,     LANG_NM
+            FROM  LANG_TABLE
+            WHERE TABLE_NM    = 'ITEM_L_CLASS'
+              AND COL_NM      = 'L_CLASS_NM'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) B
+   WHERE A.COMP_CD||A.ORG_CLASS_CD||A.L_CLASS_CD = B.PK_COL(+)
+     AND A.COMP_CD      = ${SCH_COMP_CD}
+     AND A.ORG_CLASS_CD = ${SCH_ORG_CLASS_CD}
+     AND A.USE_YN       = 'Y'
+   ORDER BY A.SORT_ORDER, A.L_CLASS_CD
+]]></query>    
+
+<!-- 중분류 조회 -->
+<query name='M_CLASS_Q'><![CDATA[ 
+   SELECT   M_CLASS_CD                      AS CODE_CD
+      ,     NVL(B.LANG_NM, A.M_CLASS_NM)    AS CODE_NM
+   FROM ITEM_M_CLASS A
+      , (
+            SELECT   PK_COL
+               ,     LANG_NM
+            FROM LANG_TABLE
+            WHERE TABLE_NM    = 'ITEM_M_CLASS'
+              AND COL_NM      = 'M_CLASS_NM'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) B
+   WHERE A.COMP_CD||A.ORG_CLASS_CD||A.L_CLASS_CD||A.M_CLASS_CD = B.PK_COL(+)
+     AND ORG_CLASS_CD = ${SCH_ORG_CLASS_CD}
+     AND COMP_CD      = ${SCH_COMP_CD}
+     @SCH_MUTI_L_CLASS_CD@
+     AND A.USE_YN = 'Y'
+   ORDER BY A.SORT_ORDER, A.L_CLASS_CD, A.M_CLASS_CD
+]]></query>    
+
+<!-- 소분류 조회 -->
+<query name='S_CLASS_Q'><![CDATA[ 
+   SELECT   S_CLASS_CD                      AS CODE_CD
+      ,     NVL(B.LANG_NM, A.S_CLASS_NM)    AS CODE_NM
+   FROM ITEM_S_CLASS A
+      , (
+            SELECT   PK_COL
+               ,     LANG_NM
+            FROM LANG_TABLE
+            WHERE TABLE_NM    = 'ITEM_S_CLASS'
+              AND COL_NM      = 'S_CLASS_NM'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) B
+   WHERE A.COMP_CD||A.ORG_CLASS_CD||A.L_CLASS_CD||A.M_CLASS_CD||A.S_CLASS_CD = B.PK_COL(+)
+     AND ORG_CLASS_CD = ${SCH_ORG_CLASS_CD}
+     AND COMP_CD      = ${SCH_COMP_CD}
+     @SCH_MUTI_L_CLASS_CD@
+     @SCH_MUTI_M_CLASS_CD@
+     AND A.USE_YN = 'Y'
+   ORDER BY A.SORT_ORDER, A.L_CLASS_CD, A.M_CLASS_CD, A.S_CLASS_CD
+]]></query>    
+
+<!-- 사용구분 조회 -->
+<query name='ORD_SALE_DIV_Q'><![CDATA[ 
+   SELECT   A1.CODE_CD                      AS CODE_CD
+      ,     NVL(B1.CODE_NM ,A1.CODE_NM)     AS CODE_NM
+   FROM COMMON  A1
+      , (
+            SELECT   *
+            FROM LANG_COMMON
+            WHERE CODE_TP     = '00045'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) B1
+   WHERE A1.COMP_CD = B1.COMP_CD(+)
+     AND A1.CODE_TP = B1.CODE_TP(+)
+     AND A1.CODE_CD = B1.CODE_CD(+)
+     AND A1.CODE_TP = '00045'
+     AND A1.COMP_CD = ${SCH_COMP_CD}
+     AND A1.USE_YN  = 'Y'
+   ORDER BY A1.SORT_SEQ, A1.CODE_CD
+]]></query>
+
+<!-- 상품 조회 -->
+<query name='ITEM_SRARCH_Q'><![CDATA[
+   SELECT   ITEM_CD
+      ,     ITEM_NM
+      ,     COST
+      ,     SALE_PRC
+   FROM (
+            SELECT   A.ITEM_CD
+               ,     NVL(L.ITEM_NM, A.ITEM_NM) AS ITEM_NM
+               ,     A.COST        -- 원가
+               ,     A.SALE_PRC    -- 매가
+            FROM ITEM A
+               , (
+                     SELECT   ITEM_CD   
+                        ,     ITEM_NM
+                     FROM  LANG_ITEM
+                     WHERE LANGUAGE_TP = ${SCH_LANGUAGE}
+                     AND   COMP_CD     = ${SCH_COMP_CD}   
+                     AND   USE_YN      = 'Y'
+                 ) L
+               , (
+                     SELECT   ITEM_CD
+                        ,     ITEM_FG
+                     FROM ITEM_FLAG
+                     WHERE COMP_CD = ${SCH_COMP_CD}
+                       AND ITEM_FG = '01'
+                       AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN START_DT AND END_DT 
+                       AND USE_YN = 'Y'
+                 ) IF
+            WHERE A.ITEM_CD = L.ITEM_CD(+)
+              AND A.ITEM_CD = IF.ITEM_CD(+)
+              AND A.COMP_CD = ${SCH_COMP_CD}
+              @SCH_MUTI_L_CLASS_CD@ 
+              @SCH_MUTI_M_CLASS_CD@ 
+              @SCH_MUTI_S_CLASS_CD@
+              @SCH_MUTI_ORD_SALE_DIV@
+              AND A.USE_YN = 'Y'
+        )
+   WHERE (${SCH_ITEM_TXT} IS NULL OR (ITEM_CD LIKE '%'|| ${SCH_ITEM_TXT} || '%' OR ITEM_NM LIKE '%'|| ${SCH_ITEM_TXT} || '%'))
+   ORDER BY ITEM_CD
+]]></query>
+   
+</SQLResource>
+

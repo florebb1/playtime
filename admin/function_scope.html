@@ -1,0 +1,74 @@
+<script>
+
+    // 전역변수
+    var person_1 = 'DAVID';
+    var person_2 = 'NICKI';
+    var person_3 = 'TAM';
+
+    //// # 예제 1
+    //// 함수 밖에서 선언한 변수를 호출하여 결과값으로 출력
+    // function getPerson(){
+    //     console.log(person_1);
+    // }
+    // getPerson();
+
+    //// # 예제 2
+    //// 함수안에 동일한 변수명을 선연하여 안과 밖에서의 호출 값이 다름
+    // function getPerson(){
+    //     var person_2 = 'TIM';
+    //     console.log('함수 안 : '+ person_2);
+    // }
+    // getPerson();
+    // console.log('함수 밖 : '+ person_2);
+
+    //// # 예제 3
+    //// 함수 안에서 전역 변수의 값을 변경하여 안과 밖에서의 호출 값이 같음
+    // function getPerson(){
+    //     person_3 = 'JACK';
+    //     console.log('함수 안 : '+person_3);
+    // }
+    // getPerson();
+    // console.log('함수 밖 : '+person_3);
+
+    //// # 결론
+    //console.log("전역변수는 여러 이유로 그 값이 변경 될 수 있다\n그래서 사용하지 않는게 좋다!");
+
+    //// # 불가피하게 전역변수를 사용해야 하는 경우 ..
+    //// # 객체를 전역변수로 만들고 객체의 속성으로 변수를 관리하는 방법을 사용
+    // MyHOBBY = {}
+    // MyHOBBY.sportTeacher = {
+    //     'soccer' : '손흥민',
+    //     'basketball' : '마이클조던',
+    //     'baseball' : '류현진'
+    // }
+    // function teachersParty() { 
+    //     return MyHOBBY.sportTeacher.soccer;
+    // }
+    // console.log(teachersParty());
+
+    //// # 자바스크립트는 함수에 대한 유효범위만을 제공!!
+    //// # 많은 언어들이 블록( 대체로 {, } )에 대한 유효범위를 제공하는 것과 다름
+    // for(var i = 0; i < 1; i++){
+    //     var name = 'LAON';
+    // }
+    // console.log(name);
+
+    //// # 자바에선 아래와 같은 방법으로 지역 번수 호출 시 오류!
+    // for(int i = 0; i < 10; i++){
+    //     String name = "egoing";
+    // }
+    // System.out.println(name);
+
+    //// # 정적 유효범위
+    //// # 함수가 선언된 시점에서의 유효 범위를 갖음 (static scoping, lexical scoping)
+    // var laidback = 'LAON';
+    // function company_1(){
+    //     var laidback = 'TAM';
+    //     company_2();
+    // }
+    // function company_2(){
+    //     console.log(laidback);
+    // }
+    // company_1();
+
+</script>

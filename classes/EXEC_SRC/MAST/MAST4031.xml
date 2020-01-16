@@ -1,0 +1,670 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='STORE_USER_Q'><![CDATA[   
+    SELECT  SU.COMP_CD
+         ,  SU.BRAND_CD
+         ,  SU.STOR_CD
+         ,  S.STOR_NM
+         ,  SU.USER_ID
+         ,  NVL(L.LANG_NM, SU.USER_NM) AS USER_NM
+         ,  SU.POS_PWD
+         ,  SU.WEB_PWD
+         ,  SU.MNG_CARD_ID
+         ,  SU.EMP_DIV
+         ,  CASE WHEN SU.EMP_DIV = '1' THEN 'Y' ELSE 'N' END AS STOR_MAN
+         ,  CASE WHEN SU.EMP_DIV = '2' THEN 'Y' ELSE 'N' END AS SUB_MAN
+         ,  SU.ROLE_DIV
+         ,  SU.POSITION_CD
+         ,  SU.WEB_AUTH_CD
+         ,  SU.ENTER_DT
+         ,  SU.START_DT
+         ,  SU.CLOSE_DT
+         ,  SU.RETIRE_DT
+         ,  SU.RETIRE_RSN
+         ,  SU.HYGIENE_EXPRIE_DT
+         ,  decrypt(SU.RESIDENT_NUM) AS RESIDENT_NUM
+         ,  SUBSTR(REPLACE(decrypt(SU.RESIDENT_NUM), '-', ''), 1, 6) AS RESIDENT_NUM1
+         ,  SUBSTR(REPLACE(decrypt(SU.RESIDENT_NUM), '-', ''), 7, 7) AS RESIDENT_NUM2
+         ,  SU.BANK_CD
+         ,  decrypt(SU.ACC_NO) AS ACC_NO
+         ,  SU.MOBILE_NO
+         ,  SU.E_MAIL
+         ,  SU.ZIP_CD
+         ,  SU.ADDR1
+         ,  SU.ADDR2
+         ,  SU.LANGUAGE_TP
+         ,  SU.LOGIN_DTM
+         ,  SU.USE_YN
+         ,  SU.NATION_CD
+         ,  SU.DISABLED_YN
+    FROM    STORE_USER  SU
+         , (
+            SELECT  S.COMP_CD
+                 ,  S.BRAND_CD
+                 ,  S.STOR_CD
+                 ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+            FROM    STORE       S
+                 ,  LANG_STORE  L
+            WHERE   S.COMP_CD       = L.COMP_CD(+)
+            AND     S.BRAND_CD      = L.BRAND_CD(+)
+            AND     S.STOR_CD       = L.STOR_CD(+)
+            AND     S.COMP_CD       = ${SCH_COMP_CD}
+            AND     L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+            AND     L.USE_YN(+)     = 'Y'
+            AND     S.STOR_TP       IN ('10', '20')
+           )           S
+         , (
+            SELECT  COMP_CD
+                 ,  PK_COL
+                 ,  LANG_NM
+            FROM    LANG_TABLE
+            WHERE   COMP_CD     = ${SCH_COMP_CD}
+            AND     TABLE_NM    = 'STORE_USER'
+            AND     COL_NM      = 'USER_NM'
+            AND     LANGUAGE_TP = ${SCH_LANG_TP}
+            AND     USE_YN      = 'Y'
+           )           L
+    WHERE   SU.COMP_CD      = S.COMP_CD
+    AND     SU.BRAND_CD     = S.BRAND_CD
+    AND     SU.STOR_CD      = S.STOR_CD
+    AND     L.COMP_CD(+)    = SU.COMP_CD
+    AND     L.PK_COL(+)     = LPAD(SU.BRAND_CD, 4, ' ')||LPAD(SU.STOR_CD, 10, ' ')||LPAD(SU.USER_ID, 10, ' ')
+    AND     SU.COMP_CD      = ${SCH_COMP_CD}
+    AND    (${SCH_BRAND_CD} IS NULL OR SU.BRAND_CD = ${SCH_BRAND_CD})
+    AND    (${SCH_STOR_CD}  IS NULL OR SU.STOR_CD  = ${SCH_STOR_CD})
+    AND    (${SCH_EMP_DIV}  IS NULL OR SU.EMP_DIV  = ${SCH_EMP_DIV})
+    AND    (${SCH_USE_YN}   IS NULL OR SU.USE_YN   = ${SCH_USE_YN})
+    AND    (${SCH_USER_TXT}   IS NULL OR ( USER_ID LIKE ${SCH_USER_TXT}||'%' OR USER_NM LIKE ${SCH_USER_TXT}||'%'))
+    ORDER  BY 
+            SU.STOR_CD, SU.USER_ID
+]]></query>
+
+<query name='STORE_USER_U'><![CDATA[
+    MERGE INTO STORE_USER
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  BRAND_CD        = ${BRAND_CD}
+           AND  STOR_CD         = ${STOR_CD}
+           AND  USER_ID         = ${USER_ID}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  USER_NM         = ${USER_NM}
+             ,  POS_PWD         = ${WEB_PWD}
+             ,  WEB_PWD         = ${WEB_PWD}
+             ,  MNG_CARD_ID     = ${MNG_CARD_ID}
+             ,  EMP_DIV         = ${EMP_DIV}
+             ,  ROLE_DIV        = ${ROLE_DIV}
+             ,  POSITION_CD     = ${POSITION_CD}
+             ,  WEB_AUTH_CD     = ${WEB_AUTH_CD}
+             ,  ENTER_DT        = ${ENTER_DT}
+             ,  RETIRE_DT       = ${RETIRE_DT}
+             ,  RETIRE_RSN      = ${RETIRE_RSN}
+             ,  HYGIENE_EXPRIE_DT= ${HYGIENE_EXPRIE_DT}
+             ,  START_DT        = ${START_DT}
+             ,  CLOSE_DT        = CASE WHEN ${USE_YN} = 'N' AND ${RETIRE_DT} IS NOT NULL AND ${CLOSE_DT} IS NULL THEN ${RETIRE_DT} ELSE ${CLOSE_DT} END
+             ,  E_MAIL          = ${E_MAIL}
+             ,  ZIP_CD          = ${ZIP_CD}
+             ,  ADDR1           = ${ADDR1}
+             ,  ADDR2           = ${ADDR2}
+             ,  RESIDENT_NUM    = encrypt(${RESIDENT_NUM})
+             ,  BANK_CD         = ${BANK_CD}
+             ,  ACC_NO          = encrypt(${ACC_NO})
+             ,  MOBILE_NO       = ${MOBILE_NO}
+             ,  LANGUAGE_TP     = ${LANGUAGE_TP}
+             ,  NATION_CD       = ${NATION_CD}
+             ,  DISABLED_YN     = ${DISABLED_YN}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  USER_ID
+             ,  USER_NM
+             ,  POS_PWD
+             ,  WEB_PWD
+             ,  MNG_CARD_ID
+             ,  EMP_DIV
+             ,  ROLE_DIV
+             ,  POSITION_CD
+             ,  WEB_AUTH_CD
+             ,  ENTER_DT
+             ,  RETIRE_DT
+             ,  RETIRE_RSN
+             ,  HYGIENE_EXPRIE_DT
+             ,  START_DT
+             ,  CLOSE_DT
+             ,  E_MAIL
+             ,  ZIP_CD
+             ,  ADDR1
+             ,  ADDR2
+             ,  RESIDENT_NUM
+             ,  BANK_CD
+             ,  ACC_NO
+             ,  MOBILE_NO
+             ,  LANGUAGE_TP
+             ,  POS_PWD_CHG_YN
+             ,  POS_PWD_CHG_DT
+             ,  WEB_PWD_CHG_YN
+             ,  WEB_PWD_CHG_DT
+             ,  NATION_CD
+             ,  DISABLED_YN
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (  
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  TO_CHAR(SYSDATE, 'YYMMDD')||TO_CHAR(SQ_STOR_USER_SEQ.NEXTVAL, 'FM0000')
+             ,  ${USER_NM}
+             ,  ${WEB_PWD}
+             ,  ${WEB_PWD}
+             ,  ${MNG_CARD_ID}
+             ,  ${EMP_DIV}
+             ,  ${ROLE_DIV}
+             ,  ${POSITION_CD}
+             ,  ${WEB_AUTH_CD}
+             ,  ${ENTER_DT}
+             ,  ${RETIRE_DT}
+             ,  ${RETIRE_RSN}
+             ,  ${HYGIENE_EXPRIE_DT}
+             ,  ${START_DT}
+             ,  ${CLOSE_DT}
+             ,  ${E_MAIL}
+             ,  ${ZIP_CD}
+             ,  ${ADDR1}
+             ,  ${ADDR2}
+             ,  encrypt(${RESIDENT_NUM})
+             ,  ${BANK_CD}
+             ,  encrypt(${ACC_NO})
+             ,  ${MOBILE_NO}
+             ,  ${LANGUAGE_TP}
+             ,  'N'
+             ,  SYSDATE
+             ,  'N'
+             ,  SYSDATE
+             ,  ${NATION_CD}
+             ,  ${DISABLED_YN}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='LANG_TABLE_U'><![CDATA[
+    MERGE INTO LANG_TABLE
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  TABLE_NM    = ${TABLE_NM}
+           AND  COL_NM      = ${COL_NM}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+           AND  PK_COL      = ${PK_COL}
+       )
+    WHEN MATCHED  THEN
+        UPDATE      
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER} 
+        )
+]]></query>
+
+<query name='STORE_INOUT_Q'><![CDATA[   
+    SELECT  P.COMP_CD
+         ,  P.USER_ID
+         ,  P.IN_BRAND_CD
+         ,  P.IN_STOR_CD
+         ,  S.STOR_NM
+         ,  P.START_DT
+         ,  P.CLOSE_DT
+         ,  P.APPR_YN
+         ,  P.USE_YN
+         ,  P.USE_YN AS USE_YN_NM
+    FROM    STORE_INOUT   P
+         ,  STORE         S
+    WHERE   S.COMP_CD   = P.COMP_CD
+    AND     S.BRAND_CD  = P.IN_BRAND_CD
+    AND     S.STOR_CD   = P.IN_STOR_CD
+    AND     P.COMP_CD   = ${SCH_COMP_CD}
+    AND     P.USER_ID   = ${SCH_USER_ID}
+    AND     P.USE_YN    = 'Y'
+    ORDER BY
+            P.COMP_CD
+         ,  P.USER_ID
+         ,  P.START_DT DESC
+]]></query>
+
+<query name='STORE_INOUT_D'><![CDATA[
+    MERGE INTO STORE_INOUT SI
+    USING  (
+            SELECT  COMP_CD
+                  , USER_ID
+                  , 0             AS DATA_DIV
+                  , MAX(START_DT) AS START_DT
+            FROM    STORE_INOUT
+            WHERE   COMP_CD     = ${COMP_CD}
+            AND     USER_ID     = ${USER_ID}
+            AND     START_DT    < ${START_DT}
+            AND     USE_YN      = 'Y'
+            GROUP BY
+                    COMP_CD
+                  , USER_ID
+            UNION ALL
+            SELECT  COMP_CD
+                  , USER_ID
+                  , 1             AS DATA_DIV
+                  , START_DT
+            FROM    STORE_INOUT
+            WHERE   COMP_CD     = ${COMP_CD}
+            AND     USER_ID     = ${USER_ID}
+            AND     START_DT    = ${START_DT}
+           ) W1
+    ON (
+                SI.COMP_CD     = W1.COMP_CD
+           AND  SI.USER_ID     = W1.USER_ID
+           AND  SI.START_DT    = W1.START_DT
+       )
+    WHEN MATCHED  THEN
+        UPDATE      
+           SET  SI.USE_YN      = CASE WHEN W1.DATA_DIV = 0 THEN SI.USE_YN  ELSE ${USE_YN}   END
+             ,  SI.CLOSE_DT    = CASE WHEN W1.DATA_DIV = 0 THEN '99991231' ELSE SI.CLOSE_DT END
+             ,  SI.UPD_DT      = SYSDATE
+             ,  SI.UPD_USER    = ${UPD_USER}
+]]></query>
+
+<query name='MOVE_STORE_Q'><![CDATA[
+    SELECT  BRAND_CD
+         ,  STOR_CD
+         ,  STOR_NM
+         ,  STOR_TP
+         ,  TEL_NO
+      FROM  (
+                SELECT  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                     ,  S.STOR_TP
+                     ,  S.TEL_NO
+                  FROM  STORE   S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        ) L
+                     ,  COMMON  C
+                 WHERE  S.COMP_CD   = L.COMP_CD(+)
+                   AND  S.BRAND_CD  = L.BRAND_CD(+)
+                   AND  S.STOR_CD   = L.STOR_CD(+)
+                   AND  S.COMP_CD   = C.COMP_CD
+                   AND  S.STOR_TP   = C.CODE_CD
+                   AND  S.COMP_CD   = ${COMP_CD}
+                   AND  C.CODE_TP   = '00565'
+                   AND  S.BRAND_CD  = ${SRC_BRAND_CD}
+                   AND  S.STOR_CD   <> ${SRC_STOR_CD}
+                   AND  S.USE_YN    = 'Y'
+                   AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+            )
+     WHERE  (${SCH_STOR_TXT} IS NULL OR (STOR_CD LIKE '%'||${SCH_STOR_TXT}||'%' OR STOR_NM LIKE '%'||${SCH_STOR_TXT}||'%'))
+     ORDER  BY STOR_CD
+]]></query>
+
+<query name='STORE_INOUT_OUT_Q'><![CDATA[
+WITH W1 AS
+   (
+    SELECT  ${SCH_COMP_CD}      AS COMP_CD
+          , ${SCH_OUT_BRAND_CD} AS OUT_BRAND_CD
+          , ${SCH_OUT_STOR_CD}  AS OUT_STOR_CD
+          , ${SCH_IN_BRAND_CD}  AS IN_BRAND_CD
+          , ${SCH_IN_STOR_CD}   AS IN_STOR_CD
+          , ${SCH_OUT_USER_ID}  AS OUT_USER_ID
+          , ${SCH_USER_ID}      AS USER_ID
+          , COUNT(*)            AS EXISTS_YN
+          , NVL(SUM(CASE WHEN START_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD') AND IN_STOR_CD = ${SCH_IN_STOR_CD} THEN 1 ELSE 0 END), 0) AS STOR_EQ_CNT
+    FROM    STORE_INOUT
+    WHERE   COMP_CD   = ${SCH_COMP_CD}
+    AND     USER_ID   = ${SCH_USER_ID}
+    AND     START_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+    AND     USE_YN    = 'Y'
+   )
+ , L1 AS (
+    SELECT  COMP_CD
+         ,  PK_COL
+         ,  LANG_NM
+    FROM    LANG_TABLE
+    WHERE   COMP_CD     = ${SCH_COMP_CD}
+    AND     TABLE_NM    = 'STORE_USER'
+    AND     COL_NM      = 'USER_NM'
+    AND     LANGUAGE_TP = ${SCH_LANG_TP}
+    AND     USE_YN      = 'Y'
+   )
+ , SL AS 
+  (
+    SELECT  COMP_CD
+         ,  BRAND_CD
+         ,  STOR_CD
+         ,  STOR_NM
+    FROM    LANG_STORE
+    WHERE   COMP_CD     = ${SCH_COMP_CD}
+    AND     LANGUAGE_TP = ${SCH_LANG_TP}
+    AND     USE_YN      = 'Y'
+   )
+    SELECT  W1.COMP_CD
+         ,  W1.USER_ID
+         ,  W1.OUT_BRAND_CD             AS OUT_BRAND_CD
+         ,  W1.OUT_STOR_CD              AS OUT_STOR_CD
+         ,  W1.OUT_USER_ID              AS OUT_USER_ID
+         ,  NVL(LO.LANG_NM, SU.USER_NM) AS OUT_USER_NM
+         ,  W1.IN_BRAND_CD              AS IN_BRAND_CD
+         ,  W1.IN_STOR_CD               AS IN_STOR_CD
+         ,  ST.STOR_NM                  AS IN_STOR_NM
+         ,  ST.STOR_TP                  AS IN_STOR_TP
+         ,  IO.IN_USER_ID               AS IN_USER_ID
+         ,  IO.START_DT
+         ,  IO.CLOSE_DT
+         ,  IO.INOUT_RSN
+         ,  IO.APPR_DT
+         ,  IO.APPR_YN
+    FROM    W1
+         ,  STORE_USER    SU
+         , (
+            SELECT  S1.COMP_CD
+                  , S1.BRAND_CD
+                  , S1.STOR_TP
+                  , S1.STOR_CD
+                  , NVL(S2.STOR_NM, S1.STOR_NM) AS STOR_NM
+            FROM    STORE S1
+                  , SL    S2
+            WHERE   S1.COMP_CD     = S2.COMP_CD    (+)
+            AND     S1.BRAND_CD    = S2.BRAND_CD   (+)
+            AND     S1.STOR_CD     = S2.STOR_CD    (+)
+            AND     S1.COMP_CD     = ${SCH_COMP_CD}
+            AND     S1.USE_YN      = 'Y'
+            AND     S1.STOR_TP    IN ('10', '20')
+           ) ST
+         ,  L1            LO
+         , (
+            SELECT  SI.COMP_CD
+                  , SI.USER_ID
+                  , SI.START_DT
+                  , SI.CLOSE_DT
+                  , SI.OUT_BRAND_CD
+                  , SI.OUT_STOR_CD
+                  , SI.OUT_USER_ID
+                  , SI.IN_BRAND_CD
+                  , SI.IN_STOR_CD
+                  , SI.IN_USER_ID
+                  , NVL(LI.LANG_NM, SU.USER_NM) AS IN_USER_NM
+                  , SI.INOUT_RSN
+                  , SI.APPR_YN
+                  , SI.APPR_DT
+            FROM    STORE_USER    SU
+                  , STORE_INOUT   SI
+                  , L1            LI
+            WHERE   SU.COMP_CD    = SI.COMP_CD
+            AND     SU.USER_ID    = SI.USER_ID
+            AND     LI.COMP_CD(+) = SI.COMP_CD
+            AND     LI.PK_COL(+)  = LPAD(SI.IN_BRAND_CD, 4, ' ')||LPAD(SI.IN_STOR_CD, 10, ' ')||LPAD(SI.IN_USER_ID, 10, ' ')
+            AND     SU.COMP_CD    = ${SCH_COMP_CD}
+            AND     SU.BRAND_CD   = ${SCH_OUT_BRAND_CD}
+            AND     SU.STOR_CD    = ${SCH_OUT_STOR_CD}
+            AND     SU.USER_ID    = ${SCH_USER_ID}
+            AND     SI.START_DT  >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+            AND     SI.USE_YN     = 'Y'
+           ) IO
+    WHERE   SU.COMP_CD      = W1.COMP_CD
+    AND     SU.BRAND_CD     = W1.OUT_BRAND_CD
+    AND     SU.STOR_CD      = W1.OUT_STOR_CD
+    AND     SU.USER_ID      = W1.OUT_USER_ID
+    AND     W1.COMP_CD      = ST.COMP_CD
+    AND     W1.OUT_BRAND_CD = ST.BRAND_CD
+    AND     W1.OUT_STOR_CD  = ST.STOR_CD
+    AND     LO.COMP_CD(+)   = W1.COMP_CD
+    AND     LO.PK_COL(+)    = LPAD(W1.OUT_BRAND_CD, 4, ' ')||LPAD(W1.OUT_STOR_CD, 10, ' ')||LPAD(W1.OUT_USER_ID, 10, ' ')
+    AND     W1.COMP_CD      = IO.COMP_CD(+)
+    AND     W1.USER_ID      = IO.USER_ID(+)
+    AND     W1.COMP_CD      = ${SCH_COMP_CD}
+    AND     W1.USER_ID      = ${SCH_USER_ID}
+    AND     1               = (
+                                CASE WHEN W1.EXISTS_YN   = 0 THEN 1
+                                     WHEN W1.STOR_EQ_CNT > 0 THEN 1
+                                     ELSE 0
+                                END
+                               )
+]]></query>
+
+<query name='STORE_INOUT_OUT_U'><![CDATA[
+    MERGE INTO STORE_INOUT SI
+    USING  (
+            SELECT  COMP_CD
+                  , USER_ID
+                  , 0               AS DATA_DIV
+                  , MAX(START_DT)   AS START_DT
+                  , TO_CHAR(TO_DATE(${START_DT}, 'YYYYMMDD') - 1, 'YYYYMMDD') CLOSE_DT
+            FROM    STORE_INOUT
+            WHERE   COMP_CD     = ${COMP_CD}
+            AND     USER_ID     = ${USER_ID}
+            AND     START_DT    < ${START_DT}
+            AND     USE_YN      = 'Y'
+            GROUP BY
+                    COMP_CD
+                  , USER_ID
+            UNION ALL
+            SELECT  ${COMP_CD}      AS COMP_CD
+                  , ${USER_ID}      AS USER_ID
+                  , 1               AS DATA_DIV
+                  , ${START_DT}     AS START_DT
+                  , '99991231'      AS CLOSE_DT
+            FROM    DUAL
+           ) W1
+    ON (
+                SI.COMP_CD  = W1.COMP_CD
+           AND  SI.USER_ID  = W1.USER_ID
+           AND  SI.START_DT = W1.START_DT
+       )
+    WHEN MATCHED  THEN
+        UPDATE      
+           SET  CLOSE_DT    = W1.CLOSE_DT
+             ,  INOUT_RSN   = ${INOUT_RSN}
+             ,  USE_YN      = 'Y'
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+       (
+        COMP_CD
+      , USER_ID
+      , START_DT
+      , CLOSE_DT
+      , OUT_BRAND_CD
+      , OUT_STOR_CD
+      , OUT_USER_ID
+      , IN_BRAND_CD
+      , IN_STOR_CD
+      , IN_USER_ID
+      , INOUT_RSN
+      , APPR_YN
+      , APPR_DT
+      , USE_YN
+      , INST_DT
+      , INST_USER
+      , UPD_DT
+      , UPD_USER
+       )
+        VALUES
+       (
+        W1.COMP_CD
+      , W1.USER_ID
+      , W1.START_DT
+      , W1.CLOSE_DT
+      , ${OUT_BRAND_CD}
+      , ${OUT_STOR_CD}
+      , ${OUT_USER_ID}
+      , ${IN_BRAND_CD}
+      , ${IN_STOR_CD}
+      , ${IN_USER_ID}
+      , ${INOUT_RSN}
+      , 'N'
+      , NULL
+      , 'Y'
+      , SYSDATE
+      , ${UPD_USER}
+      , SYSDATE
+      , ${UPD_USER} 
+       )
+]]></query>
+
+<query name='STORE_INOUT_IN_Q'><![CDATA[
+    WITH LZ AS
+   (
+    SELECT  COMP_CD
+         ,  PK_COL
+         ,  LANG_NM
+    FROM    LANG_TABLE
+    WHERE   COMP_CD     = ${SCH_COMP_CD}
+    AND     TABLE_NM    = 'STORE_USER'
+    AND     COL_NM      = 'USER_NM'
+    AND     LANGUAGE_TP = ${SCH_LANG_TP}
+    AND     USE_YN      = 'Y'
+   )
+ , SL AS 
+  (
+    SELECT  COMP_CD
+         ,  BRAND_CD
+         ,  STOR_CD
+         ,  STOR_NM
+    FROM    LANG_STORE
+    WHERE   COMP_CD     = ${SCH_COMP_CD}
+    AND     LANGUAGE_TP = ${SCH_LANG_TP}
+    AND     USE_YN      = 'Y'
+   )
+    SELECT  SI.COMP_CD
+         ,  SI.USER_ID
+         ,  NVL(L1.LANG_NM, SU.USER_NM) AS USER_NM
+         ,  SI.OUT_BRAND_CD             AS OUT_BRAND_CD
+         ,  SI.OUT_STOR_CD              AS OUT_STOR_CD
+         ,  ST.STOR_NM                  AS OUT_STOR_NM 
+         ,  SI.OUT_USER_ID              AS OUT_USER_ID
+         , (
+            SELECT  NVL(L2.LANG_NM, S2.USER_NM)
+            FROM    STORE_USER S2
+                  , LZ         L2
+            WHERE   L2.COMP_CD(+) = S2.COMP_CD
+            AND     L2.PK_COL(+)  = LPAD(S2.BRAND_CD, 4, ' ')||LPAD(S2.STOR_CD, 10, ' ')||LPAD(S2.USER_ID, 10, ' ')
+            AND     S2.COMP_CD    = SI.COMP_CD
+            AND     S2.BRAND_CD   = SI.OUT_BRAND_CD
+            AND     S2.USER_ID    = SI.OUT_USER_ID
+           )                            AS OUT_USER_NM 
+         ,  SI.IN_BRAND_CD              AS IN_BRAND_CD
+         ,  SI.IN_STOR_CD               AS IN_STOR_CD
+         ,  ST.STOR_NM                  AS IN_STOR_NM
+         ,  ST.STOR_TP                  AS IN_STOR_TP
+         ,  SI.IN_USER_ID               AS IN_USER_ID
+         , (
+            SELECT  NVL(L2.LANG_NM, S2.USER_NM)
+            FROM    STORE_USER S2
+                  , LZ         L2
+            WHERE   L2.COMP_CD(+) = S2.COMP_CD
+            AND     L2.PK_COL(+)  = LPAD(S2.BRAND_CD, 4, ' ')||LPAD(S2.STOR_CD, 10, ' ')||LPAD(S2.USER_ID, 10, ' ')
+            AND     S2.COMP_CD    = SI.COMP_CD
+            AND     S2.BRAND_CD   = SI.IN_BRAND_CD
+            AND     S2.USER_ID    = SI.IN_USER_ID
+           )                            AS IN_USER_NM
+         ,  SI.START_DT
+         ,  SI.CLOSE_DT
+         ,  SI.INOUT_RSN
+         ,  SI.APPR_DT
+         ,  SI.APPR_YN
+    FROM    STORE_INOUT SI
+         ,  STORE_USER  SU
+         ,  (
+            SELECT  S1.COMP_CD
+                  , S1.BRAND_CD
+                  , S1.STOR_TP
+                  , S1.STOR_CD
+                  , NVL(S2.STOR_NM, S1.STOR_NM) AS STOR_NM
+            FROM    STORE S1
+                  , SL    S2
+            WHERE   S1.COMP_CD     = S2.COMP_CD    (+)
+            AND     S1.BRAND_CD    = S2.BRAND_CD   (+)
+            AND     S1.STOR_CD     = S2.STOR_CD    (+)
+            AND     S1.COMP_CD     = ${SCH_COMP_CD}
+            AND     S1.USE_YN      = 'Y'
+            AND     S1.STOR_TP    IN ('10', '20')
+           )            ST
+         ,  LZ          L1
+    WHERE   SI.COMP_CD      = SU.COMP_CD
+    AND     SI.OUT_BRAND_CD = SU.BRAND_CD
+    AND     SI.OUT_STOR_CD  = SU.STOR_CD
+    AND     SI.USER_ID      = SU.USER_ID
+    AND     SI.COMP_CD      = ST.COMP_CD
+    AND     SI.OUT_BRAND_CD = ST.BRAND_CD
+    AND     SI.OUT_STOR_CD  = ST.STOR_CD
+    AND     L1.COMP_CD(+)   = SI.COMP_CD
+    AND     L1.PK_COL(+)    = LPAD(SI.OUT_BRAND_CD, 4, ' ')||LPAD(SI.OUT_STOR_CD, 10, ' ')||LPAD(SI.USER_ID, 10, ' ')
+    AND     SI.COMP_CD      = ${SCH_COMP_CD}
+    AND     SI.IN_BRAND_CD  = ${SCH_IN_BRAND_CD}
+    AND     SI.IN_STOR_CD   = ${SCH_IN_STOR_CD}
+    AND     SI.APPR_YN      = 'N'
+    AND     SI.USE_YN       = 'Y'
+]]></query>
+
+<query name='STORE_INOUT_IN_U'><![CDATA[
+    MERGE INTO STORE_INOUT SI
+    USING  DUAL
+    ON (
+                SI.COMP_CD  = ${COMP_CD}
+           AND  SI.USER_ID  = ${USER_ID}
+           AND  SI.START_DT = ${START_DT}
+       )
+    WHEN MATCHED  THEN
+        UPDATE      
+           SET  APPR_DT     = TO_CHAR(SYSDATE, 'YYYYMMDD')
+             ,  APPR_YN     = 'Y'
+             ,  IN_USER_ID  = ${IN_USER_ID}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+]]></query>
+
+</SQLResource>

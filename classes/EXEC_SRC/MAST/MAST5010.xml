@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='GIFT_MST_Q'><![CDATA[
+    SELECT  GCM.GIFT_CD
+         ,  NVL(L.LANG_NM, GCM.GIFT_NM) AS GIFT_NM
+         ,  GM.GIFT_NO
+         ,  GM.GIFT_STAT_CD
+         ,  C1.CODE_NM                  AS GIFT_STAT_NM
+         ,  GM.PRICE
+         ,  GM.STAMP_TAX
+         ,  GM.ISSUE_DT
+         ,  GM.EXP_DT
+         ,  GM.HS_SALE_DT
+         ,  GM.BRAND_CD
+         ,  BR.BRAND_NM
+         ,  GM.STOR_CD
+         ,  ST.STOR_NM
+    FROM    GIFT_MST        GM
+         ,  GIFT_CODE_MST   GCM
+         , (
+            SELECT  /*+ INDEX(LT PK_LANG_TABLE) */
+                    COMP_CD
+                 ,  PK_COL
+                 ,  LANG_NM
+            FROM    LANG_TABLE LT
+            WHERE   COMP_CD     = ${SCH_COMP_CD}
+            AND     TABLE_NM    = 'GIFT_CODE_MST'
+            AND     COL_NM      = 'GIFT_NM'
+            AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+            AND     USE_YN      = 'Y'
+           )           L
+         , (
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+            FROM    COMMON  C
+                 , (
+                    SELECT  COMP_CD
+                         ,  CODE_TP
+                         ,  CODE_CD
+                         ,  CODE_NM
+                    FROM    LANG_COMMON
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND  CODE_TP     = '00185'
+                    AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND  USE_YN      = 'Y'
+                   )       L
+            WHERE   C.COMP_CD = L.COMP_CD(+)
+            AND     C.CODE_TP = L.CODE_TP(+)
+            AND     C.CODE_CD = L.CODE_CD(+)
+            AND     C.COMP_CD = ${SCH_COMP_CD}
+            AND     C.CODE_TP = '00185'
+            AND     C.USE_YN  = 'Y'
+           )       C1
+         , (
+            SELECT  B.COMP_CD
+                  , B.BRAND_CD
+                  , NVL(LT.BRAND_NM,B.BRAND_NM) AS BRAND_NM
+            FROM    BRAND   B
+                  ,(
+                    SELECT  PK_COL     AS  BRAND_CD
+                          , LANG_NM    AS  BRAND_NM
+                    FROM    LANG_TABLE
+                    WHERE   TABLE_NM    = 'BRAND'
+                    AND   COL_NM      = 'BRAND_NM'
+                    AND   COMP_CD     = ${SCH_COMP_CD}
+                    AND   LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND   USE_YN      = 'Y'            
+                    ) LT
+            WHERE  LPAD(B.BRAND_CD,4,' ') = LT.BRAND_CD(+)
+           ) BR
+         , (
+            SELECT  S.COMP_CD
+                 ,  S.BRAND_CD
+                 ,  S.STOR_CD
+                 ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+            FROM    STORE   S
+                 , (
+                    SELECT  COMP_CD
+                         ,  BRAND_CD
+                         ,  STOR_CD
+                         ,  STOR_NM
+                    FROM    LANG_STORE
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   ) L
+            WHERE   S.COMP_CD   = L.COMP_CD(+)
+            AND     S.BRAND_CD  = L.BRAND_CD(+)
+            AND     S.STOR_CD   = L.STOR_CD(+)
+            AND     S.COMP_CD   = ${SCH_COMP_CD}
+           ) ST
+    WHERE   GM.COMP_CD      = GCM.COMP_CD
+    AND     GM.GIFT_CD      = GCM.GIFT_CD
+    AND     GM.COMP_CD      = C1.COMP_CD (+)
+    AND     GM.GIFT_STAT_CD = C1.CODE_CD (+)
+    AND     GM.COMP_CD      = BR.COMP_CD (+)
+    AND     GM.BRAND_CD     = BR.BRAND_CD(+)
+    AND     GM.COMP_CD      = ST.COMP_CD (+)
+    AND     GM.BRAND_CD     = ST.BRAND_CD(+)
+    AND     GM.STOR_CD      = ST.STOR_CD (+)
+    AND     L.COMP_CD(+)    = GCM.COMP_CD
+    AND     L.PK_COL(+)     = LPAD(GCM.GIFT_CD, 2, ' ')
+    AND     GM.COMP_CD      = ${SCH_COMP_CD}
+    AND     GM.ISSUE_DT    >= ${SCH_GFR_YM}||'01'
+    AND     GM.ISSUE_DT    <= ${SCH_GTO_YM}||'31'
+    AND     1 = (CASE WHEN ${SCH_BRAND_CD}  = '0000' AND GM.GIFT_STAT_CD IN ('10','12')      THEN 1
+                      WHEN ${SCH_BRAND_CD} != '0000' AND GM.GIFT_STAT_CD IN ('11','21','31') THEN 1
+                      ELSE 0 END)
+    AND    (${SCH_BRAND_CD}='0000' OR GM.BRAND_CD = ${SCH_BRAND_CD})
+    AND    (${SCH_STOR_CD} IS NULL OR GM.STOR_CD  = ${SCH_STOR_CD})
+    AND    (${SCH_GIFT_CD} IS NULL OR GM.GIFT_CD  = ${SCH_GIFT_CD})
+    AND    (${SCH_GIFT_NO} IS NULL OR GM.GIFT_NO LIKE '%'||${SCH_GIFT_NO}||'%')
+    AND    (${SCH_GIFT_STAT_CD} IS NULL OR GM.GIFT_STAT_CD = ${SCH_GIFT_STAT_CD})
+    ORDER BY 
+            GM.BRAND_CD
+         ,  GM.STOR_CD
+         ,  GCM.GIFT_CD
+         ,  GM.GIFT_NO
+]]></query>
+
+</SQLResource>

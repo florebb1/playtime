@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='STORE_GP_Q'><![CDATA[
+    SELECT  G.COMP_CD
+         ,  G.STOR_GP_ID
+         ,  G.STOR_GP_NM
+         ,  G.REMARK
+         ,  G.USE_YN
+         ,  NVL(U.USER_NM, G.UPD_USER)                  AS UPD_USER
+         ,  TO_CHAR(G.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')  AS UPD_DT
+      FROM  STORE_GP    G
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  USER_NM
+                  FROM  HQ_USER
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+            )   U
+     WHERE  G.COMP_CD   = U.COMP_CD(+)
+       AND  G.UPD_USER  = U.USER_ID(+)
+       AND  G.COMP_CD   = ${SCH_COMP_CD} 
+       AND  (${SCH_STOR_GP_TXT} IS NULL OR G.STOR_GP_ID  LIKE '%'||${SCH_STOR_GP_TXT}||'%' OR G.STOR_GP_NM  LIKE '%'||${SCH_STOR_GP_TXT}||'%')
+       AND  (${SCH_USE_YN}      IS NULL OR G.USE_YN      = ${SCH_USE_YN})
+     ORDER  BY G.STOR_GP_ID
+]]></query>
+
+<query name='STORE_GP_U'><![CDATA[
+    MERGE   INTO STORE_GP
+    USING   DUAL
+    ON ( 
+                COMP_CD         = ${COMP_CD}
+           AND  STOR_GP_ID      = ${STOR_GP_ID}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  STOR_GP_NM      =  ${STOR_GP_NM}
+             ,  REMARK          =  ${REMARK}
+             ,  USE_YN          =  ${USE_YN}
+             ,  UPD_DT          =  SYSDATE
+             ,  UPD_USER        =  ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  STOR_GP_ID
+             ,  STOR_GP_NM
+             ,  REMARK
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        )VALUES(
+                ${COMP_CD}
+             ,  (
+                    SELECT  TO_CHAR(SYSDATE, 'YY') || LPAD(NVL(MAX(TO_NUMBER(SUBSTR(STOR_GP_ID, 3, LENGTH(STOR_GP_ID)))) ,0) + 1, 3, '0')  AS STOR_GP_ID
+                      FROM  STORE_GP
+                     WHERE  COMP_CD                 = ${COMP_CD}
+                       AND  SUBSTR(STOR_GP_ID, 1, 2)= TO_CHAR(SYSDATE, 'YY')
+                )
+             ,  ${STOR_GP_NM}
+             ,  ${REMARK}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER} 
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='STORE_GP_IN_STORE_Q'><![CDATA[
+    SELECT  G.COMP_CD
+         ,  B.BRAND_CLASS
+         ,  G.STOR_GP_ID
+         ,  G.BRAND_CD
+         ,  S.STOR_TP
+         ,  G.STOR_CD
+         ,  S.STOR_NM
+         ,  G.USE_YN
+         ,  NVL(U.USER_NM, G.UPD_USER)                  AS UPD_USER
+         ,  TO_CHAR(G.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')  AS UPD_DT
+      FROM  STORE_GP_IN_STORE   G
+         ,  STORE               S
+         ,  BRAND               B
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  USER_NM
+                  FROM  HQ_USER
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+            )   U
+     WHERE  G.COMP_CD       = S.COMP_CD
+       AND  G.BRAND_CD      = S.BRAND_CD
+       AND  G.STOR_CD       = S.STOR_CD
+       AND  S.COMP_CD       = B.COMP_CD
+       AND  G.BRAND_CD      = B.BRAND_CD
+       AND  G.COMP_CD       = U.COMP_CD(+)
+       AND  G.UPD_USER      = U.USER_ID(+)
+       AND  G.COMP_CD       = ${SCH_COMP_CD} 
+       AND  G.STOR_GP_ID    = ${SCH_STOR_GP_ID}
+       AND  (${SCH_USE_YN} IS NULL OR G.USE_YN = ${SCH_USE_YN})
+     ORDER  BY G.COMP_CD, G.BRAND_CD, G.STOR_CD
+]]></query>
+
+<query name='STORE_GP_IN_STORE_U'><![CDATA[
+    MERGE   INTO STORE_GP_IN_STORE
+    USING   DUAL
+    ON ( 
+                COMP_CD         = ${COMP_CD}
+           AND  STOR_GP_ID      = ${STOR_GP_ID}
+           AND  BRAND_CD        = ${BRAND_CD}
+           AND  STOR_CD         = ${STOR_CD}    
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  USE_YN          =  ${USE_YN}
+             ,  UPD_DT          =  SYSDATE
+             ,  UPD_USER        =  ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  STOR_GP_ID
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${STOR_GP_ID}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER} 
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>

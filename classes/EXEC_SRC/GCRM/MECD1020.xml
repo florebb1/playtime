@@ -1,0 +1,253 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='CUST_CARD_CRG_HIS_Q'><![CDATA[ 
+    SELECT  CHANNEL
+         ,  CHANNEL_NM || ORG_CHANNEL_NM    AS CHANNEL_NM
+         ,  ORG_CHANNEL
+         ,  STOR_CD
+         ,  STOR_NM
+         ,  SUM(CRG_AMT)  AS CRG_AMT
+         ,  SUM(CNC_AMT)  AS CNC_AMT
+         ,  SUM(REF_AMT)  AS REF_AMT
+         ,  SUM(REF_FAIL_AMT)  AS REF_FAIL_AMT
+         ,  SUM(TRN_AMT)  AS TRN_AMT
+         ,  SUM(MOD_AMT)  AS MOD_AMT
+         ,  SUM(FG_TOT_AMT) AS FG_TOT_AMT
+         ,  SUM(CASH_AMT) AS CASH_AMT
+         ,  SUM(CASH_CNC_AMT) AS CASH_CNC_AMT
+         ,  SUM(CARD_AMT) AS CARD_AMT
+         ,  SUM(CARD_CNC_AMT) AS CARD_CNC_AMT
+         ,  SUM(MBIL_AMT) AS MBIL_AMT
+         ,  SUM(ACCT_AMT) AS ACCT_AMT
+         ,  SUM(ETC_AMT) AS ETC_AMT
+         ,  SUM(DC_AMT)   AS DC_AMT
+         ,  SUM(DIV_TOT_AMT)   AS DIV_TOT_AMT
+         ,  SUM(STAMP_TAX) AS STAMP_TAX
+    FROM   (
+            SELECT  CCH.CHANNEL
+                 ,  GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01755', CCH.CHANNEL, ${SCH_LANGUAGE_TP})||
+                    '['||GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01960', CCH.CRG_AUTO_DIV, ${SCH_LANGUAGE_TP})||']' AS CHANNEL_NM
+                 ,  CCH.ORG_CHANNEL
+                 ,  CASE WHEN CCH.CHANNEL ='9' THEN '('||GET_COMMON_CODE_NM(${SCH_COMP_CD}, '01755', CCH.ORG_CHANNEL, ${SCH_LANGUAGE_TP})||')'
+                         ELSE NULL
+                    END AS ORG_CHANNEL_NM
+                 ,  STO.STOR_CD
+                 ,  STO.STOR_NM
+                 ,  CASE WHEN CCH.CRG_FG  = '1' THEN CCH.CRG_AMT ELSE 0 END CRG_AMT
+                 ,  CASE WHEN CCH.CRG_FG  = '2' THEN CCH.CRG_AMT ELSE 0 END CNC_AMT
+                 ,  CASE WHEN CCH.CRG_FG  = '3' THEN CCH.CRG_AMT ELSE 0 END REF_AMT
+                 ,  CASE WHEN CCH.CRG_FG  = '4' THEN CCH.CRG_AMT ELSE 0 END TRN_AMT
+                 ,  CASE WHEN CCH.CRG_FG  = '5' THEN CCH.CRG_AMT ELSE 0 END REF_FAIL_AMT
+                 ,  CASE WHEN CCH.CRG_FG  = '9' THEN CCH.CRG_AMT ELSE 0 END MOD_AMT
+                 ,  CCH.CRG_AMT                                             FG_TOT_AMT
+                 ,  CASE WHEN CCH.CRG_DIV = '1' AND CCH.CRG_FG  = '1' THEN CCH.CRG_AMT - CCH.DC_AMT ELSE 0 END CASH_AMT
+                 ,  CASE WHEN CCH.CRG_DIV = '1' AND CCH.CRG_FG  = '2' THEN CCH.CRG_AMT - CCH.DC_AMT ELSE 0 END CASH_CNC_AMT
+                 ,  CASE WHEN CCH.CRG_DIV = '2' AND CCH.CRG_FG  = '1' THEN CCH.CRG_AMT - CCH.DC_AMT ELSE 0 END CARD_AMT
+                 ,  CASE WHEN CCH.CRG_DIV = '2' AND CCH.CRG_FG  = '2' THEN CCH.CRG_AMT - CCH.DC_AMT ELSE 0 END CARD_CNC_AMT
+                 ,  CASE WHEN CCH.CRG_DIV = '3' THEN CCH.CRG_AMT - CCH.DC_AMT ELSE 0 END MBIL_AMT
+                 ,  CASE WHEN CCH.CRG_DIV = '4' THEN CCH.CRG_AMT - CCH.DC_AMT ELSE 0 END ACCT_AMT
+                 ,  CASE WHEN CCH.CRG_DIV = '9' THEN CCH.CRG_AMT - CCH.DC_AMT ELSE 0 END ETC_AMT
+                 ,  CCH.DC_AMT                                                           DC_AMT
+                 ,  CCH.CRG_AMT                                                          DIV_TOT_AMT
+                 ,  CCH.STAMP_TAX
+            FROM    C_CARD_CHARGE_HIS CCH
+                 ,  STORE             STO
+            WHERE   CCH.COMP_CD  = STO.COMP_CD (+)
+            AND     CCH.BRAND_CD = STO.BRAND_CD(+)
+            AND     CCH.STOR_CD  = STO.STOR_CD (+)
+            AND     CCH.COMP_CD  = ${SCH_COMP_CD}
+            AND     CCH.CRG_DT  >= ${SCH_FR_DT}
+            AND     CCH.CRG_DT  <= ${SCH_TO_DT}
+            AND     CCH.CRG_DIV  = NVL(${SCH_CRG_DIV}, CCH.CRG_DIV)
+            AND     CCH.CRG_SCOPE IN ('1','3')
+            @SCH_CHANNEL_MULTI_LIST@
+            AND    (${SCH_BRAND_CD} IS NULL OR CCH.BRAND_CD     = ${SCH_BRAND_CD})
+            AND    (${SCH_STOR_CD}  IS NULL OR CCH.STOR_CD      = ${SCH_STOR_CD})
+            AND    (${SCH_CRG_SCP}  IS NULL OR NVL(CCH.CRG_SCOPE   , '1') = ${SCH_CRG_SCP} )
+            AND    (${SCH_AUTO_DIV} IS NULL OR NVL(CCH.CRG_AUTO_DIV, '1') = ${SCH_AUTO_DIV})
+           ) V01
+    GROUP BY
+            CHANNEL
+         ,  CHANNEL_NM || ORG_CHANNEL_NM
+         ,  ORG_CHANNEL
+         ,  STOR_CD
+         ,  STOR_NM
+    ORDER BY 
+            CHANNEL
+         ,  STOR_CD
+]]></query>
+
+<query name='CUST_CARD_CRG_HIS_DTL_Q'><![CDATA[ 
+    SELECT  CCH.CRG_DT
+         ,  CCH.CHANNEL
+         ,  C01.CODE_NM AS CHANNEL_NM
+         ,  STO.STOR_CD
+         ,  STO.STOR_NM
+         ,  CCH.CRG_FG
+         ,  CCT.CARD_DIV
+         ,  C04.CODE_NM AS CARD_DIV_NM
+         ,  decrypt(CCH.CARD_ID) AS CARD_ID
+         ,  V01.CUST_ID
+         ,  decrypt(V01.CUST_NM) AS CUST_NM
+         ,  C02.CODE_NM AS CRG_FG_NM
+         ,  CCH.CRG_DIV
+         ,  C03.CODE_NM AS CRG_DIV_NM
+         ,  CCH.CRG_AMT CRG_AMT
+         ,  CCH.STAMP_TAX
+         ,  CCH.REMARKS
+         ,  CCH.APPR_NO
+         ,  CCH.APPR_DT
+         ,  CCH.APPR_TM
+         ,  CCH.POS_NO
+    FROM    C_CARD_TYPE       CCT
+         ,  C_CARD_CHARGE_HIS CCH
+         , (
+            SELECT  CRD.COMP_CD
+                 ,  CRD.CARD_ID
+                 ,  CRD.CUST_ID
+                 ,  CST.CUST_NM
+                 , (
+                    SELECT  CTR.CARD_TYPE
+                    FROM    C_CARD_TYPE_REP   CTR
+                    WHERE   CTR.COMP_CD = CRD.COMP_CD
+                    AND     DECRYPT(CRD.CARD_ID) BETWEEN DECRYPT(CTR.START_CARD_CD) AND DECRYPT(CTR.CLOSE_CARD_CD)
+                    AND     ROWNUM = 1 
+                   ) CARD_TYPE
+            FROM    C_CARD            CRD
+                 ,  C_CUST            CST
+            WHERE   CRD.COMP_CD = CST.COMP_CD (+)
+            AND     CRD.CUST_ID = CST.CUST_ID (+)
+           ) V01
+         ,  STORE             STO
+         , (
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+            FROM    COMMON C
+                 , ( 
+                    SELECT  COMP_CD
+                         ,  CODE_CD
+                         ,  CODE_NM
+                    FROM    LANG_COMMON
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     CODE_TP     = '01755'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   ) L
+             WHERE  C.COMP_CD = L.COMP_CD(+)
+               AND  C.CODE_CD = L.CODE_CD(+)
+               AND  C.COMP_CD = ${SCH_COMP_CD}
+               AND  C.CODE_TP = '01755'
+               AND  C.USE_YN  = 'Y'
+           ) C01
+         , (
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+            FROM    COMMON C
+                 , ( 
+                    SELECT  COMP_CD
+                         ,  CODE_CD
+                         ,  CODE_NM
+                    FROM    LANG_COMMON
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     CODE_TP     = '01735'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   ) L
+             WHERE  C.COMP_CD = L.COMP_CD(+)
+               AND  C.CODE_CD = L.CODE_CD(+)
+               AND  C.COMP_CD = ${SCH_COMP_CD}
+               AND  C.CODE_TP = '01735'
+               AND  C.USE_YN  = 'Y'
+           ) C02
+         , (
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+            FROM    COMMON C
+                 , ( 
+                    SELECT  COMP_CD
+                         ,  CODE_CD
+                         ,  CODE_NM
+                    FROM    LANG_COMMON
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     CODE_TP     = '01745'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   ) L
+             WHERE  C.COMP_CD = L.COMP_CD(+)
+               AND  C.CODE_CD = L.CODE_CD(+)
+               AND  C.COMP_CD = ${SCH_COMP_CD}
+               AND  C.CODE_TP = '01745'
+               AND  C.USE_YN  = 'Y'
+           ) C03
+         , (
+            SELECT  C.COMP_CD
+                 ,  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+            FROM    COMMON C
+                 , ( 
+                    SELECT  COMP_CD
+                         ,  CODE_CD
+                         ,  CODE_NM
+                    FROM    LANG_COMMON
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     CODE_TP     = '01950'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   ) L
+             WHERE  C.COMP_CD = L.COMP_CD(+)
+               AND  C.CODE_CD = L.CODE_CD(+)
+               AND  C.COMP_CD = ${SCH_COMP_CD}
+               AND  C.CODE_TP = '01950'
+               AND  C.USE_YN  = 'Y'
+           ) C04
+    WHERE   CCH.COMP_CD  = V01.COMP_CD
+    AND     CCH.CARD_ID  = V01.CARD_ID
+    AND     V01.COMP_CD  = CCT.COMP_CD
+    AND     V01.CARD_TYPE= CCT.CARD_TYPE
+    AND     CCH.COMP_CD  = STO.COMP_CD (+)
+    AND     CCH.BRAND_CD = STO.BRAND_CD(+)
+    AND     CCH.STOR_CD  = STO.STOR_CD (+)
+    AND     CCH.COMP_CD  = C01.COMP_CD (+)
+    AND     CCH.CHANNEL  = C01.CODE_CD (+)
+    AND     CCH.COMP_CD  = C02.COMP_CD (+)
+    AND     CCH.CRG_FG   = C02.CODE_CD (+)
+    AND     CCH.COMP_CD  = C03.COMP_CD (+)
+    AND     CCH.CRG_DIV  = C03.CODE_CD (+)
+    AND     CCT.COMP_CD  = C04.COMP_CD (+)
+    AND     CCT.CARD_DIV = C04.CODE_CD (+)
+    AND     CCH.COMP_CD  = ${SCH_COMP_CD}
+    AND     CCH.CRG_DT  >= ${SCH_FR_DT}
+    AND     CCH.CRG_DT  <= ${SCH_TO_DT}
+    AND     CCH.CRG_SCOPE IN ('1', '3')
+    AND     CCH.CHANNEL  = NVL(${SCH_CHANNEL}, CCH.CHANNEL)
+    AND     CCH.CRG_DIV  = NVL(${SCH_CRG_DIV}, CCH.CRG_DIV)
+    AND    (${SCH_STOR_CD}  IS NULL OR CCH.STOR_CD      = ${SCH_STOR_CD})
+    AND    (${SCH_CRG_SCP}  IS NULL OR CCH.CRG_SCOPE    = ${SCH_CRG_SCP})
+    AND    (${SCH_AUTO_DIV} IS NULL OR CCH.CRG_AUTO_DIV = ${SCH_AUTO_DIV})
+    ORDER BY 
+            CCH.CRG_DT
+         ,  CCH.CHANNEL
+         ,  CCH.STOR_CD
+         ,  decrypt(CCH.CARD_ID)
+         ,  CCH.CRG_SEQ
+]]></query>
+
+<query name='SEARCH_CHANNEL_Q'><![CDATA[ 
+   SELECT   A.CODE_CD
+      ,     '['||A.CODE_CD||'] '||NVL(B.CODE_NM, A.CODE_NM) AS CODE_NM
+   FROM COMMON      A
+      , LANG_COMMON B
+   WHERE A.COMP_CD = B.COMP_CD(+)
+     AND A.CODE_TP = B.CODE_TP(+)
+     AND A.CODE_CD = B.CODE_CD(+)
+     AND A.COMP_CD = ${SCH_COMP_CD}
+     AND ${SCH_LANGUAGE_TP} = B.LANGUAGE_TP(+)
+     AND A.CODE_TP = '01755'
+     AND A.USE_YN = 'Y'
+   ORDER BY A.CODE_CD DESC
+]]></query>
+
+</SQLResource>

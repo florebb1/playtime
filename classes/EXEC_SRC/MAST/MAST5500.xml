@@ -1,0 +1,638 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!-- Mix & Match용 할인마스터 조회 -->
+<query name='DC_Q'><![CDATA[
+    SELECT  D.COMP_CD
+         ,  D.BRAND_CD
+         ,  D.DC_DIV
+         ,  D.DC_NM
+         ,  L.LANG_NM
+         ,  D.DC_FDATE
+         ,  D.DC_TDATE
+         ,  DECODE(D.DML_FLAG, 'D', 0, 1)   AS USE_YN
+      FROM  DC      D
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'DC'
+                   AND  COL_NM      = 'DC_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )       L
+     WHERE  L.COMP_CD(+) = D.COMP_CD
+       AND  L.PK_COL(+)  = LPAD(D.BRAND_CD, 4, ' ')||LPAD(D.DC_DIV, 5, ' ')
+       AND  D.COMP_CD    = ${SCH_COMP_CD}
+       AND  D.BRAND_CD   = ${SCH_BRAND_CD}
+       AND  D.MM_APPLY_YN = 'Y'
+       @SCH_USE_YN_COND@
+     ORDER  BY D.ORD_RANK, D.DC_DIV
+]]></query>
+
+<!-- 할인코드 조회 -->
+<query name='DC_DIV_Q'><![CDATA[
+    SELECT  NVL(MAX(TO_NUMBER(DC_DIV)),0) + 1   AS DC_DIV
+      FROM  DC
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+]]></query>
+
+<!-- Mix & Match용 할인마스터 저장 -->
+<query name='DC_MST_U'><![CDATA[
+    MERGE INTO DC
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  DC_DIV      = ${DC_DIV}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  DC_NM       = ${DC_NM}
+             ,  DML_FLAG    = DECODE(${USE_YN}, 'Y', 'U', 'D')
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  BRAND_CD
+             ,  DC_DIV
+             ,  DC_NM
+             ,  DC_POSNM
+             ,  DC_GRPCD
+             ,  DC_FG
+             ,  DC_VALUE
+             ,  INPUT_YN
+             ,  DC_FDATE
+             ,  DC_TDATE
+             ,  ORD_RANK
+             ,  POS_DISP_YN
+             ,  MEMB_DC_FG
+             ,  DML_FLAG
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER
+             ,  CERT_FG
+             ,  DC_CLASS
+             ,  DC_WD_FG
+             ,  MM_APPLY_YN 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${DC_DIV}
+             ,  ${DC_NM}
+             ,  ${DC_NM}
+             ,  'ETC'
+             ,  '1'
+             ,  0
+             ,  'N'
+             ,  TO_CHAR(SYSDATE, 'YYYYMMDD')
+             ,  '20991231'
+             ,  999
+             ,  'N'
+             ,  '00'
+             ,  DECODE(${USE_YN}, 'Y', 'I', 'D')
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  '0'
+             ,  '1'
+             ,  '0'
+             ,  'Y'
+        )
+]]></query>
+
+<query name='LANG_TABLE_U'><![CDATA[
+    MERGE INTO LANG_TABLE
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  TABLE_NM    = ${TABLE_NM}
+           AND  COL_NM      = ${COL_NM}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+           AND  PK_COL      = ${PK_COL}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<!-- Mix & Match 조합Rule 조회 -->
+<query name='SET_GRP_RULE_Q'><![CDATA[
+    SELECT  SGR.COMP_CD
+         ,  SGR.BRAND_CD
+         ,  SGR.DC_DIV
+         ,  SGR.SALE_START_DT
+         ,  SGR.SEQ
+         ,  SGR.SET_RANK
+         ,  SGR.SALE_END_DT
+         ,  SGR.SET_GRP_DESC
+         ,  SGR.STORE_APP_DIV
+         ,  SGR.USE_YN
+      FROM  SET_GRP_RULE    SGR
+     WHERE  SGR.COMP_CD = ${SCH_COMP_CD}
+       AND  SGR.BRAND_CD= ${SCH_BRAND_CD}
+       AND  SGR.DC_DIV  = ${SCH_DC_DIV}
+       AND  (${SCH_USE_YN} IS NULL OR SGR.USE_YN = ${SCH_USE_YN})
+     ORDER  BY TO_NUMBER(SGR.SET_RANK), SGR.SALE_START_DT DESC
+]]></query>
+
+<!-- Mix & Match 조합Rule 저장 -->
+<query name='SET_GRP_RULE_U'><![CDATA[
+    MERGE INTO SET_GRP_RULE
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  BRAND_CD        = ${BRAND_CD}
+           AND  SALE_START_DT   = ${SALE_START_DT}
+           AND  SEQ             = ${SEQ}
+    )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  SET_RANK        = ${SET_RANK}
+             ,  SALE_END_DT     = ${SALE_END_DT}
+             ,  SET_GRP_DESC    = ${SET_GRP_DESC}
+             ,  STORE_APP_DIV   = ${STORE_APP_DIV}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  BRAND_CD
+             ,  SALE_START_DT
+             ,  SEQ
+             ,  SET_RANK
+             ,  SALE_END_DT
+             ,  SET_GRP_DESC
+             ,  STORE_APP_DIV
+             ,  DC_DIV
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${SALE_START_DT}
+             ,  (
+                    SELECT  NVL(MAX(TO_NUMBER(SEQ)),0) + 1
+                      FROM  SET_GRP_RULE
+                     WHERE  COMP_CD         = ${COMP_CD}
+                       AND  BRAND_CD        = ${BRAND_CD}
+                       AND  SALE_START_DT   = ${SALE_START_DT}
+                )
+             ,  ${SET_RANK}
+             ,  ${SALE_END_DT}
+             ,  ${SET_GRP_DESC}
+             ,  ${STORE_APP_DIV}
+             ,  ${DC_DIV}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query> 
+
+<!-- Mix & Match 적용매장 조회 -->
+<query name='SET_GRP_RULE_STORE_Q'><![CDATA[
+    SELECT  RS.COMP_CD
+         ,  RS.BRAND_CD
+         ,  RS.STOR_CD
+         ,  S.STOR_NM
+         ,  RS.SALE_START_DT
+         ,  RS.SEQ
+         ,  RS.USE_YN
+      FROM  SET_GRP_RULE_STORE  RS
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE   S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  BRAND_CD    = ${SCH_BRAND_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )       L
+                 WHERE  S.COMP_CD   = L.COMP_CD(+)
+                   AND  S.BRAND_CD  = L.BRAND_CD(+)
+                   AND  S.STOR_CD   = L.STOR_CD(+)
+                   AND  S.COMP_CD   = ${SCH_COMP_CD}
+                   AND  S.BRAND_CD  = ${SCH_BRAND_CD}
+            )                   S
+     WHERE  RS.COMP_CD      = S.COMP_CD
+       AND  RS.BRAND_CD     = S.BRAND_CD
+       AND  RS.STOR_CD      = S.STOR_CD
+       AND  RS.COMP_CD      = ${SCH_COMP_CD}
+       AND  RS.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  RS.SALE_START_DT= ${SCH_SALE_START_DT}
+       AND  RS.SEQ          = ${SCH_SEQ}
+       AND  (${SCH_USE_YN} IS NULL OR RS.USE_YN = ${SCH_USE_YN})
+     ORDER  BY RS.STOR_CD
+]]></query>
+
+<!-- Mix & Match 적용매장 저장 -->
+<query name='SET_GRP_RULE_STORE_U'><![CDATA[
+    MERGE INTO SET_GRP_RULE_STORE
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  BRAND_CD        = ${BRAND_CD}
+           AND  STOR_CD         = ${STOR_CD}
+           AND  SALE_START_DT   = ${SALE_START_DT}
+           AND  SEQ             = ${SEQ}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  SALE_START_DT
+             ,  SEQ
+             ,  SET_RANK
+             ,  SALE_END_DT
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${SALE_START_DT}
+             ,  ${SEQ}
+             ,  ${SET_RANK}
+             ,  ${SALE_END_DT}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<!-- Mix & Match 적용상품 조회 -->
+<query name='SET_GRP_ITEM_Q'><![CDATA[
+    SELECT  SGI.COMP_CD
+         ,  SGI.BRAND_CD
+         ,  SGI.SALE_START_DT
+         ,  SGI.SEQ
+         ,  SGI.SET_GRP
+         ,  DECODE(SGI.SET_TP, '1', SG.SET_GRP_NM, I.ITEM_NM)   AS SET_GRP_NM
+         ,  SGI.SET_TP
+         ,  SGI.DC_FG
+         ,  SGI.DC_RATE
+         ,  SGI.DC_AMT
+         ,  SGI.QTY
+         ,  SGI.USE_YN
+      FROM  SET_GRP_ITEM    SGI
+         ,  (
+                SELECT  SG.COMP_CD
+                     ,  SG.BRAND_CD
+                     ,  SG.SET_GRP
+                     ,  NVL(L.LANG_NM, SG.SET_GRP_NM)   AS SET_GRP_NM
+                  FROM  SET_GRP     SG
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'SET_GRP'
+                               AND  COL_NM      = 'SET_GRP_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )       L
+                 WHERE  L.COMP_CD(+)    = SG.COMP_CD
+                   AND  L.PK_COL(+)     = LPAD(SG.BRAND_CD, 4, ' ')||LPAD(SG.SET_GRP, 4, ' ')
+                   AND  SG.COMP_CD      = ${SCH_COMP_CD}
+                   AND  SG.BRAND_CD     = ${SCH_BRAND_CD}
+            )               SG
+         ,  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  MAX(NVL(L.ITEM_NM, I.ITEM_NM))  AS ITEM_NM
+                  FROM  ITEM_CHAIN  I
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )       L
+                 WHERE  I.COMP_CD   = L.COMP_CD(+)
+                   AND  I.ITEM_CD   = L.ITEM_CD(+)
+                   AND  I.COMP_CD   = ${SCH_COMP_CD}
+                   AND  I.BRAND_CD  = ${SCH_BRAND_CD}
+                 GROUP  BY I.COMP_CD, I.ITEM_CD
+            )                   I
+     WHERE  SGI.COMP_CD         = SG.COMP_CD(+)
+       AND  SGI.BRAND_CD        = SG.BRAND_CD(+)
+       AND  SGI.SET_GRP         = SG.SET_GRP(+)
+       AND  SGI.COMP_CD         = I.COMP_CD(+)
+       AND  SGI.SET_GRP         = I.ITEM_CD(+)
+       AND  SGI.COMP_CD         = ${SCH_COMP_CD}
+       AND  SGI.BRAND_CD        = ${SCH_BRAND_CD}
+       AND  SGI.SALE_START_DT   = ${SCH_SALE_START_DT}
+       AND  SGI.SEQ             = ${SCH_SEQ}
+       AND  (${SCH_USE_YN} IS NULL OR SGI.USE_YN = ${SCH_USE_YN})
+     ORDER  BY SGI.SET_TP, SGI.SET_GRP
+]]></query>
+
+<!-- Mix & Match 적용상품 삭제 -->
+<query name='SET_GRP_ITEM_D'><![CDATA[
+    UPDATE  SET_GRP_ITEM
+       SET  USE_YN          = 'N'
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  BRAND_CD        = ${BRAND_CD}
+       AND  SALE_START_DT   = ${SALE_START_DT}
+       AND  SEQ             = ${SEQ}
+]]></query>
+
+<!-- Mix & Match 적용매장 저장 -->
+<query name='SET_GRP_ITEM_U'><![CDATA[
+    MERGE INTO SET_GRP_ITEM
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  BRAND_CD        = ${BRAND_CD}
+           AND  SALE_START_DT   = ${SALE_START_DT}
+           AND  SEQ             = ${SEQ}
+           AND  SET_GRP         = ${SET_GRP}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  SET_TP          = ${SET_TP}
+             ,  DC_FG           = ${DC_FG}
+             ,  DC_RATE         = ${DC_RATE}
+             ,  DC_AMT          = ${DC_AMT}
+             ,  QTY             = ${QTY}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  BRAND_CD
+             ,  SALE_START_DT
+             ,  SEQ
+             ,  SET_GRP
+             ,  SET_TP
+             ,  DC_FG
+             ,  DC_RATE
+             ,  DC_AMT
+             ,  QTY
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${SALE_START_DT}
+             ,  ${SEQ}
+             ,  ${SET_GRP}
+             ,  ${SET_TP}
+             ,  ${DC_FG}
+             ,  ${DC_RATE}
+             ,  ${DC_AMT}
+             ,  ${QTY}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<!-- Mix & Match 그룹 조회 -->
+<query name='SET_GRP_Q'><![CDATA[
+    SELECT  SG.COMP_CD
+         ,  SG.BRAND_CD
+         ,  SG.SET_GRP
+         ,  NVL(L.LANG_NM, SG.SET_GRP_NM)   AS SET_GRP_NM
+      FROM  SET_GRP     SG
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'SET_GRP'
+                   AND  COL_NM      = 'SET_GRP_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )       L
+     WHERE  L.COMP_CD(+)    = SG.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(SG.BRAND_CD, 4, ' ')||LPAD(SG.SET_GRP, 4, ' ')
+       AND  SG.COMP_CD      = ${SCH_COMP_CD}
+       AND  SG.BRAND_CD     = ${SCH_BRAND_CD}
+     ORDER  BY SG.SET_GRP
+]]></query>
+
+<query name='ITEM_Q'><![CDATA[
+    SELECT  /*+ USE_NL(I L M S) */
+            I.COMP_CD
+         ,  I.ITEM_CD
+         ,  I.ITEM_NM
+         ,  L.L_CLASS_NM
+         ,  M.M_CLASS_NM
+         ,  S.S_CLASS_NM
+         ,  I.USE_YN
+      FROM  (
+                SELECT  /*+ LEADING(I2) USE_HASH(I) */
+                        I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_NM,     I.ITEM_NM)       AS ITEM_NM
+                     ,  NVL(IC.L_CLASS_CD, I.L_CLASS_CD)    AS L_CLASS_CD
+                     ,  NVL(IC.M_CLASS_CD, I.M_CLASS_CD)    AS M_CLASS_CD
+                     ,  NVL(IC.S_CLASS_CD, I.S_CLASS_CD)    AS S_CLASS_CD
+                     ,  I.USE_YN
+                  FROM  ITEM    I
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                              FROM  ITEM_CHAIN
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  BRAND_CD    = ${SCH_BRAND_CD}
+                               AND  ORD_SALE_DIV IN ('2', '3')
+                               AND  USE_YN      = 'Y'
+                             GROUP  BY COMP_CD, ITEM_CD
+                        )       I2
+                    ,   (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )       L
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  L_CLASS_CD
+                                 ,  M_CLASS_CD
+                                 ,  S_CLASS_CD
+                              FROM  ITEM_CLASS
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  ORG_CLASS_CD= '00'
+                               AND  USE_YN      = 'Y'
+                        )       IC
+                 WHERE  I.COMP_CD   = I2.COMP_CD
+                   AND  I.ITEM_CD   = I2.ITEM_CD
+                   AND  I.COMP_CD   = L.COMP_CD(+)
+                   AND  I.ITEM_CD   = L.ITEM_CD(+)
+                   AND  I.COMP_CD   = IC.COMP_CD(+)
+                   AND  I.ITEM_CD   = IC.ITEM_CD(+)
+                   AND  I.COMP_CD   = ${SCH_COMP_CD}
+                   AND  I.ORD_SALE_DIV IN ('2', '3')
+                   AND  I.USE_YN    = 'Y'
+            )   I
+         ,  (
+                SELECT  L.COMP_CD
+                     ,  L.L_CLASS_CD
+                     ,  NVL(LL.LANG_NM, L.L_CLASS_NM)   AS L_CLASS_NM
+                     ,  L.SORT_ORDER
+                  FROM  ITEM_L_CLASS    L
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_L_CLASS'
+                               AND  COL_NM      = 'L_CLASS_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )               LL
+                 WHERE  L.COMP_CD       = LL.COMP_CD(+)
+                   AND  L.COMP_CD||L.ORG_CLASS_CD||L.L_CLASS_CD = LL.PK_COL(+)
+                   AND  L.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.ORG_CLASS_CD  = '00'
+                   AND  L.USE_YN        = 'Y'
+            )   L
+         ,  (
+                SELECT  M.COMP_CD
+                     ,  M.L_CLASS_CD
+                     ,  M.M_CLASS_CD
+                     ,  NVL(ML.LANG_NM, M.M_CLASS_NM)   AS M_CLASS_NM
+                     ,  M.SORT_ORDER
+                  FROM  ITEM_M_CLASS    M
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_M_CLASS'
+                               AND  COL_NM      = 'M_CLASS_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )               ML
+                 WHERE  M.COMP_CD       = ML.COMP_CD(+)
+                   AND  M.COMP_CD||M.ORG_CLASS_CD||M.L_CLASS_CD||M.M_CLASS_CD = ML.PK_COL(+)
+                   AND  M.COMP_CD       = ${SCH_COMP_CD}
+                   AND  M.ORG_CLASS_CD  = '00'
+                   AND  M.USE_YN        = 'Y'
+            )   M
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.L_CLASS_CD
+                     ,  S.M_CLASS_CD
+                     ,  S.S_CLASS_CD
+                     ,  NVL(SL.LANG_NM, S.S_CLASS_NM)   AS S_CLASS_NM
+                     ,  S.SORT_ORDER
+                  FROM  ITEM_S_CLASS    S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'ITEM_S_CLASS'
+                               AND  COL_NM      = 'S_CLASS_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )               SL
+                 WHERE  S.COMP_CD       = SL.COMP_CD(+)
+                   AND  S.COMP_CD||S.ORG_CLASS_CD||S.L_CLASS_CD||S.M_CLASS_CD||S.S_CLASS_CD = SL.PK_COL(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  S.ORG_CLASS_CD  = '00'
+                   AND  S.USE_YN        = 'Y'
+            )   S
+     WHERE  I.COMP_CD   = L.COMP_CD(+)
+       AND  I.L_CLASS_CD= L.L_CLASS_CD(+)
+       AND  I.COMP_CD   = M.COMP_CD(+)
+       AND  I.L_CLASS_CD= M.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD= M.M_CLASS_CD(+)
+       AND  I.COMP_CD   = S.COMP_CD(+)
+       AND  I.L_CLASS_CD= S.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD= S.M_CLASS_CD(+)
+       AND  I.S_CLASS_CD= S.S_CLASS_CD(+)
+       AND  (${SCH_L_CLASS_CD} IS NULL OR I.L_CLASS_CD = ${SCH_L_CLASS_CD})
+       AND  (${SCH_M_CLASS_CD} IS NULL OR I.M_CLASS_CD = ${SCH_M_CLASS_CD})
+       AND  (${SCH_S_CLASS_CD} IS NULL OR I.S_CLASS_CD = ${SCH_S_CLASS_CD})
+       AND  (${SCH_ITEM_TXT} IS NULL OR (I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%'))
+     ORDER  BY L.SORT_ORDER, M.SORT_ORDER, S.SORT_ORDER, I.ITEM_CD
+]]></query>
+
+</SQLResource>
+

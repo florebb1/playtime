@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='MENU_SEARCH_1_Q'><![CDATA[
+    SELECT  A1.MENU_NM      AS MENU_TXT
+         ,  A1.MENU_CD
+         ,  A1.MENU_NM
+         ,  A1.MENU_REF
+         ,  A1.PROG_TP
+         ,  A1.MENU_DIV
+         ,  A1.USE_YN
+         ,  A2.LANG_NM
+         ,  A1.MENU_IDX
+         ,  A1.PROG_NM
+         ,  A1.COMP_CD
+         ,  NVL(SM.SUB_MENU_CNT, 0)     AS SUB_MENU_CNT
+      FROM  W_MENU A1
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'W_MENU'
+                   AND  COL_NM      = 'MENU_NM'
+                   AND  LANGUAGE_TP = ${S_LANG_TP}      
+                   AND  USE_YN      = 'Y'
+            ) A2
+         ,  (
+                SELECT  COMP_CD
+                     ,  MENU_REF    AS MENU_CD
+                     ,  COUNT(*)    AS SUB_MENU_CNT
+                  FROM  W_MENU
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  USE_YN      = 'Y'
+                 GROUP  BY COMP_CD, MENU_REF
+            )       SM
+     WHERE  A1.COMP_CD  = SM.COMP_CD(+)
+       AND  A1.MENU_CD  = SM.MENU_CD(+)
+       AND  A1.COMP_CD  = ${SCH_COMP_CD}
+       AND  TO_CHAR(A1.MENU_CD)  BETWEEN '1000' AND '1999'
+       AND  A1.MENU_CD  = A2.PK_COL(+)
+     ORDER  BY A1.MENU_IDX, A1.MENU_CD
+]]></query>
+
+<query name='MENU_SEARCH_2_Q'><![CDATA[
+    SELECT  A1.MENU_NM      AS MENU_TXT
+         ,  A2.LANG_NM
+         ,  A1.MENU_CD
+         ,  A1.MENU_NM
+         ,  A1.MENU_REF    
+         ,  A1.PROG_TP    
+         ,  A1.MENU_DIV 
+         ,  A1.USE_YN
+         ,  A1.MENU_IDX
+         ,  A1.PROG_NM
+         ,  A1.COMP_CD
+         ,  NVL(SM.SUB_MENU_CNT, 0)     AS SUB_MENU_CNT
+      FROM  W_MENU A1
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'W_MENU'
+                   AND  COL_NM      = 'MENU_NM'
+                   AND  LANGUAGE_TP = ${S_LANG_TP}       
+                   AND  USE_YN      = 'Y'    
+             ) A2
+         ,  (
+                SELECT  COMP_CD
+                     ,  MENU_REF    AS MENU_CD
+                     ,  COUNT(*)    AS SUB_MENU_CNT
+                  FROM  W_MENU
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  USE_YN      = 'Y'
+                 GROUP  BY COMP_CD, MENU_REF
+            )       SM
+     WHERE  A1.COMP_CD  = SM.COMP_CD(+)
+       AND  A1.MENU_CD  = SM.MENU_CD(+)
+       AND  A1.COMP_CD  = ${SCH_COMP_CD}
+       AND  A1.MENU_REF = ${S_MENU_REF}
+       AND  A1.MENU_CD  = A2.PK_COL(+)
+     ORDER  BY A1.MENU_IDX, A1.MENU_CD 
+]]></query>
+
+<query name='MENU_INSERT_Q'><![CDATA[
+INSERT INTO W_MENU (
+    COMP_CD          , MENU_CD               ,MENU_NM                ,PROG_NM
+   ,MENU_REF         ,MENU_IDX               ,MENU_DIV               ,PROG_TP
+   ,USE_YN                 
+   ,INST_USER        ,INST_DT                ,UPD_USER               ,UPD_DT
+) VALUES (
+    ${S_COMP_CD}     ,${S_MENU_CD}           ,${S_MENU_NM}           ,${S_PROG_NM}
+   ,${S_MENU_REF}    ,${S_MENU_IDX}          ,${S_MENU_DIV}          ,${S_PROG_TP}
+   ,${S_USE_YN}                 
+   ,${S_USER_ID}     ,SYSDATE                ,${S_USER_ID}            ,SYSDATE
+)
+]]></query>
+
+<query name='MENU_UPDATE_Q'><![CDATA[
+UPDATE  W_MENU
+   SET  MENU_NM        =  ${S_MENU_NM}
+     ,  PROG_NM        =  ${S_PROG_NM}
+     ,  MENU_IDX       =  ${S_MENU_IDX}
+     ,  MENU_DIV       =  ${S_MENU_DIV}
+     ,  PROG_TP        =  ${S_PROG_TP}
+     ,  USE_YN         =  ${S_USE_YN}
+     ,  UPD_USER       =  ${S_USER_ID}
+     ,  UPD_DT         =  SYSDATE
+ WHERE  COMP_CD        =  ${S_COMP_CD}
+   AND  MENU_CD        =  ${S_MENU_CD}
+]]></query>
+
+<query name='MENU_DELETE_Q'><![CDATA[
+DELETE FROM W_MENU WHERE COMP_CD = ${S_COMP_CD} AND MENU_CD = ${S_MENU_CD}
+]]></query>
+
+<query name='LANG_MENU_UPSERT_Q'><![CDATA[
+MERGE INTO LANG_TABLE
+USING DUAL
+   ON ( 
+               COMP_CD     = ${S_COMP_CD}
+         AND   TABLE_NM    = 'W_MENU'
+         AND   COL_NM      = 'MENU_NM'
+         AND   LANGUAGE_TP = ${S_LANG_TP}
+         AND   PK_COL      = ${S_MENU_CD}
+       )
+WHEN MATCHED THEN
+   UPDATE 
+      SET LANG_NM    = ${S_LANG_NM}
+      ,   UPD_DT     = SYSDATE
+      ,   UPD_USER   = ${S_USER_ID}
+WHEN NOT MATCHED THEN   
+   INSERT ( 
+             COMP_CD
+            ,TABLE_NM 
+            ,COL_NM 
+            ,LANGUAGE_TP 
+            ,PK_COL 
+            ,LANG_NM 
+            ,USE_YN 
+            ,INST_DT 
+            ,INST_USER 
+            ,UPD_DT 
+            ,UPD_USER 
+          )
+   VALUES ( 
+             ${S_COMP_CD}
+            ,'W_MENU' 
+            ,'MENU_NM' 
+            ,${S_LANG_TP} 
+            ,${S_MENU_CD} 
+            ,${S_LANG_NM} 
+            ,'Y' 
+            ,SYSDATE 
+            ,${S_USER_ID}
+            ,SYSDATE 
+            ,${S_USER_ID}
+          )
+
+]]></query>
+
+</SQLResource>

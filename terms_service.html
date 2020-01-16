@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>PlayTime</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+	<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+	<link rel='stylesheet' href='https://cdn.jsdelivr.net/foundation/5.5.0/css/foundation.css'>
+	<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+	<style>
+		.bottom {
+			padding-top:50px;
+		}
+		.brand-image {
+			width:100%;
+		}
+		.brand-image-2 {
+			width:calc(100% - 16%);
+			margin:0 8%;
+		}
+		.brand-image img {
+			width:100%;
+			height:auto;
+		}
+		.brand-content {
+			padding:15px 0;
+			margin:0 8%;
+		}
+		.brand-content h5 {
+			text-align: center;
+			padding-top:10px;
+		}
+		.brand-content h1 {
+			font-size:28px;
+			line-height:150%;
+			letter-spacing:-1px;
+			font-weight:600;
+			text-align: center;
+			padding:10px 0;
+		}
+		.brand-content > div {
+			font-size:14px;
+			line-height:150%;
+			text-align: center;
+		}
+		.brand-logo-img {
+			font-size:14px;
+			font-weight:600;
+			padding:20px 0 10px;
+			margin:20px 8% 5px 8%;
+			border-top:1px solid #eee;
+		}
+	</style>
+</head>
+
+<body>
+
+<div class="bottom">
+	<div style="margin:0 5.5% 0 5.5%; height:40px; text-align:center;">
+		<div style="float:left; width:15%; text-align:left; font-size:20px; color:#000;"><i id="back" class="fas fa-chevron-left" onclick="history.back();"></i></div>
+		<div class="nsR" style="float:left; width:70%; text-align:center; font-size:20px;">이용약관</div>
+		<div style="float:left; width:15%; text-align:right; font-size:20px;"></div>
+	</div>
+</div>
+<div class="brand-content">
+	<h5>(주)플레이타임그룹 (19.01.07)</h5>
+</div>
+<div id="content" style="margin: 0 8%;"></div>
+
+<script src="https://code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+	$(document).on('ready', function() {
+		// 이용약관
+		$.ajax({
+			url : '/api/mbl_ADM_0007.jsp?COMP_CD=010',
+			type : 'POST',
+			dataType : 'JSON',
+			success:function(response){
+				for (var i = 0; i < response.RESULT.length; i++) {
+					if(response.RESULT[i].TERMS_TYPE == "05") {
+						$("#content").html(response.RESULT[i].TERMS_CONTS);
+					}
+				}
+			}
+		});
+	});
+</script>
+</body>
+</html>

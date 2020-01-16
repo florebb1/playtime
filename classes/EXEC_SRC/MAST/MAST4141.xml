@@ -1,0 +1,458 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!-- 상품대분류 데이터 조회 -->
+<query name='ITEM_L_CLASS_Q'><![CDATA[
+    SELECT  ILC.COMP_CD
+         ,  ILC.ORG_CLASS_CD
+         ,  ILC.L_CLASS_CD
+         ,  ILC.L_CLASS_NM
+         ,  L.LANG_NM
+         ,  ILC.SORT_ORDER
+         ,  ILC.USE_YN
+      FROM  ITEM_L_CLASS    ILC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ITEM_L_CLASS'
+                   AND  COL_NM      = 'L_CLASS_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)     = ILC.COMP_CD
+       AND  L.PK_COL(+)      = ILC.COMP_CD||ILC.ORG_CLASS_CD||ILC.L_CLASS_CD
+       AND  ILC.COMP_CD      = ${SCH_COMP_CD}
+       AND  ILC.ORG_CLASS_CD = ${SCH_ORG_CLASS_CD}
+       AND  ILC.CLASS_DIV    = ${SCH_CLASS_DIV}
+       AND  (${SCH_USE_YN}  IS NULL OR ILC.USE_YN = ${SCH_USE_YN})
+     ORDER  BY ILC.SORT_ORDER
+]]></query>
+
+<!-- 상품중분류 데이터 조회 -->
+<query name='ITEM_M_CLASS_Q'><![CDATA[
+    SELECT  IMC.COMP_CD
+         ,  IMC.ORG_CLASS_CD
+         ,  IMC.L_CLASS_CD
+         ,  IMC.M_CLASS_CD
+         ,  IMC.M_CLASS_NM
+         ,  L.LANG_NM
+         ,  IMCC.BTN_COLOR
+         ,  IMC.SORT_ORDER
+         ,  IMC.USE_YN
+      FROM  ITEM_M_CLASS    IMC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ITEM_M_CLASS'
+                   AND  COL_NM      = 'M_CLASS_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+         ,  ITEM_M_CLASS_COLOR  IMCC
+     WHERE  L.COMP_CD(+)    = IMC.COMP_CD
+       AND  L.PK_COL(+)     = IMC.COMP_CD||IMC.ORG_CLASS_CD||IMC.L_CLASS_CD||IMC.M_CLASS_CD
+       AND  IMC.COMP_CD     = IMCC.COMP_CD(+)
+       AND  IMC.ORG_CLASS_CD= IMCC.ORG_CLASS_CD(+)
+       AND  IMC.L_CLASS_CD  = IMCC.L_CLASS_CD(+)
+       AND  IMC.M_CLASS_CD  = IMCC.M_CLASS_CD(+)
+       AND  IMC.COMP_CD     = ${SCH_COMP_CD}
+       AND  IMC.ORG_CLASS_CD= ${SCH_ORG_CLASS_CD}
+       AND  IMC.L_CLASS_CD  = ${SCH_L_CLASS_CD}
+       AND  (${SCH_USE_YN} IS NULL OR IMC.USE_YN = ${SCH_USE_YN})
+     ORDER  BY IMC.SORT_ORDER
+]]></query>
+
+<!-- 상품소분류 데이터 조회 -->
+<query name='ITEM_S_CLASS_Q'><![CDATA[
+    SELECT  ISC.COMP_CD
+         ,  ISC.ORG_CLASS_CD
+         ,  ISC.L_CLASS_CD
+         ,  ISC.M_CLASS_CD
+         ,  ISC.S_CLASS_CD
+         ,  ISC.S_CLASS_NM
+         ,  L.LANG_NM
+         ,  ISC.SORT_ORDER
+         ,  ISC.USE_YN
+      FROM  ITEM_S_CLASS    ISC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ITEM_S_CLASS'
+                   AND  COL_NM      = 'S_CLASS_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = ISC.COMP_CD
+       AND  L.PK_COL(+)     = ISC.COMP_CD||ISC.ORG_CLASS_CD||ISC.L_CLASS_CD||ISC.M_CLASS_CD||ISC.S_CLASS_CD
+       AND  ISC.COMP_CD     = ${SCH_COMP_CD}
+       AND  ISC.ORG_CLASS_CD= ${SCH_ORG_CLASS_CD}
+       AND  ISC.L_CLASS_CD  = ${SCH_L_CLASS_CD}
+       AND  ISC.M_CLASS_CD  = ${SCH_M_CLASS_CD}
+       AND  (${SCH_USE_YN}  IS NULL OR ISC.USE_YN = ${SCH_USE_YN})
+     ORDER  BY ISC.SORT_ORDER
+]]></query>
+
+<!-- 상품세분류 데이터 조회 -->
+<query name='ITEM_D_CLASS_Q'><![CDATA[
+    SELECT  IDC.COMP_CD
+         ,  IDC.ORG_CLASS_CD
+         ,  IDC.L_CLASS_CD
+         ,  IDC.M_CLASS_CD
+         ,  IDC.S_CLASS_CD
+         ,  IDC.D_CLASS_CD
+         ,  IDC.D_CLASS_NM
+         ,  L.LANG_NM
+         ,  IDC.SORT_ORDER
+         ,  IDC.USE_YN
+      FROM  ITEM_D_CLASS    IDC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ITEM_D_CLASS'
+                   AND  COL_NM      = 'D_CLASS_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = IDC.COMP_CD
+       AND  L.PK_COL(+)     = IDC.COMP_CD||IDC.ORG_CLASS_CD||IDC.L_CLASS_CD||IDC.M_CLASS_CD||IDC.S_CLASS_CD||IDC.D_CLASS_CD
+       AND  IDC.COMP_CD     = ${SCH_COMP_CD}
+       AND  IDC.ORG_CLASS_CD= ${SCH_ORG_CLASS_CD}
+       AND  IDC.L_CLASS_CD  = ${SCH_L_CLASS_CD}
+       AND  IDC.M_CLASS_CD  = ${SCH_M_CLASS_CD}
+       AND  IDC.S_CLASS_CD  = ${SCH_S_CLASS_CD}
+       AND  (${SCH_USE_YN}  IS NULL OR IDC.USE_YN = ${SCH_USE_YN})
+     ORDER  BY IDC.SORT_ORDER
+]]></query>
+
+<query name='ITEM_L_CLASS_U'><![CDATA[
+    MERGE   INTO ITEM_L_CLASS
+    USING   DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  ORG_CLASS_CD    = ${ORG_CLASS_CD}
+           AND  L_CLASS_CD      = ${L_CLASS_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  L_CLASS_NM      = ${L_CLASS_NM}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  ORG_CLASS_CD
+             ,  L_CLASS_CD
+             ,  L_CLASS_NM
+             ,  SORT_ORDER 
+             ,  USE_YN 
+             ,  INST_DT 
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+             ,  CLASS_DIV
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${ORG_CLASS_CD}
+             ,  ${L_CLASS_CD}
+             ,  ${L_CLASS_NM} 
+             ,  ${SORT_ORDER} 
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             , '1'
+        )
+]]></query>
+
+<query name='ITEM_M_CLASS_U'><![CDATA[
+    MERGE   INTO ITEM_M_CLASS
+    USING   DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  ORG_CLASS_CD    = ${ORG_CLASS_CD}
+           AND  L_CLASS_CD      = ${L_CLASS_CD}
+           AND  M_CLASS_CD      = ${M_CLASS_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  M_CLASS_NM      = ${M_CLASS_NM}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  ORG_CLASS_CD
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  M_CLASS_NM
+             ,  SORT_ORDER 
+             ,  USE_YN 
+             ,  INST_DT 
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${ORG_CLASS_CD}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${M_CLASS_NM} 
+             ,  ${SORT_ORDER} 
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='ITEM_S_CLASS_U'><![CDATA[
+    MERGE   INTO ITEM_S_CLASS
+    USING   DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  ORG_CLASS_CD    = ${ORG_CLASS_CD}
+           AND  L_CLASS_CD      = ${L_CLASS_CD}
+           AND  M_CLASS_CD      = ${M_CLASS_CD}
+           AND  S_CLASS_CD      = ${S_CLASS_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  S_CLASS_NM      = ${S_CLASS_NM}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  ORG_CLASS_CD
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  S_CLASS_CD
+             ,  S_CLASS_NM
+             ,  SORT_ORDER 
+             ,  USE_YN 
+             ,  INST_DT 
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${ORG_CLASS_CD}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${S_CLASS_CD}
+             ,  ${S_CLASS_NM} 
+             ,  ${SORT_ORDER} 
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='ITEM_D_CLASS_U'><![CDATA[
+    MERGE   INTO ITEM_D_CLASS
+    USING   DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  ORG_CLASS_CD    = ${ORG_CLASS_CD}
+           AND  L_CLASS_CD      = ${L_CLASS_CD}
+           AND  M_CLASS_CD      = ${M_CLASS_CD}
+           AND  S_CLASS_CD      = ${S_CLASS_CD}
+           AND  D_CLASS_CD      = ${D_CLASS_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  D_CLASS_NM      = ${D_CLASS_NM}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  ORG_CLASS_CD
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  S_CLASS_CD
+             ,  D_CLASS_CD
+             ,  D_CLASS_NM
+             ,  SORT_ORDER 
+             ,  USE_YN 
+             ,  INST_DT 
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${ORG_CLASS_CD}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${S_CLASS_CD}
+             ,  ${D_CLASS_CD}
+             ,  ${D_CLASS_NM} 
+             ,  ${SORT_ORDER} 
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='LANG_TABLE_U'><![CDATA[
+    MERGE   INTO LANG_TABLE
+    USING   DUAL
+    ON  (
+                COMP_CD     = ${COMP_CD}
+           AND  TABLE_NM    = ${TABLE_NM}
+           AND  COL_NM      = ${COL_NM}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+           AND  PK_COL      = ${PK_COL}
+        )
+    WHEN MATCHED THEN
+        UPDATE  SET LANG_NM = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}   
+        )
+]]></query>
+
+<query name='ITEM_M_CLASS_COLOR_U'><![CDATA[ 
+    MERGE INTO ITEM_M_CLASS_COLOR
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  ORG_CLASS_CD    = ${ORG_CLASS_CD}
+           AND  L_CLASS_CD      = ${L_CLASS_CD}
+           AND  M_CLASS_CD      = ${M_CLASS_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  BTN_COLOR       = ${BTN_COLOR}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  ORG_CLASS_CD
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  BTN_COLOR
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (    
+                ${COMP_CD}
+             ,  ${ORG_CLASS_CD}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${BTN_COLOR}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='ITEM_S_CLASS_COLOR_U'><![CDATA[ 
+    MERGE INTO ITEM_S_CLASS_COLOR
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  ORG_CLASS_CD    = ${ORG_CLASS_CD}
+           AND  L_CLASS_CD      = ${L_CLASS_CD}
+           AND  M_CLASS_CD      = ${M_CLASS_CD}
+           AND  S_CLASS_CD      = ${S_CLASS_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  BTN_COLOR       = ${BTN_COLOR}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  ORG_CLASS_CD
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  S_CLASS_CD
+             ,  BTN_COLOR
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (    
+                ${COMP_CD}
+             ,  ${ORG_CLASS_CD}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${S_CLASS_CD}
+             ,  ${BTN_COLOR}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>

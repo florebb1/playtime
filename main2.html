@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PlayTime</title>
+        <meta charset="UTF-8">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+        <link crossorigin="anonymous" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" rel="stylesheet">
+        <link href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css" rel="stylesheet" type="text/css">
+        <link href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css" rel="stylesheet">
+        <link href='//cdn.jsdelivr.net/jquery.slick/1.4.1/slick.css' rel='stylesheet'>
+        <link href="/css/style.css" rel="stylesheet" type="text/css">
+        <link href="/css/slick.css" rel="stylesheet" type="text/css"/>
+        <style>
+            body {
+                margin: 0;
+            }
+            *, *:before, *:after { box-sizing: inherit; }
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: fill;
+            }
+            a:focus, a:hover, a:visited, a:link {
+                text-decoration:none;
+                color: #000;
+                font-weight: 800;
+            }
+            .menu {
+                height: 30px;
+                background-color: #fff;
+                text-align: center;
+                color: #808080;
+            }
+            .slick-active {
+                color: #000 !important;
+            }
+            .button {
+                height: 40px;
+                width: 100%;
+                background-color: #FFCA02;
+                border-radius: 10px;
+                color: #fff;
+                border: none;
+            }
+            .my_store {
+                margin: 10px 8%;
+                background-image: url("/images/1.png");
+                height: 350px;
+                border-radius: 10px;
+                color: #fff !important;
+                background-size: cover;
+                background-position: 50% 50%;
+            }
+
+            .flex-wrap {
+
+            }
+            .flex-wrap:after {
+                content: '';
+                display: block;
+                clear: both;
+            }
+            .left-box {
+                float: left;
+                width:30%;
+                height:100%;
+                overflow-y: auto;
+                background-color: #f8f8f8;
+                text-align: center;
+            }
+            .right-box {
+                float: right;
+                width:70%;
+                height:100%;
+                overflow-y: auto;
+            }
+            div.select_box {
+                position: relative;
+                height: 50px;
+                border: none;
+                background-color: #f8f8f8;
+            }
+            div.select_box label {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+            div.select_box select.color {
+                width: 100%;
+                height: 40px;
+                min-height: 40px;
+                line-height: 40px;
+                padding: 0 10px;
+                opacity: 0;
+            }
+            .fav-star-y {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 28px;
+                font-weight: 900;
+                color: #FFCA02;
+                text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            }
+            .fav-star-n {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 28px;
+                font-weight: 300;
+                color: #eeeeee;
+                text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+                
+            }
+            .tel-btn {
+                height: 40px;
+                width: 100%;
+                background-color: #FFCA02;
+                border-radius: 10px;
+                color: #fff;
+                border: none;
+                display: block;
+                line-height: 40px;
+                text-align: center;
+                font-size: 18px;
+                font-weight: 800;
+            }
+            .tel-btn:link,
+            .tel-btn:visited {
+                color: #fff;
+                text-decoration: none;
+                cursor: auto;
+            }
+            .tel-btn:link:active,
+            .tel-btn:visited:active {
+                color: #fff;
+            }
+            .box-sh-gnt {
+                -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+                -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+                box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+            }
+            .ovf-scroll {
+	            overflow-x:scroll;
+            }
+        </style>
+    </head>
+    <body>
+        <input id="before_bar" type="hidden" value="0">
+        <!-- header -->
+        <div class="box-sh-gnt" id="header" style="position:fixed; top:0px; left:0px; height:100px; right:0px;overflow:hidden;">
+            <div style="margin:20px 5.5% 20px 5.5%; height:30px; text-align:center;">
+                <!-- mypage -->
+                <div style="float:left; width:25%; text-align:left;">
+                    <img id="user" src="/images/navi/mypage.png" style="height:30px; width:30px;"></i>
+                </div>
+                <!-- logo -->
+                <div style="float:left; width:50%; text-align:center;"><img src="/images/logo.png" style="width:160px; height:30px; text-align:center;"></div>
+                <!-- push messenge -->
+                <div style="float:left; width:25%; text-align:right; font-size:23px; color:#808080;"><!-- <i class="far fa-bell"></i> --></div>
+            </div>
+            <!-- THUMBNAILS -->
+            <div style="position:relative">
+                <div class="slider-nav-thumbnails tabmenuas" style="position: relative;">
+                    <div>
+                        <div class="menu slick-active" id="menu1" slide="slide_1">이벤트</div>
+                    </div>
+                    <div>
+                        <div class="menu" id="menu2" slide="slide_2">공지사항</div>
+                    </div>
+                    <div>
+                        <div class="menu" id="menu3" slide="slide_3">뉴스</div>
+                    </div>
+                </div>
+                <div id="nav_bar" style="position:absolute;top:27px;left:0%;width:33.3%;">
+                    <div style="height:3px; background-color:#FFCA02; width:100%;"></div>
+                </div>
+            </div>
+        </div>
+        <!-- content -->
+        <div id="content" style="position:fixed; top:100px; bottom:60px; left:0px; right:0px; overflow:auto;">
+            <!-- MAIN SLIDES -->
+            <div class="slider">
+                <!-- evant -->
+                <div data-index="1" id="ovf-1" class="slick-active ovf-scroll">
+                    <div id="evant_list" class="ovf-scroll">
+	                   	                    
+<!--
+						<div style="margin: 1.5rem 8%;">
+							<a href='https://www.naver.com/' target='_blank' style='color:#fff;text-decoration:none' >
+								<div class='evant1' style='height: 360px; border-radius: 10px; background-size:cover; background-image:url(/admin/uploadFile/20190503095726.png);'>
+		                        	<input type='hidden' name='EVENT_ID' class="78">
+		                        	<input type='hidden' name='LINK_TYPE' class="02">
+		                        	<input type='hidden' name='LINK_URL' class="https://www.naver.com/">
+		                        	<div class='nsR' style='margin:0 5%; padding-top:10px; font-size:13px;'></div>
+		                        	<div class='nsrB' style='margin:0 5%; padding-top:10px; font-size:22px;'>테스트</div>
+	                        	</div>
+							</a>
+                       </div>
+-->
+
+	                    
+	                    
+                    </div>
+                </div>
+                <!-- infomation -->
+                <div data-index="2" id="ovf-2" class="ovf-scroll">
+                    <div id="notice" style="padding:40px 8% 0;"></div>
+                </div>
+                <!-- news -->
+                <div data-index="3" id="ovf-3" class="ovf-scroll">
+                    <div id="news" style="padding:40px 8% 0;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="box-sh-gnt" id="footer" style="position:fixed; bottom:0px; height:60px; left:0px; right:0px; overflow:hidden;">
+            <div id="code" style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/code.png" style="width:60%;"></div>
+            <div style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/yellowhome2.png" style="width:60%;"></div>
+            <div id="store" style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/store.png" style="width:60%;"></div>
+            <div id="play" style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/play.png" style="width:60%;"></div>
+        </div>
+        
+        <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+        <script src='//cdn.jsdelivr.net/jquery.slick/1.4.1/slick.min.js'></script>
+        <script type="text/javascript">
+			$(window).resize(function() {
+				$('#ovf-1').height($(window).height() - 160);
+				$('#ovf-2').height($(window).height() - 160);
+				$('#ovf-3').height($(window).height() - 160);
+			});
+			$(window).trigger('resize');
+		    function setCookie(name, value, days) {
+                var d = new Date;
+                d.setTime(d.getTime() + 24 * 60 * 60 * 1000 * days);
+                document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+            }
+            function getCookie(name) {
+                var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+                return v
+                    ? v[2]
+                    : null;
+            }
+            $(document).on('ready', function () {
+
+                setCookie('tab', null, -1);
+                setCookie('brand', null, -1);
+                setCookie('area', null, -1);
+
+                var sliderCurrent = getParameterByName("slider");
+                // console.log(getCookie("tab_main"));
+//                 console.log(sliderCurrent);
+                if(getCookie("tab_main") == "0" || getCookie("tab_main") == null){
+                    getEvent(true);
+                }else if(getCookie("tab_main") == "1"){
+                    getNotice(true);
+                }else if(getCookie("tab_main") == "2"){
+                    getNews(true);
+                }
+                
+                $('#code').click(function () {
+                    document.location.href = "/member.html";
+                });
+                $('#store').click(function () {
+                    document.location.href = "/store.html";
+                });
+                $('#play').click(function () {
+                    document.location.href = "/infomation.html";
+                });
+                $("#user").click(function () {
+                    document.location.href = "/mypage.html";
+                });
+                $('#news1').click(function () {
+                    document.location.href = "/main_news_card1.html";
+                });
+                
+                // remove active class from all thumbnail slides
+                $('.slider-nav-thumbnails').removeClass('slick-active');
+                // set active class to first thumbnail slides
+                $('.slider-nav-thumbnails').eq(0).addClass('slick-active');
+                // On before slide change match active thumbnail to current slide
+                $('.slider .slider-nav-thumbnails').on('beforeChange', function (event, slick, currentSlide, nextSlide) {
+                    var mySlideNumber = nextSlide;
+                    $('.slider-nav-thumbnails').removeClass('slick-active');
+                    $('.slider-nav-thumbnails').eq(mySlideNumber).addClass('slick-active');
+                });
+                // UPDATED
+                $('.slider').on('afterChange', function (event, slick, currentSlide) {
+                    setCookie('tab_main', currentSlide, 999);
+                    $('.content').hide();
+                    $('.content[data-id=' + (
+                    currentSlide + 1) + ']').show();
+
+                    if (!$(event.target).hasClass('membership_card')) {
+                        $('.menu').removeClass('slick-active');
+                        var before = $('#before_bar').val();
+                        var move = before - currentSlide;
+                        if (currentSlide == 0) {
+                            getEvent(false);
+                            $('#menu1').addClass('slick-active');
+                            if (move == 1) {
+                                $('#nav_bar').animate({left: '0'});
+                            } else if (move == 2) {
+                                $('#nav_bar').animate({left: '0'});
+                            }
+                            $('#before_bar').val(currentSlide);
+                        } else if (currentSlide == 1) {
+                            getNotice(false);
+                            $("#menu2").addClass("slick-active");
+                            if (move == -1) {
+                                $('#nav_bar').animate({left: '33.3%'});
+                            } else if (move == 1) {
+                                $('#nav_bar').animate({left: '33.3%'});
+                            }
+                            $('#before_bar').val(currentSlide);
+                        } else if (currentSlide == 2) {
+                            getNews(false);
+                            $("#menu3").addClass("slick-active");
+                            if (move == -1) {
+                                $('#nav_bar').animate({left: '66.6%'});
+                            } else if (move == -2) {
+                                $('#nav_bar').animate({left: '66.6%'});
+                            }
+                            $('#before_bar').val(currentSlide);
+                        }
+                    }
+                });
+            });
+function getParameterByName(name) {
+  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+    results = regex.exec(location.search);
+  return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+function getEvent(refresh){
+    var leg = $("#evant_list").find(".evant1").length;
+    if (leg == 0) {
+        $.ajax({
+            url: "/api/mbl_ADM_0002.jsp?COMP_CD=010",
+            type: 'POST',
+            dataType: 'JSON',
+            success: function (response) {
+                console.log(response);
+                if (response.RESULT.length > 0) {
+                    for (var i = 0; i < response.RESULT.length; i++) {
+                        if (response.RESULT[i].USE_INFO == "Y") {
+                            var res = "";
+                            if(response.RESULT[i].LINK_TYPE == "01"){
+                                res += "<div style='margin: 1.5rem 8%;'>"
+                                    + "<a href='/main_evant_card.html?EVENT_ID=" + response.RESULT[i].EVENT_ID+"' style='color:#fff;text-decoration:none'>";
+                            }else{
+                                res += "<div style='margin: 1.5rem 8%;'>"
+                                    + "<a href='"+response.RESULT[i].LINK_URL+"' target='_blank' style='color:#fff;text-decoration:none' >";
+                            }
+                            res += "<div class='evant1' style='height:155px; border-radius: 10px; background-size:cover; background-image:url(" + response.RESULT[i].THUMB_PATH +");'>"
+                                + "<input type='hidden' name='EVENT_ID' class=" + response.RESULT[i].EVENT_ID + ">"
+                                + "<input type='hidden' name='LINK_TYPE' class=" + response.RESULT[i].LINK_TYPE + ">"
+                                + "<input type='hidden' name='LINK_URL' class=" + response.RESULT[i].LINK_URL + ">"
+                                + "<div class='nsR' style='margin:0 5%; padding-top:10px; font-size:13px;'></div>"
+                                + "<div class='nsrB' style='margin:0 5%; padding-top:10px; font-size:22px;'>'" + response.RESULT[i].TITLE + "'</div>"
+                                + "</div>"
+                                + "</a>"
+                                + "</div>";
+                        }
+                        $("#evant_list").append(res);
+                    }
+                } else {
+
+                    var res = "";
+                    res += "<div class='evant1' style='color:#000'>"
+                        + "<div class='nsR' style='margin:0 5%; padding-top:10px; font-size:13px;'></div>"
+                        + "<div class='nsrB' style='margin:0 5%; padding-top:10px; font-size:22px;text-align:center'>진행중인 이벤트가<br>존재하지 않습니다.</div>"
+                        + "<div class='nsR' style='margin:0 8%; padding-top:10px; font-size:13px; margin-top:260px;'></div>"
+                        + "</div>";
+
+                    $("#evant_list").html(res);
+
+                }
+                if(refresh){
+                    $('.slider').slick({
+                        slidesToShow: 1,
+                        slidesToScroll: 1,
+                        arrows: false,
+                        fade: false,
+                        asNavFor: '.slider-nav-thumbnails',
+                        infinite: false,
+                        adaptiveHeight: true,
+                        swipe: false
+                    });
+                    $('.slider-nav-thumbnails').slick({
+                        slidesToShow: 3,
+                        slidesToScroll: 1,
+                        asNavFor: '.slider',
+                        dots: true,
+                        focusOnSelect: true,
+                        infinite: false
+                    });
+                }else{
+                    if($("#evant_list").children($(".evant1")).length > 0){
+                        $('.slider').slick('refresh');
+                    }
+                }
+            }
+        });
+    }
+}
+
+function getNotice(refresh){
+    //alert(" bb : "+ $("#notice").find(".info1").length);
+
+    if($("#notice").find(".info1").length == 0){
+        $.ajax({
+            url: "/api/mbl_ADM_0005.jsp?COMP_CD=010",
+            type: 'POST',
+            dataType: 'JSON',
+            success: function (response) { 
+                // alert(1)
+                console.log(response);
+                if (response.RESULT.length > 0) {
+                    for (var i = 0; i < response.RESULT.length; i++) {
+                        if (response.RESULT[i].USE_INFO == "Y") {
+                            var res = "";
+                            if(response.RESULT[i].LINK_TYPE == "01"){
+                                res += "<a href='/main_info_card.html?NOTI_ID=" + response.RESULT[i].NOTI_ID+"' style='color:#fff;text-decoration:none'>";
+                            }else{
+                                res += "<a href='"+response.RESULT[i].LINK_URL+"' target='_blank' style='color:#fff;text-decoration:none' onclick='alert(1)'>";
+                            }
+                            style=''
+                            res += "<div class='info1' style='height:155px;'>" + "<img src='" + response.RESULT[i].THUMB_PATH +"' style='border-radius:10px;'>" 
+                            	+ "<input type='hidden' name='NOTI_ID' class=" + response.RESULT[i].NOTI_ID + ">" 
+                            	+ "<input type='hidden' name='LINK_TYPE' class=" + response.RESULT[i].LINK_TYPE + ">" 
+                            	+ "<input type='hidden' name='LINK_URL' class=" + response.RESULT[i].LINK_URL + "></div>" 
+                            	+ "<div style='height:65px; text-align:center; padding: 20px 0;'>" 
+                            	+ "<div class='nsR' style='color:#000; font-size:14px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;''>" + response.RESULT[i].TITLE
+                            	+ "<div class='nsR' style='color:#808080; font-size:12px; padding-top:5px;''>" + response.RESULT[i].REG_DTM.substr(0, 10) 
+                            	+ "</div>" 
+//                                 + "<div class='nsB' style='padding-top:10px; font-size:15px;''>" + response.RESULT[i].TITLE + "</div>" 
+                                + "<div class='nsR' style='padding-top:10px; color:#808080; font-size:13px;'>#" + response.RESULT[i].NOTI_TAG_01 + " #" + response.RESULT[i].NOTI_TAG_02 + " #" + response.RESULT[i].NOTI_TAG_03 + "</div>" 
+                                + "</div>";
+                            res += "</a>";
+                            $("#notice").append(res);
+                        }
+                    }
+                } else {
+                    var res = "";
+                    res += "<div class='info1' style='color:#000'>" 
+                    	+ "<div class='nsR' style='margin:0 5%; padding-top:10px; font-size:13px;'></div>" 
+                    	+ "<div class='nsrB' style='margin:0 5%; padding-top:10px; font-size:22px;text-align:center'>공지사항이<br>존재하지 않습니다.</div>" 
+                    	+ "<div class='nsR' style='margin:0 8%; padding-top:10px; font-size:13px; margin-top:260px;'></div>" 
+                    	+ "</div>";
+                    // res += "<div class='evant1'>"
+                    //       +"<div class='nsR' style='margin:0 5%; padding-top:10px; font-size:13px;'></div>"
+                    //       +"<div class='nsrB' style='margin:0 5%; padding-top:10px; font-size:22px;'>진행중인 이벤트가<br>존재하지 않습니다.</div>"
+                    //       +"<div class='nsR' style='margin:0 8%; padding-top:10px; font-size:13px; margin-top:260px;'></div>"
+                    //       +"</div>"
+                    $("#notice").append(res);
+                }
+                if(refresh){
+                    $('.slider').slick({
+                        slidesToShow: 1,
+                        slidesToScroll: 1,
+                        arrows: false,
+                        fade: false,
+                        asNavFor: '.slider-nav-thumbnails',
+                        infinite: false,
+                        adaptiveHeight: true,
+                        swipe: false
+                    });
+
+                    $('.slider-nav-thumbnails').slick({
+                        slidesToShow: 3,
+                        slidesToScroll: 1,
+                        asNavFor: '.slider',
+                        dots: true,
+                        focusOnSelect: true,
+                        infinite: false
+                    });
+                    $('.slider').slick("slickGoTo",1);
+                }
+                else{
+//                     console.log($("#notice").children($(".info1")).length);
+                    if($("#notice").children($(".info1")).length > 0){
+                        $('.slider').slick('refresh');
+                    }
+                }
+               
+            }
+        });
+    }
+}
+
+function getNews(refresh){
+    if($("#news").find(".news1").length == 0){
+        $.ajax({
+            url: "/api/mbl_ADM_0001.jsp?COMP_CD=010",
+            type: 'POST',
+            dataType: 'JSON',
+            success: function (response) { 
+	            console.log(response);
+                if (response.RESULT.length != 0) {
+                    for (var i = 0; i < response.RESULT.length; i++) {
+                        if (response.RESULT[i].USE_INFO == "Y") {
+                            var res = "";
+                            if(response.RESULT[i].LINK_TYPE == "01"){
+                                res += "<a href='/main_news_card.html?NEWS_ID=" + response.RESULT[i].NEWS_ID+"' style='color:#fff;text-decoration:none'>";
+                            }else{
+                                res += "<a href='"+response.RESULT[i].LINK_URL+"' target='_blank' style='color:#fff;text-decoration:none'>";
+                            }
+                            res += "<div class='news1' style='height:155px;'>" 
+                            	+ "<img src='" + response.RESULT[i].THUMB_PATH +"'>" 
+                            	+ "<input type='hidden' name='NEWS_ID' class=" + response.RESULT[i].NEWS_ID + "></div>" 
+                            	+ "<div style='height:60px; text-align:center; padding:20px 0;'>" 
+                            	+ "<div class='nsR' style='color:#000; font-size:14px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;'>" + response.RESULT[i].TITLE 
+                            	+ "<div class='nsR' style='color:#808080; font-size:12px;'>" + response.RESULT[i].REG_DTM.substr(0, 10) 
+                            	+ "</div>" 
+//                             	+ "<div class='nsB' style='padding-top:5px; font-size:15px;'>" + response.RESULT[i].TITLE + "</div>" 
+                            	+ "</div>";
+                            res += "</a>";
+                            $("#news").append(res);
+                        }
+                    }
+                } else {
+                    var res = "";
+                    res += "<div class='news1' style='color:#000'>" + "<div class='nsR' style='margin:0 5%; padding-top:10px; font-size:13px;'></div>" + "<div class='nsrB' style='margin:0 5%; padding-top:10px; font-size:22px;text-align:center'>뉴스가<br>존재하지 않습니다.</div>" + "<div class='nsR' style='margin:0 8%; padding-top:10px; font-size:13px; margin-top:260px;'></div>" + "</div>";
+                    $("#news").append(res);
+                }
+                if(refresh){
+                    $('.slider').slick({
+                        slidesToShow: 1,
+                        slidesToScroll: 1,
+                        arrows: false,
+                        fade: false,
+                        asNavFor: '.slider-nav-thumbnails',
+                        infinite: false,
+                        adaptiveHeight: true,
+                        swipe: false,
+                      
+                    });
+
+                    $('.slider-nav-thumbnails').slick({
+                        slidesToShow: 3,
+                        slidesToScroll: 1,
+                        asNavFor: '.slider',
+                        dots: true,
+                        focusOnSelect: true,
+                        infinite: false
+                    });
+                    $('.slider').slick("slickGoTo",2);
+                }
+                else{
+                    if($("#news").children($(".news1")).length > 0){
+                        $('.slider').slick('refresh');
+                    }
+                }
+            }
+        });
+    }
+}
+        </script>
+    </body>
+</html>

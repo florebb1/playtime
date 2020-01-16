@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='ITEM_CHAIN_HIS_Q'><![CDATA[
+    SELECT  *
+      FROM (
+            SELECT  I.COMP_CD
+                 ,  I.BRAND_CD
+                 ,  I.STOR_TP
+                 ,  I.ITEM_CD
+                 ,  NVL(IL.ITEM_NM, I.ITEM_NM)          AS ITEM_NM
+                 ,  ICH.START_DT                        AS START_DT
+                 ,  ICH.CLOSE_DT                        AS CLOSE_DT
+                 ,  ICH.SALE_PRC                        AS PRICE
+                 ,  ICH.COST                            AS COST
+                 ,  ICH.START_DT                        AS CHG_START_DT
+                 ,  ICH.CLOSE_DT                        AS CHG_CLOSE_DT
+                 ,  ICH.SALE_PRC                        AS CHG_PRICE
+                 ,  ICH.USE_YN                          AS USE_YN
+            FROM    ITEM_CHAIN      I
+                 , (
+                    SELECT  *
+                    FROM    ITEM_CHAIN_HIS  A
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     BRAND_CD    = ${SCH_BRAND_CD}
+                    AND     STOR_TP     = ${SCH_STOR_TP}
+                    AND     ${SCH_GFR_DATE} BETWEEN A.START_DT AND NVL(A.CLOSE_DT, '99991231')
+                    AND     USE_YN      = 'Y'
+                   )                ICH
+                 ,  BRAND           B
+                 , (
+                    SELECT  COMP_CD
+                          , ITEM_CD
+                          , ITEM_NM
+                    FROM    LANG_ITEM
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   )               IL
+            WHERE  I.COMP_CD       = ICH.COMP_CD
+            AND  I.BRAND_CD      = ICH.BRAND_CD
+            AND  I.STOR_TP       = ICH.STOR_TP
+            AND  I.ITEM_CD       = ICH.ITEM_CD
+            AND  I.COMP_CD       = B.COMP_CD
+            AND  I.BRAND_CD      = B.BRAND_CD
+            AND  I.COMP_CD       = IL.COMP_CD(+)
+            AND  I.ITEM_CD       = IL.ITEM_CD(+)
+            AND  I.COMP_CD       = ${SCH_COMP_CD}
+            AND  I.BRAND_CD      = ${SCH_BRAND_CD}
+            AND  I.STOR_TP       = ${SCH_STOR_TP}
+            AND  I.USE_YN        = 'Y'
+            AND  I.ORD_SALE_DIV  = '3'
+            AND (${SCH_L_CLASS_CD} IS NULL OR I.L_CLASS_CD = ${SCH_L_CLASS_CD})
+            AND (${SCH_M_CLASS_CD} IS NULL OR I.M_CLASS_CD = ${SCH_M_CLASS_CD})
+            AND (${SCH_S_CLASS_CD} IS NULL OR I.S_CLASS_CD = ${SCH_S_CLASS_CD})
+            AND (${SCH_ITEM_TXT}   IS NULL OR (I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%'))
+        )
+ ORDER  BY ITEM_CD
+]]></query>
+
+<query name='ITEM_STORE_Q'><![CDATA[
+    SELECT  *
+      FROM (
+            SELECT  I.COMP_CD
+                 ,  I.BRAND_CD
+                 ,  I.STOR_TP
+                 ,  I.ITEM_CD
+                 ,  NVL(IL.ITEM_NM  , I.ITEM_NM)     AS ITEM_NM
+                 ,  NVL(IST.START_DT, ICH.START_DT)  AS START_DT
+                 ,  NVL(IST.CLOSE_DT, ICH.CLOSE_DT)  AS CLOSE_DT
+                 ,  NVL(IST.SALE_PRC, ICH.SALE_PRC)  AS PRICE
+                 ,  ICH.COST                         AS COST
+                 ,  NVL(IST.START_DT, ICH.START_DT)  AS CHG_START_DT
+                 ,  NVL(IST.CLOSE_DT, ICH.CLOSE_DT)  AS CHG_CLOSE_DT
+                 ,  NVL(IST.SALE_PRC, ICH.SALE_PRC)  AS CHG_PRICE
+                 ,  NVL(IST.USE_YN  , 'N')           AS USE_YN
+            FROM    ITEM_CHAIN      I
+                 , (
+                    SELECT  *
+                    FROM    ITEM_CHAIN_HIS  A
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     BRAND_CD    = ${SCH_BRAND_CD}
+                    AND     STOR_TP     = ${SCH_STOR_TP}
+                    AND     ${SCH_GFR_DATE} BETWEEN A.START_DT AND NVL(A.CLOSE_DT, '99991231')
+                    AND     USE_YN      = 'Y'
+                   )                ICH
+                 ,  BRAND           B
+                 , (
+                    SELECT  COMP_CD
+                          , ITEM_CD
+                          , ITEM_NM
+                    FROM    LANG_ITEM
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                    AND     USE_YN      = 'Y'
+                   )               IL
+                 , (
+                    SELECT  IST.COMP_CD
+                          , IST.BRAND_CD
+                          , IST.STOR_CD
+                          , IST.ITEM_CD
+                          , IST.START_DT
+                          , IST.CLOSE_DT
+                          , IST.PRICE SALE_PRC
+                          , IST.USE_YN
+                    FROM    ITEM_STORE  IST
+                          , ITEM        ITM
+                    WHERE   IST.COMP_CD      = ITM.COMP_CD
+                    AND     IST.ITEM_CD      = ITM.ITEM_CD
+                    AND     IST.COMP_CD      = ${SCH_COMP_CD}
+                    AND     IST.BRAND_CD     = ${SCH_BRAND_CD}
+                    AND     IST.STOR_CD      = ${SCH_STOR_CD}
+                    AND     IST.PRC_DIV      = '02'
+                    AND     ITM.ORD_SALE_DIV = '3'
+                    AND    (${SCH_L_CLASS_CD} IS NULL OR ITM.L_CLASS_CD = ${SCH_L_CLASS_CD})
+                    AND    (${SCH_M_CLASS_CD} IS NULL OR ITM.M_CLASS_CD = ${SCH_M_CLASS_CD})
+                    AND    (${SCH_S_CLASS_CD} IS NULL OR ITM.S_CLASS_CD = ${SCH_S_CLASS_CD})
+                    AND    (${SCH_ITEM_TXT} IS NULL OR (ITM.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%' OR ITM.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%'))
+                    AND    ${SCH_GFR_DATE} BETWEEN IST.START_DT AND NVL(IST.CLOSE_DT, '99991231')
+                   ) IST
+            WHERE   I.COMP_CD       = ICH.COMP_CD
+            AND     I.BRAND_CD      = ICH.BRAND_CD
+            AND     I.STOR_TP       = ICH.STOR_TP
+            AND     I.ITEM_CD       = ICH.ITEM_CD
+            AND     I.COMP_CD       = B.COMP_CD
+            AND     I.BRAND_CD      = B.BRAND_CD
+            AND     I.COMP_CD       = IL.COMP_CD (+)
+            AND     I.ITEM_CD       = IL.ITEM_CD (+)
+            AND     I.COMP_CD       = IST.COMP_CD (+)
+            AND     I.BRAND_CD      = IST.BRAND_CD(+)
+            AND     I.ITEM_CD       = IST.ITEM_CD (+)
+            AND     I.COMP_CD       = ${SCH_COMP_CD}
+            AND     I.BRAND_CD      = ${SCH_BRAND_CD}
+            AND     I.STOR_TP       = ${SCH_STOR_TP}
+            AND     I.USE_YN        = 'Y'
+            AND     I.ORD_SALE_DIV  = '3'
+            AND    (${SCH_L_CLASS_CD} IS NULL OR I.L_CLASS_CD = ${SCH_L_CLASS_CD})
+            AND    (${SCH_M_CLASS_CD} IS NULL OR I.M_CLASS_CD = ${SCH_M_CLASS_CD})
+            AND    (${SCH_S_CLASS_CD} IS NULL OR I.S_CLASS_CD = ${SCH_S_CLASS_CD})
+            AND    (${SCH_ITEM_TXT}   IS NULL OR (I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%'))
+        )   I
+ ORDER  BY ITEM_CD
+]]></query>
+</SQLResource>
+

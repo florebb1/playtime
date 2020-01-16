@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+<style> 
+body {
+  background-color: #FFCA02;
+}
+.stamp_coupon {
+  margin:30px 0;
+}
+.stamp_coupon_body {
+  border-radius:10px;
+  padding:10px;
+  position: relative;
+  background-color:rgba(255,255,255,1);
+  background-image:url('/images/icon/yellow_stamp.png');
+  background-repeat: no-repeat;
+  background-size:25%;
+  background-position:13% center;
+}
+.stamp_in_body {
+	padding-left:40%;
+}
+.stamp_in_body h4 ,h5 {
+	text-align: center;
+}
+
+</style>
+</head>
+<body>
+
+<form id="membership_frm">
+  <input name="USER_ID" type="hidden" value="MOBILE">
+  <input id="CUST_ID" name="CUST_ID" type="hidden">
+  <input id="FR_YMD" name="FR_YMD" type="hidden">
+  <input id="TO_YMD" name="TO_YMD" type="hidden">  
+</form>
+
+<div style="margin:0 8%;">
+  <div style="margin:40px 0; color:#fff;">
+    <i id="back" class="fas fa-chevron-left"></i>
+  </div>
+  <div class="nsB" style="color:#fff;font-size:14px;line-height:25px;">
+    <span style="font-size:20px;">나의 스탬프</span><br>일부 매장에서 사용이 제한 될 수 있으며,<br>쿠폰과 중복 사용은 불가능 합니다.
+  </div>
+  <div id="stamp_list"></div>
+</div>
+
+<script src="//code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+<script src="/js/sweetalert.min.js"></script>
+<script src="/js/userCheck.js"></script>
+<script type="text/javascript">
+  function setCookie(cName, cValue, cDay){
+      var expire = new Date();
+      expire.setDate(expire.getDate() + cDay);
+      cookies = cName + '=' + escape(cValue) + '; path=/ '; // 한글 깨짐을 막기위해 escape(cValue)를 합니다.
+      if(typeof cDay != 'undefined') cookies += ';expires=' + expire.toGMTString() + ';';
+      document.cookie = cookies;
+  }
+  function getCookie(cName) {
+      cName = cName + '=';
+      var cookieData = document.cookie;
+      var start = cookieData.indexOf(cName);
+      var cValue = '';
+      if(start != -1){
+          start += cName.length;
+          var end = cookieData.indexOf(';', start);
+          if(end == -1)end = cookieData.length;
+          cValue = cookieData.substring(start, end);
+      }
+      return unescape(cValue);
+  }
+$(document).on('ready', function() {
+  userCheck(getCookie('user'));
+  var cookie = getCookie('user');
+  $("#CUST_ID").val(cookie);
+  
+  var d = new Date();
+  var strDate = d.getFullYear().toString()+(d.getMonth()+1).toString()+(d.getDate()).toString();
+  var endDate = (d.getFullYear()-1).toString()+(d.getMonth()+1).toString()+(d.getDate()).toString();
+  $('#FR_YMD').val(endDate);
+  $('#TO_YMD').val(strDate);
+  var datas = $("#membership_frm").serialize();
+  $.ajax({
+      url : "/api/mbl_0520.jsp",
+      type : 'POST',
+      dataType : 'JSON',
+      data : datas,
+        success:function(response){
+// 	        console.log(response);
+			if(response.RESULT.length != 0) {
+				var result = "";
+				for(var i=0; i < response.RESULT.length; i++) {
+					result +="<div class='stamp_coupon'>"
+	            		+"<div class='stamp_coupon_body'>"
+						+"<div class='stamp_in_body'>"
+						+"<h4>"+response.RESULT[i].STOR_NM+"</h4>"
+						+"<h5>"+response.RESULT[i].YMD+"</h5>"
+						+"</div>"
+						+"</div>"
+						+"</div>"
+				}
+				$('#stamp_list').append(result);	
+			}else {
+	            swal({
+	              button: "확인",
+	              title: "안내.",
+	              text: "적립된 스탬프가 없습니다."
+	            }).then(function() {
+	              window.location = "/mypage.html";
+	            });
+			}
+        }
+  });
+
+
+  
+  
+  $("#back").click(function() {
+    document.location.href="/mypage.html";
+  });
+
+});
+</script>
+</body>
+</html>

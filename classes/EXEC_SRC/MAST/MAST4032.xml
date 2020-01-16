@@ -1,0 +1,356 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='VENDOR_Q'><![CDATA[
+    SELECT  S.COMP_CD
+         ,  S.BRAND_CD
+         ,  S.STOR_TP
+         ,  S.STOR_CD
+         ,  S.STOR_NM
+         ,  L.STOR_NM   AS LANG_NM
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.BUSI_NO
+                 ELSE S.BUSI_NO
+            END         AS BUSI_NO
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.BUSI_NM
+                 ELSE S.BUSI_NM
+            END         AS BUSI_NM
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.BUSI_TP
+                 ELSE S.BUSI_TP
+            END         AS BUSI_TP
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.BUSI_CT
+                 ELSE S.BUSI_CT
+            END         AS BUSI_CT
+         ,  S.EXECUTE_NM
+         ,  S.EXECUTE_TEL
+         ,  S.EXECUTE_HP
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.TEL_NO
+                 ELSE S.TEL_NO
+            END         AS TEL_NO
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.FAX
+                 ELSE S.FAX
+            END         AS FAX
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.E_MAIL
+                 ELSE S.E_MAIL
+            END         AS E_MAIL
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.ZIP_CD
+                 ELSE S.ZIP_CD
+            END         AS ZIP_CD
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.ADDR
+                 ELSE S.ADDR1
+            END         AS ADDR1
+         ,  CASE WHEN S.STOR_TP = '31' THEN C.ADDR2
+                 ELSE S.ADDR2
+            END         AS ADDR2
+         ,  S.APP_DIV
+         ,  S.NATION_CD
+         ,  S.REGION_NO
+         ,  S.CURRENCY_CD
+         ,  S.USE_YN
+      FROM  STORE       S
+         ,  COMPANY     C
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  STOR_NM
+                  FROM  LANG_STORE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD                   AS STOR_TP
+                     ,  C.CODE_NM                   AS STOR_TP_NM
+                  FROM  COMMON C
+                 WHERE  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '00565'
+                   AND  C.VAL_C1    = 'V'   -- 공급업체만
+                   AND  C.USE_YN    = 'Y'
+            )   C1
+     WHERE  S.COMP_CD   = C.COMP_CD
+       AND  S.COMP_CD   = L.COMP_CD(+)
+       AND  S.BRAND_CD  = L.BRAND_CD(+)
+       AND  S.STOR_CD   = L.STOR_CD(+)
+       AND  S.COMP_CD   = C1.COMP_CD
+       AND  S.STOR_TP   = C1.STOR_TP
+       AND  S.COMP_CD   = ${SCH_COMP_CD}
+       AND  S.BRAND_CD  = ${SCH_BRAND_CD}
+       AND  (${SCH_STOR_TXT} IS NULL OR (S.STOR_CD LIKE '%'||${SCH_STOR_TXT}||'%' OR S.STOR_NM LIKE '%'||${SCH_STOR_TXT}||'%' OR L.STOR_NM LIKE '%'||${SCH_STOR_TXT}||'%'))
+       AND  (${SCH_USE_YN} IS NULL OR S.USE_YN = ${SCH_USE_YN})
+     ORDER  BY S.STOR_CD
+]]></query>
+
+<query name='VENDOR_U'><![CDATA[
+    MERGE   INTO STORE
+    USING   DUAL
+       ON   (
+                    COMP_CD         = ${COMP_CD}
+                AND BRAND_CD        = ${BRAND_CD}
+                AND STOR_CD         = ${STOR_CD}
+            )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  STOR_NM             = ${STOR_NM}
+             ,  BUSI_NO             = ${BUSI_NO}
+             ,  BUSI_NM             = ${BUSI_NM}
+             ,  BUSI_TP             = ${BUSI_TP}
+             ,  BUSI_CT             = ${BUSI_CT}
+             ,  EXECUTE_NM          = ${EXECUTE_NM}
+             ,  EXECUTE_TEL         = ${EXECUTE_TEL}
+             ,  EXECUTE_HP          = ${EXECUTE_HP}
+             ,  ZIP_CD              = ${ZIP_CD}
+             ,  ADDR1               = ${ADDR1}
+             ,  ADDR2               = ${ADDR2} 
+             ,  TEL_NO              = ${TEL_NO}
+             ,  FAX                 = ${FAX}
+             ,  E_MAIL              = ${E_MAIL}
+             ,  APP_DIV             = ${APP_DIV}
+             ,  CURRENCY_CD         = ${CURRENCY_CD}
+             ,  NATION_CD           = ${NATION_CD}
+             ,  REGION_NO           = ${REGION_NO}
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  STOR_TP
+             ,  STOR_NM
+             ,  REP_STOR_CD
+             ,  BUSI_NO
+             ,  BUSI_NM
+             ,  BUSI_TP
+             ,  BUSI_CT
+             ,  EXECUTE_NM
+             ,  EXECUTE_TEL
+             ,  EXECUTE_HP
+             ,  ZIP_CD
+             ,  ADDR1
+             ,  ADDR2
+             ,  TEL_NO
+             ,  FAX
+             ,  E_MAIL
+             ,  APP_DIV
+             ,  CURRENCY_CD
+             ,  NATION_CD
+             ,  REGION_NO
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${STOR_TP}
+             ,  ${STOR_NM}
+             ,  ${STOR_CD}
+             ,  ${BUSI_NO}
+             ,  ${BUSI_NM}
+             ,  ${BUSI_TP}
+             ,  ${BUSI_CT}
+             ,  ${EXECUTE_NM}
+             ,  ${EXECUTE_TEL}
+             ,  ${EXECUTE_HP}
+             ,  ${ZIP_CD}
+             ,  ${ADDR1}
+             ,  ${ADDR2}
+             ,  ${TEL_NO}
+             ,  ${FAX}
+             ,  ${E_MAIL}
+             ,  ${APP_DIV}
+             ,  ${CURRENCY_CD}
+             ,  ${NATION_CD}
+             ,  ${REGION_NO}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )  
+]]></query>
+
+<query name='LANG_STORE_U'><![CDATA[      
+    MERGE   INTO LANG_STORE
+    USING   DUAL
+       ON   (
+                    COMP_CD     = ${COMP_CD}
+                AND BRAND_CD    = ${BRAND_CD}
+                AND STOR_CD     = ${STOR_CD}
+                AND LANGUAGE_TP = ${LANGUAGE_TP}
+            )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  STOR_NM     = ${STOR_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  LANGUAGE_TP
+             ,  STOR_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${LANGUAGE_TP}
+             ,  ${STOR_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='VENDOR_USER_Q'><![CDATA[
+    SELECT  S.COMP_CD
+         ,  S.BRAND_CD
+         ,  S.STOR_CD
+         ,  S.USER_ID
+         ,  S.USER_NM
+         ,  L.LANG_NM   AS LANG_NM
+         ,  S.WEB_PWD
+         ,  S.LANGUAGE_TP
+         ,  S.USE_YN
+      FROM  STORE_USER  S
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'STORE_USER'
+                   AND  COL_NM      = 'USER_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = S.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(S.BRAND_CD, 4, ' ')||LPAD(S.STOR_CD, 10, ' ')||LPAD(S.USER_ID, 10, ' ') 
+       AND  S.COMP_CD       = ${SCH_COMP_CD}
+       AND  S.BRAND_CD      = ${SCH_BRAND_CD}
+       AND  S.STOR_CD       = ${SCH_STOR_CD}
+       AND  (${SCH_USE_YN}  IS NULL OR S.USE_YN = ${SCH_USE_YN})
+     ORDER  BY S.USER_ID
+]]></query>
+
+<query name='VENDOR_USER_U'><![CDATA[
+    MERGE   INTO STORE_USER
+    USING   DUAL
+       ON   (
+                    COMP_CD         = ${COMP_CD}
+                AND BRAND_CD        = ${BRAND_CD}
+                AND STOR_CD         = ${STOR_CD}
+                AND USER_ID         = ${USER_ID}
+            )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  USER_NM             = ${USER_NM}
+             ,  WEB_PWD             = ${WEB_PWD}
+             ,  LANGUAGE_TP         = ${LANGUAGE_TP}
+             ,  NATION_CD           = ${NATION_CD}
+             ,  REGION_NO           = ${REGION_NO}
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  USER_ID
+             ,  USER_NM
+             ,  WEB_PWD
+             ,  EMP_DIV
+             ,  ROLE_DIV
+             ,  WEB_AUTH_CD
+             ,  LANGUAGE_TP
+             ,  NATION_CD
+             ,  REGION_NO
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${USER_ID}
+             ,  ${USER_NM}
+             ,  ${WEB_PWD}
+             ,  '1'
+             ,  '01'
+             ,  '90'
+             ,  ${LANGUAGE_TP}
+             ,  ${NATION_CD}
+             ,  ${REGION_NO}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )  
+]]></query>
+
+<query name='LANG_TABLE_U'><![CDATA[      
+    MERGE   INTO LANG_TABLE
+    USING   DUAL
+       ON   (
+                    COMP_CD     = ${COMP_CD}
+                AND TABLE_NM    = ${TABLE_NM}
+                AND COL_NM      = ${COL_NM}
+                AND LANGUAGE_TP = ${LANGUAGE_TP}
+                AND PK_COL      = ${PK_COL}
+            )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>

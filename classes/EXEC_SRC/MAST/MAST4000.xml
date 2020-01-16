@@ -1,0 +1,135 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='BRAND_Q'><![CDATA[
+    SELECT  B.BRAND_CD
+         ,  B.BRAND_NM
+         ,  L.LANG_NM
+         ,  B.COMP_CD
+         ,  C.COMP_NM
+         ,  B.BRAND_CLASS
+         ,  B.NATION_CD
+         ,  B.MULTI_LANGUAGE_YN
+         ,  B.LANGUAGE_TP
+         ,  B.USE_YN
+      FROM  BRAND B
+         ,  ( 
+                SELECT  COMP_CD
+                     ,  COMP_NM
+                  FROM  COMPANY
+                 WHERE  USE_YN = 'Y'
+            )   C
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'BRAND'
+                   AND  COL_NM      = 'BRAND_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  B.COMP_CD = C.COMP_CD
+       AND  B.COMP_CD = L.COMP_CD(+)
+       AND  LPAD(B.BRAND_CD, 4, ' ') = PK_COL(+)
+       AND  B.COMP_CD = ${SCH_COMP_CD}
+       AND  (${SCH_USE_YN} IS NULL OR B.USE_YN = ${SCH_USE_YN})
+     ORDER  BY BRAND_CD
+]]></query>
+
+<query name='BRAND_U'><![CDATA[ 
+    MERGE INTO BRAND
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+        )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  BRAND_NM            = ${BRAND_NM}
+             ,  BRAND_CLASS         = ${BRAND_CLASS}
+             ,  NATION_CD           = ${NATION_CD}
+             ,  MULTI_LANGUAGE_YN   = ${MULTI_LANGUAGE_YN}
+             ,  LANGUAGE_TP         = ${LANGUAGE_TP}
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  BRAND_CD 
+             ,  BRAND_NM
+             ,  BRAND_CLASS
+             ,  NATION_CD 
+             ,  MULTI_LANGUAGE_YN 
+             ,  LANGUAGE_TP 
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${BRAND_NM}
+             ,  ${BRAND_CLASS}
+             ,  ${NATION_CD}
+             ,  ${MULTI_LANGUAGE_YN}
+             ,  ${LANGUAGE_TP}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+    
+<query name='BRAND_LANG_U'><![CDATA[ 
+    MERGE INTO LANG_TABLE
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  TABLE_NM    = ${TABLE_NM}
+           AND  COL_NM      = ${COL_NM}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+           AND  PK_COL      = ${PK_COL}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>
+

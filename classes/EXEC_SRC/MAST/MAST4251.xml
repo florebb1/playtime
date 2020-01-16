@@ -1,0 +1,2397 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='ITEM_H_Q'><![CDATA[
+    SELECT  I.COMP_CD
+         ,  I.BRAND_CD
+         ,  I.ITEM_CD
+         ,  I.ITEM_POS_NM                               AS ITEM_POS_NM
+         ,  TO_CHAR(NVL(B.SALE_PRC, 0), '9,999,999.99') AS SALE_PRC
+      FROM  (
+                SELECT  I.COMP_CD
+                     ,  I.BRAND_CD
+                     ,  I.ITEM_CD
+                     ,  MAX(NVL(L.ITEM_POS_NM, I.ITEM_POS_NM))  AS ITEM_POS_NM
+                     ,  MAX(I.INST_DT) AS INST_DT
+                  FROM  (
+                            SELECT  P.COMP_CD
+                                 ,  P.BRAND_CD
+                                 ,  PM.ITEM_CD
+                              FROM  CS_PROGRAM      P
+                                 ,  CS_PROGRAM_MATL PM
+                             WHERE  P.COMP_CD       = PM.COMP_CD
+                               AND  P.PROGRAM_ID    = PM.PROGRAM_ID
+                               AND  P.COMP_CD       = ${SCH_COMP_CD}
+                               AND  P.BRAND_CD      = ${SCH_BRAND_CD}
+                               AND  P.USE_YN        = 'Y'
+                               AND  PM.USE_YN       = 'Y'
+                             GROUP  BY P.COMP_CD, P.BRAND_CD, PM.ITEM_CD
+                        )           PM
+                     ,  ITEM_CHAIN  I
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_POS_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  PM.COMP_CD  = I.COMP_CD
+                   AND  PM.BRAND_CD = I.BRAND_CD
+                   AND  PM.ITEM_CD  = I.ITEM_CD
+                   AND  I.COMP_CD   = L.COMP_CD(+)
+                   AND  I.ITEM_CD   = L.ITEM_CD(+)
+                   AND  I.COMP_CD   = ${SCH_COMP_CD}
+                   AND  I.BRAND_CD  = ${SCH_BRAND_CD}
+                   AND  I.STOR_TP   = '10'
+                   AND  I.ORD_SALE_DIV IN ('2', '3')
+                   AND  I.SALE_START_DT BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMMDD') AND TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'YYYYMMDD')
+                   AND  I.USE_YN = 'Y'
+                   AND  I.ITEM_CD NOT IN (
+                                            SELECT  TOUCH_CD
+                                              FROM  TOUCH_UI
+                                             WHERE  COMP_CD   = ${SCH_COMP_CD}
+                                               AND  BRAND_CD  = ${SCH_BRAND_CD}
+                                               AND  TOUCH_DIV = ${SCH_TOUCH_DIV}
+                                               AND  TOUCH_TP  = ${SCH_TOUCH_TP}
+                                               AND  USE_YN    = 'Y'
+                                       )
+                 GROUP  BY I.COMP_CD, I.BRAND_CD, I.ITEM_CD
+            ) I
+         ,  ITEM B
+     WHERE  I.COMP_CD = B.COMP_CD(+)
+       AND  I.ITEM_CD = B.ITEM_CD(+)
+     @ORDERBY@
+]]></query>
+
+<query name='ITEM_S_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  BRAND_CD
+         ,  ITEM_CD
+         ,  ITEM_POS_NM      AS ITEM_POS_NM
+         ,  NVL(SALE_PRC, 0) AS SALE_PRC
+      FROM  (
+                SELECT  A.COMP_CD
+                     ,  A.BRAND_CD
+                     ,  A.ITEM_CD
+                     ,  DECODE(A.SALE_PRC_CTRL, 'H', A.SALE_PRC, NVL(B.PRICE, A.SALE_PRC))  AS SALE_PRC
+                     ,  NVL(L.ITEM_POS_NM, A.ITEM_POS_NM)                                           AS ITEM_POS_NM
+                     ,  A.INST_DT
+                  FROM  (
+                            SELECT  P.COMP_CD
+                                 ,  P.BRAND_CD
+                                 ,  PM.ITEM_CD
+                              FROM  CS_PROGRAM      P
+                                 ,  CS_PROGRAM_MATL PM
+                             WHERE  P.COMP_CD       = PM.COMP_CD
+                               AND  P.PROGRAM_ID    = PM.PROGRAM_ID
+                               AND  P.COMP_CD       = ${SCH_COMP_CD}
+                               AND  P.BRAND_CD      = ${SCH_BRAND_CD}
+                               AND  P.USE_YN        = 'Y'
+                               AND  PM.USE_YN       = 'Y'
+                             GROUP  BY P.COMP_CD, P.BRAND_CD, PM.ITEM_CD
+                        )           PM
+                     ,  ITEM_CHAIN A
+                     ,  (
+                            SELECT  S.*
+                              FROM  ITEM_STORE S
+                             WHERE  S.COMP_CD  = ${SCH_COMP_CD}
+                               AND  S.BRAND_CD = ${SCH_BRAND_CD}
+                               AND  S.STOR_CD  = ${SCH_STOR_CD}
+                               AND  S.PRC_DIV  = '02'
+                               AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S.START_DT AND NVL(S.CLOSE_DT, '99991231')
+                        ) B
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_POS_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  PM.COMP_CD  = A.COMP_CD
+                   AND  PM.BRAND_CD = A.BRAND_CD
+                   AND  PM.ITEM_CD  = A.ITEM_CD
+                   AND  A.COMP_CD   = B.COMP_CD(+)
+                   AND  A.ITEM_CD   = B.ITEM_CD(+)
+                   AND  A.COMP_CD   = L.COMP_CD(+)
+                   AND  A.ITEM_CD   = L.ITEM_CD(+)
+                   AND  A.COMP_CD   = ${SCH_COMP_CD}
+                   AND  A.BRAND_CD  = ${SCH_BRAND_CD}
+                   AND  A.STOR_TP   = (
+                                            SELECT  STOR_TP
+                                              FROM  STORE
+                                             WHERE  COMP_CD  = ${SCH_COMP_CD}
+                                               AND  BRAND_CD = ${SCH_BRAND_CD}
+                                               AND  STOR_CD  = ${SCH_STOR_CD}
+                                       )
+                   AND  A.ORD_SALE_DIV IN ('2', '3')
+                   AND  A.SALE_START_DT BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMMDD') AND TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'YYYYMMDD')
+                   AND  A.USE_YN    = 'Y'
+                   AND  A.ITEM_CD NOT IN (
+                                            SELECT  TOUCH_CD
+                                              FROM  TOUCH_STORE_UI
+                                             WHERE  COMP_CD   = ${SCH_COMP_CD}
+                                               AND  BRAND_CD  = ${SCH_BRAND_CD}
+                                               AND  TOUCH_DIV = ${SCH_TOUCH_DIV}
+                                               AND  STOR_CD   = ${SCH_STOR_CD}
+                                               AND  TOUCH_TP  = ${SCH_TOUCH_TP}
+                                               AND  USE_YN    = 'Y'
+                                         )
+            ) I
+     @ORDERBY@
+]]></query>
+
+<query name='UNUSED_TOUCH_GR_CD_H_Q'><![CDATA[
+   SELECT   ${SCH_COMP_CD}      AS COMP_CD
+      ,     TOUCH_GR_CD
+      ,     MULT_PRC
+   FROM (
+            SELECT  RN  AS TOUCH_GR_CD
+              ,     'I' AS MULT_PRC
+            FROM (
+                    SELECT
+                           'G' || LPAD(LEVEL, 9, 0) AS RN
+                    FROM DUAL
+                    CONNECT BY LEVEL <= 100
+                 )
+            WHERE RN NOT IN (
+                              SELECT TOUCH_GR_CD
+                              FROM TOUCH_UI
+                              WHERE COMP_CD   = ${SCH_COMP_CD}
+                                AND BRAND_CD  = ${SCH_BRAND_CD}
+                                AND TOUCH_DIV = ${SCH_TOUCH_DIV}
+                                AND TOUCH_TP  = ${SCH_TOUCH_TP}
+                            )
+            UNION ALL
+            SELECT  RN  AS TOUCH_GR_CD
+               ,    'U' AS MULT_PRC
+            FROM (
+                    SELECT
+                           'G' || LPAD(LEVEL, 9, 0) AS RN
+                    FROM DUAL
+                    CONNECT BY LEVEL <= 100
+                 )
+            WHERE RN IN (
+                              SELECT TOUCH_GR_CD
+                              FROM TOUCH_UI
+                              WHERE USE_YN    = 'N'
+                                AND COMP_CD   = ${SCH_COMP_CD}
+                                AND BRAND_CD  = ${SCH_BRAND_CD}
+                                AND TOUCH_DIV = ${SCH_TOUCH_DIV}
+                                AND TOUCH_TP  = ${SCH_TOUCH_TP}
+                        )
+       )
+   ORDER BY TOUCH_GR_CD
+]]></query>
+
+<query name='UNUSED_TOUCH_GR_CD_S_Q'><![CDATA[
+   SELECT   ${SCH_COMP_CD}      AS COMP_CD
+      ,     TOUCH_GR_CD
+      ,     MULT_PRC
+   FROM (
+            SELECT  RN  AS TOUCH_GR_CD
+              ,     'I' AS MULT_PRC
+            FROM (
+                    SELECT
+                           'G' || LPAD(LEVEL, 9, 0) AS RN
+                    FROM DUAL
+                    CONNECT BY LEVEL <= 100
+                 )
+            WHERE RN NOT IN (
+                              SELECT TOUCH_GR_CD
+                              FROM TOUCH_STORE_UI
+                              WHERE COMP_CD   = ${SCH_COMP_CD}
+                                AND BRAND_CD  = ${SCH_BRAND_CD}
+                                AND TOUCH_DIV = ${SCH_TOUCH_DIV}
+                                AND STOR_CD   = ${SCH_STOR_CD}
+                                AND TOUCH_TP  = ${SCH_TOUCH_TP}
+                            )
+            UNION ALL
+            SELECT  RN  AS TOUCH_GR_CD
+               ,    'U' AS MULT_PRC
+            FROM (
+                    SELECT
+                           'G' || LPAD(LEVEL, 9, 0) AS RN
+                    FROM DUAL
+                    CONNECT BY LEVEL <= 100
+                 )
+            WHERE RN IN (
+                              SELECT TOUCH_GR_CD
+                              FROM TOUCH_STORE_UI
+                              WHERE USE_YN = 'N'
+                                AND COMP_CD   = ${SCH_COMP_CD}
+                                AND BRAND_CD  = ${SCH_BRAND_CD}
+                                AND TOUCH_DIV = ${SCH_TOUCH_DIV}
+                                AND STOR_CD   = ${SCH_STOR_CD}
+                                AND TOUCH_TP  = ${SCH_TOUCH_TP}
+                        )
+       )
+   ORDER BY TOUCH_GR_CD
+]]></query>
+
+<query name='TOUCH_UI_Q'><![CDATA[
+    SELECT  A.COMP_CD
+         ,  A.BRAND_CD
+         ,  A.TOUCH_DIV
+         ,  A.TOUCH_GR_CD
+         ,  A.TOUCH_GR_CD AS MOVE_TOUCH_GR_CD
+         ,  A.TOUCH_CD
+         ,  TO_CHAR(NVL(I.SALE_PRC, 0), '9,999,999.99') AS SALE_PRC
+         ,  A.TOUCH_TP
+         ,  NVL(DECODE(A.TOUCH_TP, 'G', L.LANG_NM, I.ITEM_NM), A.TOUCH_NM)  AS TOUCH_NM
+         ,  A.POSITION
+         ,  CASE WHEN TOUCH_TP = 'G' THEN NVL(B.CNT, 0)
+                 ELSE 0
+            END AS SUB_MENU_CNT
+      FROM  TOUCH_UI A
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  TOUCH_DIV
+                     ,  TOUCH_GR_CD
+                     ,  COUNT(*) AS CNT
+                  FROM  TOUCH_UI
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  BRAND_CD    = ${SCH_BRAND_CD}
+                   AND  TOUCH_DIV   = ${SCH_TOUCH_DIV}
+                   AND  (${SCH_TOUCH_GR_CD} IS NULL OR TOUCH_GR_CD = ${SCH_TOUCH_GR_CD})
+                   AND  TOUCH_TP = 'M'
+                   AND  USE_YN = 'Y'
+                   AND  POSITION IS NOT NULL
+                 GROUP  BY COMP_CD, BRAND_CD, TOUCH_DIV, TOUCH_GR_CD
+            ) B
+         ,  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_POS_NM, I.ITEM_POS_NM)   AS ITEM_NM
+                     ,  I.SALE_PRC
+                     ,  I.USE_YN
+                  FROM  (
+                            SELECT  P.COMP_CD
+                                 ,  PM.ITEM_CD
+                              FROM  CS_PROGRAM      P
+                                 ,  CS_PROGRAM_MATL PM
+                             WHERE  P.COMP_CD       = PM.COMP_CD
+                               AND  P.PROGRAM_ID    = PM.PROGRAM_ID
+                               AND  P.COMP_CD       = ${SCH_COMP_CD}
+                               AND  P.BRAND_CD      = ${SCH_BRAND_CD}
+                               AND  P.USE_YN        = 'Y'
+                               AND  PM.USE_YN       = 'Y'
+                             GROUP  BY P.COMP_CD, PM.ITEM_CD
+                        )           PM
+                     ,  ITEM    I
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_POS_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  PM.COMP_CD  = I.COMP_CD
+                   AND  PM.ITEM_CD  = I.ITEM_CD
+                   AND  I.COMP_CD   = L.COMP_CD(+)
+                   AND  I.ITEM_CD   = L.ITEM_CD(+)
+                   AND  I.COMP_CD   = ${SCH_COMP_CD}
+            )   I
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'TOUCH_UI'
+                   AND  COL_NM      = 'TOUCH_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  A.COMP_CD       = B.COMP_CD(+)
+       AND  A.BRAND_CD      = B.BRAND_CD(+)
+       AND  A.TOUCH_DIV     = B.TOUCH_DIV(+)
+       AND  A.TOUCH_GR_CD   = B.TOUCH_GR_CD(+)
+       AND  A.COMP_CD       = I.COMP_CD(+)
+       AND  A.TOUCH_CD      = I.ITEM_CD(+)
+       AND  A.COMP_CD       = L.COMP_CD(+)
+       AND  LPAD(A.BRAND_CD, 4, ' ')||LPAD(A.TOUCH_DIV, 1, ' ')||LPAD(A.TOUCH_GR_CD, 10, ' ')||LPAD(A.TOUCH_CD, 10, ' ') = L.PK_COL(+)
+       AND  A.COMP_CD       = ${SCH_COMP_CD}
+       AND  A.BRAND_CD      = ${SCH_BRAND_CD}
+       AND  A.TOUCH_DIV     = ${SCH_TOUCH_DIV}
+       AND  A.TOUCH_TP      = ${SCH_TOUCH_TP}
+       AND  (${SCH_TOUCH_GR_CD} IS NULL OR A.TOUCH_GR_CD = ${SCH_TOUCH_GR_CD})
+       AND  A.USE_YN        = 'Y'
+       AND  NVL(I.USE_YN, 'Y') = 'Y'
+     ORDER  BY A.POSITION, A.UPD_DT
+]]></query>
+
+<query name='TOUCH_STORE_UI_Q'><![CDATA[
+    SELECT  A.COMP_CD
+         ,  A.BRAND_CD
+         ,  A.STOR_CD
+         ,  A.TOUCH_DIV
+         ,  A.TOUCH_GR_CD
+         ,  A.TOUCH_GR_CD                                                   AS MOVE_TOUCH_GR_CD
+         ,  A.TOUCH_CD
+         ,  TO_CHAR(NVL(I.SALE_PRC, 0), '9,999,999.99')                     AS SALE_PRC
+         ,  A.TOUCH_TP
+         ,  NVL(DECODE(A.TOUCH_TP, 'G', L.LANG_NM, I.ITEM_NM), A.TOUCH_NM)  AS TOUCH_NM
+         ,  A.POSITION
+         ,  CASE WHEN TOUCH_TP = 'G' THEN NVL(B.CNT, 0)
+                 ELSE 0
+            END                                                             AS SUB_MENU_CNT
+      FROM  TOUCH_STORE_UI A
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  TOUCH_DIV
+                     ,  TOUCH_GR_CD
+                     ,  COUNT(*) AS CNT
+                  FROM  TOUCH_STORE_UI
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  BRAND_CD    = ${SCH_BRAND_CD}
+                   AND  TOUCH_DIV   = ${SCH_TOUCH_DIV}
+                   AND  STOR_CD     = ${SCH_STOR_CD}
+                   AND  (${SCH_TOUCH_GR_CD} IS NULL OR TOUCH_GR_CD = ${SCH_TOUCH_GR_CD})
+                   AND  TOUCH_TP    = 'M'
+                   AND  USE_YN      = 'Y'
+                   AND  POSITION IS NOT NULL
+                 GROUP  BY COMP_CD, BRAND_CD, STOR_CD, TOUCH_DIV, TOUCH_GR_CD
+            ) B
+         ,  (
+                SELECT  A.COMP_CD
+                     ,  A.BRAND_CD
+                     ,  A.ITEM_CD
+                     ,  NVL(L.ITEM_POS_NM, A.ITEM_POS_NM)   AS ITEM_NM
+                     ,  NVL(B.PRICE, A.SALE_PRC)    AS SALE_PRC
+                     ,  A.USE_YN
+                  FROM  (
+                            SELECT  P.COMP_CD
+                                 ,  P.BRAND_CD
+                                 ,  PM.ITEM_CD
+                              FROM  CS_PROGRAM      P
+                                 ,  CS_PROGRAM_MATL PM
+                             WHERE  P.COMP_CD       = PM.COMP_CD
+                               AND  P.PROGRAM_ID    = PM.PROGRAM_ID
+                               AND  P.COMP_CD       = ${SCH_COMP_CD}
+                               AND  P.BRAND_CD      = ${SCH_BRAND_CD}
+                               AND  P.USE_YN        = 'Y'
+                               AND  PM.USE_YN       = 'Y'
+                             GROUP  BY P.COMP_CD, P.BRAND_CD, PM.ITEM_CD
+                        )           PM
+                     ,  ITEM_CHAIN A
+                     ,  (
+                            SELECT  S.*
+                              FROM  ITEM_STORE S
+                             WHERE  S.COMP_CD  = ${SCH_COMP_CD}
+                               AND  S.BRAND_CD = ${SCH_BRAND_CD}
+                               AND  S.STOR_CD  = ${SCH_STOR_CD}
+                               AND  S.PRC_DIV  = '02'
+                               AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S.START_DT AND NVL(S.CLOSE_DT, '99991231')
+                        ) B
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_POS_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  PM.COMP_CD  = A.COMP_CD
+                   AND  PM.BRAND_CD = A.BRAND_CD
+                   AND  PM.ITEM_CD  = A.ITEM_CD
+                   AND  A.COMP_CD   = B.COMP_CD(+)
+                   AND  A.ITEM_CD   = B.ITEM_CD(+)
+                   AND  A.COMP_CD   = L.COMP_CD(+)
+                   AND  A.ITEM_CD   = L.ITEM_CD(+)
+                   AND  A.COMP_CD   = ${SCH_COMP_CD}
+                   AND  A.BRAND_CD  = ${SCH_BRAND_CD}
+                   AND  A.STOR_TP   = (
+                                        SELECT  STOR_TP
+                                          FROM  STORE
+                                         WHERE  COMP_CD  = ${SCH_COMP_CD}
+                                           AND  BRAND_CD = ${SCH_BRAND_CD}
+                                           AND  STOR_CD  = ${SCH_STOR_CD}
+                                     )
+                   AND  A.ORD_SALE_DIV IN ('2', '3')
+            ) I
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'TOUCH_STORE_UI'
+                   AND  COL_NM      = 'TOUCH_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  A.COMP_CD     = B.COMP_CD(+)
+       AND  A.BRAND_CD    = B.BRAND_CD(+)
+       AND  A.STOR_CD     = B.STOR_CD(+)
+       AND  A.TOUCH_DIV   = B.TOUCH_DIV(+)
+       AND  A.TOUCH_GR_CD = B.TOUCH_GR_CD(+)
+       AND  A.COMP_CD     = I.COMP_CD(+)
+       AND  A.BRAND_CD    = I.BRAND_CD(+)
+       AND  A.TOUCH_CD    = I.ITEM_CD(+)
+       AND  A.COMP_CD   = L.COMP_CD(+)
+       AND  LPAD(A.BRAND_CD, 4, ' ')||LPAD(A.STOR_CD, 10, ' ')||LPAD(A.TOUCH_DIV, 1, ' ')||LPAD(A.TOUCH_GR_CD, 10, ' ')||LPAD(A.TOUCH_CD, 10, ' ') = L.PK_COL(+)
+       AND  A.COMP_CD     = ${SCH_COMP_CD}
+       AND  A.BRAND_CD    = ${SCH_BRAND_CD}
+       AND  A.TOUCH_DIV   = ${SCH_TOUCH_DIV}
+       AND  A.TOUCH_TP    = ${SCH_TOUCH_TP}
+       AND  A.STOR_CD     = ${SCH_STOR_CD}
+       AND  (${SCH_TOUCH_GR_CD} IS NULL OR A.TOUCH_GR_CD = ${SCH_TOUCH_GR_CD})
+       AND  A.USE_YN      = 'Y'
+       AND  NVL(I.USE_YN, 'Y') = 'Y'
+     ORDER  BY POSITION, A.UPD_DT
+]]></query>
+
+<query name='TOUCH_UI_H_Q'><![CDATA[
+    SELECT  A.COMP_CD
+         ,  A.BRAND_CD
+         ,  A.TOUCH_DIV
+         ,  A.TOUCH_GR_CD
+         ,  A.TOUCH_CD
+         ,  A.TOUCH_TP
+         ,  DECODE(A.TOUCH_TP, 'G', A.TOUCH_NM, I.ITEM_NM)  AS TOUCH_NM
+         ,  DECODE(A.TOUCH_TP, 'G', L.LANG_NM, I.ITEM_NM)   AS LANG_NM
+         ,  TO_CHAR(NVL(I.SALE_PRC, 0), '9,999,999.99')     AS SALE_PRC
+         ,  A.BTN_COLOR1
+         ,  A.BTN_COLOR2
+         ,  A.FONT_COLOR
+         ,  A.FONT_SIZE
+         ,  A.FONT_WEIGHT
+         ,  A.IMG_YN
+         ,  A.IMG_PATH
+         ,  A.POSITION
+         ,  A.USE_YN
+         ,  A.TOUCH_CD                                      AS ORG_TOUCH_CD
+         ,  I.SALE_PRC_CTRL
+      FROM  TOUCH_UI A
+         ,  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_POS_NM, I.ITEM_POS_NM)   AS ITEM_NM
+                     ,  I.SALE_PRC
+                     ,  I.SALE_PRC_CTRL
+                  FROM  (
+                            SELECT  P.COMP_CD
+                                 ,  P.BRAND_CD
+                                 ,  PM.ITEM_CD
+                              FROM  CS_PROGRAM      P
+                                 ,  CS_PROGRAM_MATL PM
+                             WHERE  P.COMP_CD       = PM.COMP_CD
+                               AND  P.PROGRAM_ID    = PM.PROGRAM_ID
+                               AND  P.COMP_CD       = ${SCH_COMP_CD}
+                               AND  P.BRAND_CD      = ${SCH_BRAND_CD}
+                               AND  P.USE_YN        = 'Y'
+                               AND  PM.USE_YN       = 'Y'
+                             GROUP  BY P.COMP_CD, P.BRAND_CD, PM.ITEM_CD
+                        )           PM
+                     ,  ITEM    I
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_POS_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  PM.COMP_CD  = I.COMP_CD
+                   AND  PM.ITEM_CD  = I.ITEM_CD
+                   AND  I.COMP_CD   = L.COMP_CD(+)
+                   AND  I.ITEM_CD   = L.ITEM_CD(+)
+                   AND  I.COMP_CD   = ${SCH_COMP_CD}
+            )   I
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'TOUCH_UI'
+                   AND  COL_NM      = 'TOUCH_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  A.COMP_CD       = I.COMP_CD(+)
+       AND  A.TOUCH_CD      = I.ITEM_CD(+)
+       AND  A.COMP_CD       = L.COMP_CD(+)
+       AND  LPAD(A.BRAND_CD, 4, ' ')||LPAD(A.TOUCH_DIV, 1, ' ')||LPAD(A.TOUCH_GR_CD, 10, ' ')||LPAD(A.TOUCH_CD, 10, ' ') = L.PK_COL(+)
+       AND  A.COMP_CD       = ${SCH_COMP_CD}
+       AND  A.BRAND_CD      = ${SCH_BRAND_CD}
+       AND  A.TOUCH_DIV     = ${SCH_TOUCH_DIV}
+       AND  A.TOUCH_GR_CD   = ${SCH_TOUCH_GR_CD}
+       AND  A.TOUCH_TP      = ${SCH_TOUCH_TP}
+       AND  (${SCH_TOUCH_CD} IS NULL OR A.TOUCH_CD = ${SCH_TOUCH_CD})
+]]></query>
+
+<query name='TOUCH_UI_S_Q'><![CDATA[   
+    SELECT  A.COMP_CD
+         ,  A.BRAND_CD
+         ,  A.STOR_CD
+         ,  A.TOUCH_DIV
+         ,  A.TOUCH_GR_CD
+         ,  A.TOUCH_CD
+         ,  A.TOUCH_TP
+         ,  DECODE(A.TOUCH_TP, 'G', A.TOUCH_NM, I.ITEM_NM)  AS TOUCH_NM
+         ,  DECODE(A.TOUCH_TP, 'G', L.LANG_NM, I.ITEM_NM)   AS LANG_NM
+         ,  TO_CHAR(NVL(I.SALE_PRC, 0), '9,999,999.99')     AS SALE_PRC
+         ,  B.ITEM_SVR_FILE
+         ,  A.BTN_COLOR1
+         ,  A.BTN_COLOR2
+         ,  A.FONT_COLOR
+         ,  A.FONT_SIZE
+         ,  A.FONT_WEIGHT
+         ,  A.IMG_YN
+         ,  A.IMG_PATH
+         ,  A.POSITION
+         ,  A.USE_YN
+         ,  A.TOUCH_CD AS ORG_TOUCH_CD
+         ,  I.SALE_PRC_CTRL
+         ,  I.SALE_VAT_IN_RATE*100  AS SALE_VAT_IN_RATE
+         ,  I.SALE_VAT_OUT_RATE*100 AS SALE_VAT_OUT_RATE
+      FROM  TOUCH_STORE_UI  A
+         ,  ITEM_INFO       B
+         ,  (
+                SELECT  A.COMP_CD
+                     ,  A.BRAND_CD
+                     ,  A.ITEM_CD
+                     ,  NVL(L.ITEM_POS_NM, A.ITEM_POS_NM)               AS ITEM_NM
+                     ,  NVL(B.PRICE, A.SALE_PRC)                        AS SALE_PRC
+                     ,  A.SALE_PRC_CTRL
+                     ,  A.SALE_VAT_IN_RATE                              AS SALE_VAT_IN_RATE
+                     ,  A.SALE_VAT_OUT_RATE                             AS SALE_VAT_OUT_RATE
+                  FROM  (
+                            SELECT  P.COMP_CD
+                                 ,  P.BRAND_CD
+                                 ,  PM.ITEM_CD
+                              FROM  CS_PROGRAM      P
+                                 ,  CS_PROGRAM_MATL PM
+                             WHERE  P.COMP_CD       = PM.COMP_CD
+                               AND  P.PROGRAM_ID    = PM.PROGRAM_ID
+                               AND  P.COMP_CD       = ${SCH_COMP_CD}
+                               AND  P.BRAND_CD      = ${SCH_BRAND_CD}
+                               AND  P.USE_YN        = 'Y'
+                               AND  PM.USE_YN       = 'Y'
+                             GROUP  BY P.COMP_CD, P.BRAND_CD, PM.ITEM_CD
+                        )           PM
+                     ,  ITEM_CHAIN A
+                     ,  (
+                            SELECT  S.*
+                              FROM  ITEM_STORE S
+                             WHERE  S.COMP_CD  = ${SCH_COMP_CD}
+                               AND  S.BRAND_CD = ${SCH_BRAND_CD}
+                               AND  S.STOR_CD  = ${SCH_STOR_CD}
+                               AND  S.PRC_DIV  = '02'
+                               AND  TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S.START_DT AND NVL(S.CLOSE_DT, '99991231')
+                        )   B
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_POS_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  PM.COMP_CD  = A.COMP_CD
+                   AND  PM.BRAND_CD = A.BRAND_CD
+                   AND  PM.ITEM_CD  = A.ITEM_CD
+                   AND  A.COMP_CD   = B.COMP_CD(+)
+                   AND  A.ITEM_CD   = B.ITEM_CD(+)
+                   AND  A.COMP_CD   = L.COMP_CD(+)
+                   AND  A.ITEM_CD   = L.ITEM_CD(+)
+                   AND  A.COMP_CD   = ${SCH_COMP_CD}
+                   AND  A.BRAND_CD  = ${SCH_BRAND_CD}
+                   AND  A.STOR_TP   = (
+                                        SELECT  STOR_TP
+                                          FROM  STORE
+                                         WHERE  COMP_CD  = ${SCH_COMP_CD}
+                                           AND  BRAND_CD = ${SCH_BRAND_CD}
+                                           AND  STOR_CD  = ${SCH_STOR_CD}
+                                     )
+                   AND  A.ORD_SALE_DIV IN ('2', '3')
+                   AND  A.USE_YN   = 'Y'
+            )   I
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'TOUCH_STORE_UI'
+                   AND  COL_NM      = 'TOUCH_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  A.COMP_CD   = B.COMP_CD(+)
+       AND  A.TOUCH_CD  = B.ITEM_CD(+)
+       AND  A.COMP_CD   = I.COMP_CD(+)
+       AND  A.BRAND_CD  = I.BRAND_CD(+)
+       AND  A.TOUCH_CD  = I.ITEM_CD(+)
+       AND  A.COMP_CD   = L.COMP_CD(+)
+       AND  LPAD(A.BRAND_CD, 4, ' ')||LPAD(A.STOR_CD, 10, ' ')||LPAD(A.TOUCH_DIV, 1, ' ')||LPAD(A.TOUCH_GR_CD, 10, ' ')||LPAD(A.TOUCH_CD, 10, ' ') = L.PK_COL(+)
+       AND  A.COMP_CD   = ${SCH_COMP_CD}
+       AND  A.BRAND_CD  = ${SCH_BRAND_CD}
+       AND  A.STOR_CD   = ${SCH_STOR_CD}
+       AND  A.TOUCH_DIV = ${SCH_TOUCH_DIV}
+       AND  TOUCH_GR_CD = ${SCH_TOUCH_GR_CD}
+       AND  (${SCH_TOUCH_CD} IS NULL OR A.TOUCH_CD = ${SCH_TOUCH_CD}) 
+       AND  A.TOUCH_TP = ${SCH_TOUCH_TP}
+]]></query>
+
+<query name='TOUCH_UI_H_I'><![CDATA[
+   
+   INSERT INTO TOUCH_UI (
+               COMP_CD
+           ,   BRAND_CD
+           ,   TOUCH_DIV 
+           ,   TOUCH_GR_CD
+           ,   TOUCH_CD
+           ,   TOUCH_TP
+           ,   TOUCH_NM
+           ,   BTN_COLOR1 
+           ,   BTN_COLOR2
+           ,   FONT_COLOR
+           ,   FONT_SIZE
+           ,   IMG_YN
+           ,   IMG_PATH
+           ,   POSITION
+           ,   USE_YN
+           ,   INST_DT
+           ,   INST_USER 
+           ,   UPD_DT 
+           ,   UPD_USER
+           )
+           VALUES
+           (
+               ${COMP_CD}
+           ,   ${BRAND_CD}
+           ,   ${TOUCH_DIV}    
+           ,   ${TOUCH_GR_CD}
+           ,   ${TOUCH_CD}
+           ,   ${TOUCH_TP}
+           ,   ${TOUCH_NM}
+           ,   ${BTN_COLOR1}
+           ,   ${BTN_COLOR2}
+           ,   ${FONT_COLOR}
+           ,   ${FONT_SIZE}
+           ,   ${IMG_YN}
+           ,   ${IMG_PATH}
+           ,   ${POSITION}
+           ,   ${USE_YN}
+           ,   SYSDATE
+           ,   ${INST_USER}
+           ,   SYSDATE
+           ,   ${UPD_USER}
+           )
+                  
+]]></query>
+
+<query name='TOUCH_UI_S_I'><![CDATA[
+   
+   INSERT INTO TOUCH_STORE_UI (
+               COMP_CD
+           ,   BRAND_CD
+           ,   STOR_CD
+           ,   TOUCH_DIV 
+           ,   TOUCH_GR_CD
+           ,   TOUCH_CD
+           ,   TOUCH_TP
+           ,   TOUCH_NM
+           ,   BTN_COLOR1 
+           ,   BTN_COLOR2
+           ,   FONT_COLOR
+           ,   FONT_SIZE
+           ,   IMG_YN
+           ,   IMG_PATH
+           ,   POSITION
+           ,   USE_YN
+           ,   INST_DT
+           ,   INST_USER 
+           ,   UPD_DT 
+           ,   UPD_USER
+           )
+           VALUES
+           (
+               ${COMP_CD}
+           ,   ${BRAND_CD}
+           ,   ${STOR_CD}
+           ,   ${TOUCH_DIV}    
+           ,   ${TOUCH_GR_CD}
+           ,   ${TOUCH_CD}
+           ,   ${TOUCH_TP}
+           ,   ${TOUCH_NM}
+           ,   ${BTN_COLOR1}
+           ,   ${BTN_COLOR2}
+           ,   ${FONT_COLOR}
+           ,   ${FONT_SIZE}
+           ,   ${IMG_YN}
+           ,   ${IMG_PATH}
+           ,   ${POSITION}
+           ,   ${USE_YN}
+           ,   SYSDATE
+           ,   ${INST_USER}
+           ,   SYSDATE
+           ,   ${UPD_USER}
+           )
+                  
+]]></query>
+
+<query name='TOUCH_UI_H_U'><![CDATA[
+   MERGE INTO TOUCH_UI
+   USING DUAL
+   ON (
+             COMP_CD       =    ${COMP_CD}
+         AND BRAND_CD      =    ${BRAND_CD}
+         AND TOUCH_DIV     =    ${TOUCH_DIV}
+         AND TOUCH_GR_CD   =    ${TOUCH_GR_CD}
+         AND TOUCH_CD      =    ${TOUCH_CD}
+      )
+   WHEN  MATCHED  THEN
+      UPDATE
+      SET   TOUCH_NM    =  ${TOUCH_NM}
+         ,  BTN_COLOR1  =  ${BTN_COLOR1}
+         ,  BTN_COLOR2  =  ${BTN_COLOR2}
+         ,  FONT_COLOR  =  ${FONT_COLOR}
+         ,  FONT_SIZE   =  ${FONT_SIZE}
+         ,  FONT_WEIGHT =  ${FONT_WEIGHT}
+         ,  IMG_YN      =  ${IMG_YN}
+         ,  IMG_PATH    =  ${IMG_PATH}
+         ,  POSITION    =  ${POSITION}
+         ,  USE_YN      =  ${USE_YN}
+         ,  UPD_DT      =  SYSDATE
+         ,  UPD_USER    =  ${UPD_USER}
+   WHEN NOT MATCHED THEN
+      INSERT (   
+                  COMP_CD
+               ,  BRAND_CD
+               ,  TOUCH_DIV 
+               ,  TOUCH_GR_CD
+               ,  TOUCH_CD
+               ,  TOUCH_TP
+               ,  TOUCH_NM
+               ,  BTN_COLOR1 
+               ,  BTN_COLOR2
+               ,  FONT_COLOR
+               ,  FONT_SIZE
+               ,  FONT_WEIGHT
+               ,  IMG_YN
+               ,  IMG_PATH
+               ,  POSITION
+               ,  USE_YN
+               ,  INST_DT
+               ,  INST_USER 
+               ,  UPD_DT 
+               ,  UPD_USER
+             ) VALUES (
+                  ${COMP_CD}
+               ,  ${BRAND_CD}
+               ,  ${TOUCH_DIV}    
+               ,  ${TOUCH_GR_CD}
+               ,  ${TOUCH_CD}
+               ,  ${TOUCH_TP}
+               ,  ${TOUCH_NM}
+               ,  ${BTN_COLOR1}
+               ,  ${BTN_COLOR2}
+               ,  ${FONT_COLOR}
+               ,  ${FONT_SIZE}
+               ,  ${FONT_WEIGHT}
+               ,  ${IMG_YN}
+               ,  ${IMG_PATH}
+               ,  ${POSITION}
+               ,  ${USE_YN}
+               ,  SYSDATE
+               ,  ${INST_USER}
+               ,  SYSDATE
+               ,  ${UPD_USER}
+            )
+ ]]></query>
+
+<query name='TOUCH_UI_S_U'><![CDATA[
+   MERGE INTO TOUCH_STORE_UI
+   USING DUAL
+   ON (
+             COMP_CD       =    ${COMP_CD}
+         AND BRAND_CD      =    ${BRAND_CD}
+         AND STOR_CD       =    ${STOR_CD}
+         AND TOUCH_DIV     =    ${TOUCH_DIV}
+         AND TOUCH_GR_CD   =    ${TOUCH_GR_CD}
+         AND TOUCH_CD      =    ${TOUCH_CD}
+      )
+   WHEN  MATCHED  THEN
+      UPDATE
+      SET   TOUCH_NM    =  ${TOUCH_NM}
+         ,  BTN_COLOR1  =  ${BTN_COLOR1}
+         ,  BTN_COLOR2  =  ${BTN_COLOR2}
+         ,  FONT_COLOR  =  ${FONT_COLOR}
+         ,  FONT_SIZE   =  ${FONT_SIZE}
+         ,  FONT_WEIGHT =  ${FONT_WEIGHT}
+         ,  IMG_YN      =  ${IMG_YN}
+         ,  IMG_PATH    =  ${IMG_PATH}
+         ,  POSITION    =  ${POSITION}
+         ,  USE_YN      =  ${USE_YN}
+         ,  UPD_DT      =  SYSDATE
+         ,  UPD_USER    =  ${UPD_USER}
+   WHEN NOT MATCHED THEN
+      INSERT (   
+                  COMP_CD
+               ,  BRAND_CD
+               ,  STOR_CD
+               ,  TOUCH_DIV 
+               ,  TOUCH_GR_CD
+               ,  TOUCH_CD
+               ,  TOUCH_TP
+               ,  TOUCH_NM
+               ,  BTN_COLOR1 
+               ,  BTN_COLOR2
+               ,  FONT_COLOR
+               ,  FONT_SIZE
+               ,  FONT_WEIGHT
+               ,  IMG_YN
+               ,  IMG_PATH
+               ,  POSITION
+               ,  USE_YN
+               ,  INST_DT
+               ,  INST_USER 
+               ,  UPD_DT 
+               ,  UPD_USER
+             ) VALUES (
+                  ${COMP_CD}
+               ,  ${BRAND_CD}
+               ,  ${STOR_CD}
+               ,  ${TOUCH_DIV}    
+               ,  ${TOUCH_GR_CD}
+               ,  ${TOUCH_CD}
+               ,  ${TOUCH_TP}
+               ,  ${TOUCH_NM}
+               ,  ${BTN_COLOR1}
+               ,  ${BTN_COLOR2}
+               ,  ${FONT_COLOR}
+               ,  ${FONT_SIZE}
+               ,  ${FONT_WEIGHT}
+               ,  ${IMG_YN}
+               ,  ${IMG_PATH}
+               ,  ${POSITION}
+               ,  ${USE_YN}
+               ,  SYSDATE
+               ,  ${INST_USER}
+               ,  SYSDATE
+               ,  ${UPD_USER}
+            )
+ ]]></query>
+
+<query name='TOUCH_LANG_U'><![CDATA[ 
+    MERGE INTO LANG_TABLE
+    USING DUAL
+       ON (
+                COMP_CD     = ${COMP_CD}
+            AND TABLE_NM    = ${TABLE_NM}
+            AND COL_NM      = ${COL_NM}
+            AND LANGUAGE_TP = ${LANGUAGE_TP}
+            AND PK_COL      = ${PK_COL}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+            ,   TABLE_NM
+            ,   COL_NM
+            ,   LANGUAGE_TP
+            ,   PK_COL
+            ,   LANG_NM
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+            ,   ${TABLE_NM}
+            ,   ${COL_NM}
+            ,   ${LANGUAGE_TP}
+            ,   ${PK_COL}
+            ,   ${LANG_NM}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+    )
+    ]]></query>
+
+<query name='TOUCH_STORE_GRP_Q'><![CDATA[
+   SELECT   B.BRAND_CD
+      ,     B.TOUCH_DIV
+      ,     B.TOUCH_GR_CD
+      ,     B.TOUCH_CD
+      ,     NVL(B.STOR_GRP_TP, A.CODE_CD) AS STOR_GRP_TP
+      ,     B.TOUCH_TP
+      ,     NVL(B.USE_YN, 'Y') AS USE_YN
+      ,     B.ROWID
+   FROM (
+            SELECT   C.CODE_CD
+            FROM  COMMON C
+            WHERE COMP_CD   = ${SCH_COMP_CD}
+              AND CODE_TP   = '00620'
+              AND USE_YN    = 'Y'
+            ORDER BY CODE_CD
+        ) A,
+        (
+            SELECT   BRAND_CD
+               ,     TOUCH_DIV
+               ,     TOUCH_GR_CD
+               ,     TOUCH_CD
+               ,     STOR_GRP_TP
+               ,     TOUCH_TP
+               ,     USE_YN
+               ,     ROWID
+            FROM TOUCH_STORE_GRP
+            WHERE COMP_CD     = ${SCH_COMP_CD}
+              AND BRAND_CD    = ${SCH_BRAND_CD}
+              AND TOUCH_DIV   = ${SCH_TOUCH_DIV}
+              AND TOUCH_GR_CD = ${SCH_TOUCH_GR_CD}
+              AND TOUCH_CD    = ${SCH_TOUCH_CD} 
+        ) B
+   WHERE A.CODE_CD = B.STOR_GRP_TP(+)
+]]></query>
+
+<query name='TOUCH_STORE_GRP_I'><![CDATA[
+   
+   INSERT INTO TOUCH_STORE_GRP (
+               COMP_CD
+           ,   BRAND_CD
+           ,   TOUCH_DIV
+           ,   TOUCH_GR_CD
+           ,   TOUCH_CD
+           ,   STOR_GRP_TP
+           ,   TOUCH_TP
+           ,   USE_YN
+           ,   INST_DT
+           ,   INST_USER 
+           ,   UPD_DT 
+           ,   UPD_USER
+           )
+           VALUES
+           (
+               ${COMP_CD}
+           ,   ${BRAND_CD}
+           ,   ${TOUCH_DIV}
+           ,   ${TOUCH_GR_CD}
+           ,   ${TOUCH_CD}
+           ,   ${STOR_GRP_TP}
+           ,   ${TOUCH_TP}
+           ,   ${USE_YN}
+           ,   SYSDATE
+           ,   ${INST_USER}
+           ,   SYSDATE
+           ,   ${UPD_USER}
+           )
+                  
+]]></query>
+
+<query name='TOUCH_STORE_GRP_U'><![CDATA[
+    UPDATE TOUCH_STORE_GRP 
+    SET    STOR_GRP_TP = ${STOR_GRP_TP}
+         , USE_YN      = ${USE_YN}
+         , UPD_DT      = SYSDATE
+         , UPD_USER    = ${UPD_USER}
+    WHERE COMP_CD      = ${COMP_CD}
+      AND BRAND_CD     = ${BRAND_CD}
+      AND TOUCH_DIV    = ${TOUCH_DIV}
+      AND TOUCH_GR_CD  = ${TOUCH_GR_CD}
+      AND TOUCH_CD     = ${TOUCH_CD}
+      AND ROWID        = ${ROWID}
+ ]]></query>
+
+<query name='ITEM_STORE_Q'><![CDATA[
+   SELECT   BRAND_CD
+      ,     STOR_CD
+      ,     ITEM_CD
+      ,     SALE_START_DT
+      ,     SALE_PRC
+      ,     STOR_SALE_PRC
+      ,     SALE_VAT_YN
+      ,     SALE_VAT_RULE
+      ,     SALE_VAT_IN_RATE
+      ,     SALE_VAT_OUT_RATE
+      ,     USE_YN
+      ,     ROWID
+    FROM ITEM_STORE
+   WHERE COMP_CD  = ${SCH_COMP_CD}
+     AND BRAND_CD = ${SCH_BRAND_CD}
+     AND STOR_CD  = ${SCH_STOR_CD}
+     AND ITEM_CD  = ${SCH_ITEM_CD}
+     AND USE_YN = 'Y'
+   ORDER BY SALE_START_DT DESC
+]]></query>
+
+<query name='ITEM_STORE_I'><![CDATA[
+   
+   INSERT INTO ITEM_STORE (
+               COMP_CD
+           ,   BRAND_CD
+           ,   STOR_CD
+           ,   ITEM_CD
+           ,   SALE_START_DT
+           ,   PRC_CHANGE_DIV
+           ,   SALE_PRC
+           ,   DC_RATE
+           ,   DC_AMT
+           ,   STOR_SALE_PRC
+           ,   SALE_VAT_YN
+           ,   SALE_VAT_RULE
+           ,   SALE_VAT_IN_RATE
+           ,   SALE_VAT_OUT_RATE
+           ,   USE_YN
+           ,   INST_DT
+           ,   INST_USER 
+           ,   UPD_DT 
+           ,   UPD_USER
+           )
+           VALUES
+           (
+               ${COMP_CD}
+           ,   ${BRAND_CD}
+           ,   ${STOR_CD}
+           ,   ${ITEM_CD}
+           ,   ${SALE_START_DT}
+           ,   '1'
+           ,   ${SALE_PRC}
+           ,   0
+           ,   0
+           ,   ${STOR_SALE_PRC}
+           ,   ${SALE_VAT_YN}
+           ,   ${SALE_VAT_RULE}
+           ,   ${SALE_VAT_IN_RATE}
+           ,   ${SALE_VAT_OUT_RATE}
+           ,   ${USE_YN}
+           ,   SYSDATE
+           ,   ${INST_USER}
+           ,   SYSDATE
+           ,   ${UPD_USER}
+           )
+                  
+]]></query>
+
+<query name='ITEM_STORE_U'><![CDATA[
+   MERGE INTO ITEM_STORE
+   USING DUAL
+   ON (
+             COMP_CD        = ${COMP_CD}
+         AND BRAND_CD       = ${BRAND_CD}
+         AND STOR_CD        = ${STOR_CD}
+         AND ITEM_CD        = ${ITEM_CD}
+         AND SALE_START_DT  = TO_CHAR(SYSDATE, 'YYYYMMDD')
+      )
+   WHEN  MATCHED  THEN
+      UPDATE
+      SET   STOR_SALE_PRC      = ${STOR_SALE_PRC}
+         ,  SALE_VAT_YN        = ${SALE_VAT_YN}
+         ,  SALE_VAT_RULE      = ${SALE_VAT_RULE}
+         ,  SALE_VAT_IN_RATE   = ${SALE_VAT_IN_RATE}/100
+         ,  SALE_VAT_OUT_RATE  = ${SALE_VAT_OUT_RATE}/100
+         ,  USE_YN             = 'Y'
+         ,  UPD_DT             = SYSDATE
+         ,  UPD_USER           = ${UPD_USER}
+   WHEN NOT MATCHED THEN
+      INSERT (   
+                  COMP_CD
+              ,   BRAND_CD
+              ,   STOR_CD
+              ,   ITEM_CD
+              ,   SALE_START_DT
+              ,   PRC_CHANGE_DIV
+              ,   SALE_PRC
+              ,   DC_RATE
+              ,   DC_AMT
+              ,   STOR_SALE_PRC
+              ,   SALE_VAT_YN
+              ,   SALE_VAT_RULE
+              ,   SALE_VAT_IN_RATE
+              ,   SALE_VAT_OUT_RATE
+              ,   USE_YN
+              ,   INST_DT
+              ,   INST_USER 
+              ,   UPD_DT 
+              ,   UPD_USER
+              )
+              VALUES
+              (
+                  ${COMP_CD}
+              ,   ${BRAND_CD}
+              ,   ${STOR_CD}
+              ,   ${ITEM_CD}
+              ,   TO_CHAR(SYSDATE, 'YYYYMMDD')
+              ,   '1'
+              ,   ${SALE_PRC}
+              ,   0
+              ,   0
+              ,   ${STOR_SALE_PRC}
+              ,   ${SALE_VAT_YN}
+              ,   ${SALE_VAT_RULE}
+              ,   ${SALE_VAT_IN_RATE}/100
+              ,   ${SALE_VAT_OUT_RATE}/100
+              ,   'Y'
+              ,   SYSDATE
+              ,   ${INST_USER}
+              ,   SYSDATE
+              ,   ${UPD_USER}
+              )
+ ]]></query>
+
+<query name='ITEM_STORE_D'><![CDATA[
+    DELETE ITEM_STORE 
+    WHERE ROWID          = ${ROWID}
+ ]]></query>
+
+<query name='ITEM_STORE_ALL_D'><![CDATA[
+    DELETE ITEM_STORE 
+    WHERE COMP_CD  = ${COMP_CD}
+      AND BRAND_CD = ${BRAND_CD}
+      AND STOR_CD  = ${STOR_CD}
+      AND ITEM_CD  = ${ITEM_CD}
+ ]]></query>
+   
+<query name='TOUCH_UI_MOVE_H_I'><![CDATA[
+   
+   INSERT INTO TOUCH_UI (
+               COMP_CD
+           ,   BRAND_CD
+           ,   TOUCH_DIV 
+           ,   TOUCH_GR_CD
+           ,   TOUCH_CD
+           ,   TOUCH_TP
+           ,   TOUCH_NM
+           ,   POSITION
+           ,   USE_YN
+           ,   INST_DT
+           ,   INST_USER 
+           ,   UPD_DT 
+           ,   UPD_USER
+           )
+           VALUES
+           (
+               ${COMP_CD}
+           ,   ${BRAND_CD}
+           ,   ${TOUCH_DIV}    
+           ,   ${TOUCH_GR_CD}
+           ,   ${TOUCH_CD}
+           ,   ${TOUCH_TP}
+           ,   ${TOUCH_NM}
+           ,   ${POSITION}
+           ,   ${USE_YN}
+           ,   SYSDATE
+           ,   ${INST_USER}
+           ,   SYSDATE
+           ,   ${UPD_USER}
+           )
+                  
+]]></query>
+
+<query name='TOUCH_UI_MOVE_S_I'><![CDATA[
+   
+   INSERT INTO TOUCH_STORE_UI (
+               COMP_CD
+           ,   BRAND_CD
+           ,   STOR_CD
+           ,   TOUCH_DIV 
+           ,   TOUCH_GR_CD
+           ,   TOUCH_CD
+           ,   TOUCH_TP
+           ,   TOUCH_NM
+           ,   POSITION
+           ,   USE_YN
+           ,   INST_DT
+           ,   INST_USER 
+           ,   UPD_DT 
+           ,   UPD_USER
+           )
+           VALUES
+           (
+               ${COMP_CD}
+           ,   ${BRAND_CD}
+           ,   ${STOR_CD}
+           ,   ${TOUCH_DIV}    
+           ,   ${TOUCH_GR_CD}
+           ,   ${TOUCH_CD}
+           ,   ${TOUCH_TP}
+           ,   ${TOUCH_NM}
+           ,   ${POSITION}
+           ,   ${USE_YN}
+           ,   SYSDATE
+           ,   ${INST_USER}
+           ,   SYSDATE
+           ,   ${UPD_USER}
+           )
+                  
+]]></query>
+
+<query name='TOUCH_UI_MOVE_H_U'><![CDATA[
+   MERGE INTO TOUCH_UI
+   USING DUAL
+   ON (
+             COMP_CD       =    ${COMP_CD}
+         AND BRAND_CD      =    ${BRAND_CD}
+         AND TOUCH_DIV     =    ${TOUCH_DIV}
+         AND TOUCH_GR_CD   =    ${TOUCH_GR_CD}
+         AND TOUCH_CD      =    ${TOUCH_CD}
+      )
+   WHEN  MATCHED  THEN
+      UPDATE
+      SET   TOUCH_NM    = ${TOUCH_NM}
+         ,  POSITION    = ${POSITION}
+         ,  USE_YN      = ${USE_YN}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+   WHEN NOT MATCHED THEN
+      INSERT (   
+                  COMP_CD
+              ,   BRAND_CD
+              ,   TOUCH_DIV 
+              ,   TOUCH_GR_CD
+              ,   TOUCH_CD
+              ,   TOUCH_TP
+              ,   TOUCH_NM
+              ,   POSITION
+              ,   USE_YN
+              ,   INST_DT
+              ,   INST_USER 
+              ,   UPD_DT 
+              ,   UPD_USER
+             ) VALUES (
+                  ${COMP_CD}
+              ,   ${BRAND_CD}
+              ,   ${TOUCH_DIV}    
+              ,   ${TOUCH_GR_CD}
+              ,   ${TOUCH_CD}
+              ,   ${TOUCH_TP}
+              ,   ${TOUCH_NM}
+              ,   ${POSITION}
+              ,   ${USE_YN}
+              ,   SYSDATE
+              ,   ${INST_USER}
+              ,   SYSDATE
+              ,   ${UPD_USER}
+             )
+ ]]></query>
+
+<query name='TOUCH_UI_MOVE_S_U'><![CDATA[
+   MERGE INTO TOUCH_STORE_UI
+   USING DUAL
+   ON (
+             COMP_CD       =  ${COMP_CD}
+         AND BRAND_CD      =  ${BRAND_CD}
+         AND STOR_CD       =  ${STOR_CD}
+         AND TOUCH_DIV     =  ${TOUCH_DIV}
+         AND TOUCH_GR_CD   =  ${TOUCH_GR_CD}
+         AND TOUCH_CD      =  ${TOUCH_CD}
+      )
+   WHEN  MATCHED  THEN
+      UPDATE
+      SET   TOUCH_NM    =  ${TOUCH_NM}
+         ,  POSITION    =  ${POSITION}
+         ,  USE_YN      =  ${USE_YN}
+         ,  UPD_DT      =  SYSDATE
+         ,  UPD_USER    =  ${UPD_USER}
+   WHEN NOT MATCHED THEN
+      INSERT (   
+                  COMP_CD
+              ,   BRAND_CD
+              ,   STOR_CD
+              ,   TOUCH_DIV 
+              ,   TOUCH_GR_CD
+              ,   TOUCH_CD
+              ,   TOUCH_TP
+              ,   TOUCH_NM
+              ,   POSITION
+              ,   USE_YN
+              ,   INST_DT
+              ,   INST_USER 
+              ,   UPD_DT 
+              ,   UPD_USER
+             ) VALUES (
+                  ${COMP_CD}
+              ,   ${BRAND_CD}
+              ,   ${STOR_CD}
+              ,   ${TOUCH_DIV}    
+              ,   ${TOUCH_GR_CD}
+              ,   ${TOUCH_CD}
+              ,   ${TOUCH_TP}
+              ,   ${TOUCH_NM}
+              ,   ${POSITION}
+              ,   ${USE_YN}
+              ,   SYSDATE
+              ,   ${INST_USER}
+              ,   SYSDATE
+              ,   ${UPD_USER}
+             )
+ ]]></query>
+
+<!-- (본사) 그룹 삭제시 처리 부분 -->  
+<query name='TOUCH_UI_DEL_H_D'><![CDATA[
+    UPDATE TOUCH_UI 
+    SET    USE_YN      = 'N'
+         , TOUCH_NM    = ''
+         , UPD_DT      = SYSDATE
+         , UPD_USER    = ${UPD_USER}
+    WHERE COMP_CD      = ${COMP_CD}
+      AND BRAND_CD     = ${BRAND_CD}
+      AND TOUCH_DIV    = ${TOUCH_DIV}
+      AND TOUCH_GR_CD  = ${TOUCH_GR_CD}
+      AND TOUCH_TP     LIKE DECODE(${TOUCH_TP}, 'G', '%', ${TOUCH_TP} )  
+      AND POSITION     LIKE DECODE(${TOUCH_TP}, 'G', '%', ${POSITION} )
+      AND USE_YN       = 'Y'
+ ]]></query>
+ 
+ <!-- (점포) 그룹 삭제시 처리 부분 -->
+<query name='TOUCH_UI_DEL_S_D'><![CDATA[
+    UPDATE TOUCH_STORE_UI 
+    SET    USE_YN      = 'N'
+         , TOUCH_NM    = ''
+         , UPD_DT      = SYSDATE
+         , UPD_USER    = ${UPD_USER}
+    WHERE COMP_CD      = ${COMP_CD}
+      AND BRAND_CD     = ${BRAND_CD}
+      AND STOR_CD      = ${STOR_CD}
+      AND TOUCH_DIV    = ${TOUCH_DIV}
+      AND TOUCH_GR_CD  = ${TOUCH_GR_CD}      
+      AND TOUCH_TP     LIKE DECODE(${TOUCH_TP}, 'G', '%', ${TOUCH_TP} )
+      AND POSITION     LIKE DECODE(${TOUCH_TP}, 'G', '%', ${POSITION} )
+      AND USE_YN       = 'Y' 
+ ]]></query>
+ 
+ 
+ <query name='TOUCH_UI_MOVE_H_D'><![CDATA[
+    UPDATE TOUCH_UI 
+    SET    USE_YN      = 'N'
+         , UPD_DT      = SYSDATE
+         , UPD_USER    = ${UPD_USER}
+    WHERE COMP_CD      = ${COMP_CD}
+      AND BRAND_CD     = ${BRAND_CD}
+      AND TOUCH_DIV    = ${TOUCH_DIV}
+      AND TOUCH_GR_CD  = ${TOUCH_GR_CD}
+      AND TOUCH_TP     = ${TOUCH_TP}
+      AND POSITION     = ${POSITION}
+ ]]></query>
+
+<query name='TOUCH_UI_MOVE_S_D'><![CDATA[
+    UPDATE TOUCH_STORE_UI 
+    SET    USE_YN      = 'N'
+         , UPD_DT      = SYSDATE
+         , UPD_USER    = ${UPD_USER}
+    WHERE COMP_CD      = ${COMP_CD}
+      AND BRAND_CD     = ${BRAND_CD}
+      AND STOR_CD      = ${STOR_CD}
+      AND TOUCH_DIV    = ${TOUCH_DIV}
+      AND TOUCH_GR_CD  = ${TOUCH_GR_CD}
+      AND TOUCH_TP     = ${TOUCH_TP}
+      AND POSITION     = ${POSITION}
+ ]]></query>
+ 
+ 
+<query name='TOUCH_UI_H_D'><![CDATA[
+    DELETE TOUCH_UI 
+    WHERE COMP_CD      = ${COMP_CD}
+      AND BRAND_CD     = ${BRAND_CD}
+      AND TOUCH_DIV    = ${TOUCH_DIV}
+      AND TOUCH_GR_CD  = ${TOUCH_GR_CD}
+      AND TOUCH_CD     = ${TOUCH_CD}
+      AND TOUCH_TP     = ${TOUCH_TP}
+ ]]></query>
+
+<query name='TOUCH_UI_S_D'><![CDATA[
+    DELETE TOUCH_STORE_UI 
+    WHERE COMP_CD      = ${COMP_CD}
+      AND BRAND_CD     = ${BRAND_CD}
+      AND STOR_CD      = ${STOR_CD}
+      AND TOUCH_DIV    = ${TOUCH_DIV}
+      AND TOUCH_GR_CD  = ${TOUCH_GR_CD}
+      AND TOUCH_CD     = ${TOUCH_CD}
+      AND TOUCH_TP     = ${TOUCH_TP}
+ ]]></query>
+  
+ <query name='STORE_Q'><![CDATA[
+   WITH CM AS
+          ( SELECT  C.CODE_TP                   AS CODE_TP
+                  , C.CODE_CD                   AS CODE_CD
+                  , NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  , VAL_C1
+              FROM COMMON C,
+                   ( SELECT COMP_CD, CODE_TP, CODE_CD, CODE_NM
+                       FROM LANG_COMMON
+                      WHERE COMP_CD      = ${SCH_COMP_CD}
+                        AND CODE_TP      IN ( '00565', '00650')
+                        AND LANGUAGE_TP  = DECODE(${SCH_LANGUAGE}, NULL, ' ', ${SCH_LANGUAGE} )
+                        AND USE_YN       = 'Y'
+                   )   L
+             WHERE C.COMP_CD  = L.COMP_CD(+)
+               AND C.CODE_TP  = L.CODE_TP(+)
+               AND C.CODE_CD  = L.CODE_CD(+)
+               AND C.COMP_CD  = ${SCH_COMP_CD}
+               AND C.CODE_TP  IN ( '00565', '00650' )
+               AND C.USE_YN   = 'Y'
+          )
+     SELECT STOR_CD
+      ,     STOR_NM
+      ,     STOR_TP
+      ,     STOR_TP_NM
+      ,     SV_USER_ID
+      ,     SV_USER_NM
+      ,     APP_DIV
+      ,     APP_DIV_NM
+      ,     TEL_NO
+     FROM (
+              SELECT  A.STOR_CD        AS STOR_CD
+                    , B.STOR_NM        AS STOR_NM
+                    , B.STOR_TP        AS STOR_TP
+                    , C.CODE_NM        AS STOR_TP_NM
+                    , B.SV_USER_ID     AS SV_USER_ID
+                    , D.USER_NM        AS SV_USER_NM
+                    , B.APP_DIV        AS APP_DIV
+                    , E.CODE_NM        AS APP_DIV_NM
+                    , B.TEL_NO         AS TEL_NO
+                 FROM THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+                     , STORE B
+                     , ( SELECT CODE_CD, CODE_NM, VAL_C1 FROM CM WHERE CODE_TP = '00565' ) C
+                     , ( SELECT CODE_CD, CODE_NM FROM CM WHERE CODE_TP = '00650' ) E
+                     , HQ_USER D
+                WHERE A.COMP_CD    = B.COMP_CD
+                  AND A.STOR_CD    = B.STOR_CD
+                  AND B.STOR_TP    = C.CODE_CD(+)
+                  AND B.SV_USER_ID = D.USER_ID(+)
+                  AND B.APP_DIV    = E.CODE_CD(+)
+                  AND B.COMP_CD    = ${SCH_COMP_CD}
+                  AND B.BRAND_CD   = ${SCH_BRAND_CD}
+                  AND (${SCH_STOR_CD} IS NULL OR B.STOR_CD <> ${SCH_STOR_CD})
+                  AND (${SCH_STOR_TP} IS NULL OR B.STOR_TP = ${SCH_STOR_TP})
+                  AND (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+                  AND B.USE_YN = 'Y'
+         )
+   WHERE (${SCH_STOR_TXT} IS NULL OR (STOR_NM LIKE '%'|| ${SCH_STOR_TXT} || '%' OR STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+   ORDER BY STOR_CD
+]]></query>
+
+<query name='TOUCH_STORE_UI_D'><![CDATA[
+    UPDATE  TOUCH_STORE_UI
+       SET  USE_YN      = 'N'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_CD     = ${STOR_CD}
+       AND  TOUCH_DIV   = ${TOUCH_DIV}
+       AND  (
+                ${COPY_UNIT} = '1'
+                OR
+                (
+                    ${COPY_UNIT} = '2'
+                    AND
+                    (
+                        (TOUCH_TP = 'G' AND POSITION = ${POSITION})
+                        OR
+                        (TOUCH_TP = 'M' AND TOUCH_GR_CD = (
+                                                            SELECT  TOUCH_GR_CD
+                                                              FROM  TOUCH_STORE_UI
+                                                             WHERE  COMP_CD     = ${COMP_CD}
+                                                               AND  BRAND_CD    = ${BRAND_CD}
+                                                               AND  STOR_CD     = ${STOR_CD}
+                                                               AND  TOUCH_DIV   = ${TOUCH_DIV}
+                                                               AND  TOUCH_TP    = 'G'
+                                                               AND  POSITION    = ${POSITION}
+                                                               AND  USE_YN      = 'Y'
+                                                               AND  ROWNUM      = 1
+                                                          ))
+                    )
+                )
+                OR
+                (
+                    ${COPY_UNIT} = '3'
+                    AND
+                    (
+                        TOUCH_TP = 'M' AND TOUCH_GR_CD = ${TOUCH_GR_CD} AND POSITION = ${POSITION}
+                    )
+                )
+            )
+ ]]></query>
+
+<query name='TOUCH_STORE_UI_H_I'><![CDATA[
+    MERGE INTO TOUCH_STORE_UI TT
+    USING ( 
+            SELECT  COMP_CD
+                 ,  BRAND_CD
+                 ,  ${TGT_STOR_CD} AS STOR_CD
+                 ,  TOUCH_DIV
+                 ,  TOUCH_GR_CD
+                 ,  TOUCH_CD
+                 ,  TOUCH_TP
+                 ,  TOUCH_NM
+                 ,  BTN_COLOR1
+                 ,  BTN_COLOR2
+                 ,  FONT_COLOR
+                 ,  FONT_SIZE
+                 ,  IMG_YN
+                 ,  IMG_PATH
+                 ,  POSITION
+                 ,  USE_YN
+              FROM  TOUCH_UI
+             WHERE  COMP_CD   = ${COMP_CD}
+               AND  BRAND_CD  = ${BRAND_CD}
+               AND  TOUCH_DIV = ${TOUCH_DIV}
+               AND  (${TOUCH_GR_CD} IS NULL OR TOUCH_GR_CD = ${TOUCH_GR_CD})
+               AND  (${TOUCH_CD}    IS NULL OR TOUCH_CD    = ${TOUCH_CD})
+          ) ST
+       ON (
+                TT.COMP_CD      = ST.COMP_CD
+            AND TT.BRAND_CD     = ST.BRAND_CD
+            AND TT.STOR_CD      = ST.STOR_CD
+            AND TT.TOUCH_DIV    = ST.TOUCH_DIV
+            AND TT.TOUCH_GR_CD  = ST.TOUCH_GR_CD
+            AND TT.TOUCH_CD     = ST.TOUCH_CD
+          )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  TOUCH_TP    =  ST.TOUCH_TP
+             ,  TOUCH_NM    =  ST.TOUCH_NM
+             ,  BTN_COLOR1  =  ST.BTN_COLOR1
+             ,  BTN_COLOR2  =  ST.BTN_COLOR2
+             ,  FONT_COLOR  =  ST.FONT_COLOR
+             ,  FONT_SIZE   =  ST.FONT_SIZE
+             ,  IMG_YN      =  ST.IMG_YN
+             ,  IMG_PATH    =  ST.IMG_PATH
+             ,  POSITION    =  ST.POSITION
+             ,  USE_YN      =  ST.USE_YN
+             ,  UPD_DT      =  SYSDATE
+             ,  UPD_USER    =  ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (   
+                COMP_CD
+            ,   BRAND_CD
+            ,   STOR_CD
+            ,   TOUCH_DIV 
+            ,   TOUCH_GR_CD
+            ,   TOUCH_CD
+            ,   TOUCH_TP
+            ,   TOUCH_NM
+            ,   BTN_COLOR1
+            ,   BTN_COLOR2
+            ,   FONT_COLOR
+            ,   FONT_SIZE
+            ,   IMG_YN
+            ,   IMG_PATH
+            ,   POSITION
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER 
+            ,   UPD_DT 
+            ,   UPD_USER
+        ) VALUES (
+                ST.COMP_CD
+            ,   ST.BRAND_CD
+            ,   ST.STOR_CD
+            ,   ST.TOUCH_DIV
+            ,   ST.TOUCH_GR_CD
+            ,   ST.TOUCH_CD
+            ,   ST.TOUCH_TP
+            ,   ST.TOUCH_NM
+            ,   ST.BTN_COLOR1
+            ,   ST.BTN_COLOR2
+            ,   ST.FONT_COLOR
+            ,   ST.FONT_SIZE
+            ,   ST.IMG_YN
+            ,   ST.IMG_PATH
+            ,   ST.POSITION
+            ,   ST.USE_YN
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+        )
+ ]]></query>
+
+<query name='TOUCH_STORE_UI_S_I'><![CDATA[
+    MERGE INTO TOUCH_STORE_UI TT
+    USING ( 
+            SELECT  COMP_CD
+                 ,  BRAND_CD
+                 ,  ${TGT_STOR_CD} AS STOR_CD
+                 ,  TOUCH_DIV
+                 ,  TOUCH_GR_CD
+                 ,  TOUCH_CD
+                 ,  TOUCH_TP
+                 ,  TOUCH_NM
+                 ,  BTN_COLOR1
+                 ,  BTN_COLOR2
+                 ,  FONT_COLOR
+                 ,  FONT_SIZE
+                 ,  IMG_YN
+                 ,  IMG_PATH
+                 ,  POSITION
+                 ,  USE_YN
+              FROM  TOUCH_STORE_UI
+             WHERE  COMP_CD     = ${COMP_CD}
+               AND  BRAND_CD    = ${BRAND_CD}
+               AND  STOR_CD     = ${SRC_STOR_CD}
+               AND  TOUCH_DIV   = ${TOUCH_DIV}
+               AND  (${TOUCH_GR_CD} IS NULL OR TOUCH_GR_CD = ${TOUCH_GR_CD})
+               AND  (${TOUCH_CD}    IS NULL OR TOUCH_CD    = ${TOUCH_CD})
+          ) ST
+       ON (
+                TT.COMP_CD      = ST.COMP_CD
+            AND TT.BRAND_CD     = ST.BRAND_CD
+            AND TT.STOR_CD      = ST.STOR_CD
+            AND TT.TOUCH_DIV    = ST.TOUCH_DIV
+            AND TT.TOUCH_GR_CD  = ST.TOUCH_GR_CD
+            AND TT.TOUCH_CD     = ST.TOUCH_CD
+          )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  TOUCH_TP    =  ST.TOUCH_TP
+             ,  TOUCH_NM    =  ST.TOUCH_NM
+             ,  BTN_COLOR1  =  ST.BTN_COLOR1
+             ,  BTN_COLOR2  =  ST.BTN_COLOR2
+             ,  FONT_COLOR  =  ST.FONT_COLOR
+             ,  FONT_SIZE   =  ST.FONT_SIZE
+             ,  IMG_YN      =  ST.IMG_YN
+             ,  IMG_PATH    =  ST.IMG_PATH
+             ,  POSITION    =  ST.POSITION
+             ,  USE_YN      =  ST.USE_YN
+             ,  UPD_DT      =  SYSDATE
+             ,  UPD_USER    =  ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (   
+                COMP_CD
+            ,   BRAND_CD
+            ,   STOR_CD
+            ,   TOUCH_DIV 
+            ,   TOUCH_GR_CD
+            ,   TOUCH_CD
+            ,   TOUCH_TP
+            ,   TOUCH_NM
+            ,   BTN_COLOR1
+            ,   BTN_COLOR2
+            ,   FONT_COLOR
+            ,   FONT_SIZE
+            ,   IMG_YN
+            ,   IMG_PATH
+            ,   POSITION
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER 
+            ,   UPD_DT 
+            ,   UPD_USER
+        ) VALUES (
+                ST.COMP_CD
+            ,   ST.BRAND_CD
+            ,   ST.STOR_CD
+            ,   ST.TOUCH_DIV
+            ,   ST.TOUCH_GR_CD
+            ,   ST.TOUCH_CD
+            ,   ST.TOUCH_TP
+            ,   ST.TOUCH_NM
+            ,   ST.BTN_COLOR1
+            ,   ST.BTN_COLOR2
+            ,   ST.FONT_COLOR
+            ,   ST.FONT_SIZE
+            ,   ST.IMG_YN
+            ,   ST.IMG_PATH
+            ,   ST.POSITION
+            ,   ST.USE_YN
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+        )
+ ]]></query>
+   
+<query name='TOUCH_STORE_Q'><![CDATA[
+   WITH CM AS
+          ( SELECT  C.COMP_CD
+                  , C.CODE_TP                   AS CODE_TP
+                  , C.CODE_CD                   AS CODE_CD
+                  , NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  , VAL_C1
+              FROM COMMON C,
+                   ( SELECT CODE_TP, CODE_CD, CODE_NM
+                       FROM LANG_COMMON
+                      WHERE CODE_TP      IN ( '00565', '00650')
+                        AND LANGUAGE_TP  = DECODE(${SCH_LANGUAGE}, NULL, ' ', ${SCH_LANGUAGE} )
+                        AND COMP_CD      = ${SCH_COMP_CD}
+                        AND USE_YN       = 'Y'
+                   )   L
+             WHERE C.CODE_TP  = L.CODE_TP(+)
+               AND C.CODE_CD  = L.CODE_CD(+)
+               AND C.COMP_CD  = ${SCH_COMP_CD}
+               AND C.CODE_TP  IN ( '00565', '00650' )
+               AND C.USE_YN   = 'Y'
+          )
+     SELECT COMP_CD
+      ,     BRAND_CD
+      ,     STOR_CD
+      ,     STOR_NM
+      ,     STOR_TP
+      ,     BUSI_NM
+      ,     TEL_NO
+      ,     SIDO_CD
+      ,     REGION_CD
+      ,     (
+                SELECT  REGION_NM
+                  FROM  REGION
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  NATION_CD   = A.NATION_CD
+                   AND  CITY_CD     = A.SIDO_CD
+                   AND  REGION_CD   = A.REGION_CD
+            )           AS REGION_CD_NM
+      ,     TRAD_AREA
+      ,     SV_USER_ID
+      ,     SV_USER_NM
+      ,     APP_DIV
+      ,     NATION_CD
+      ,     NATION_NM
+      ,     REGION_NO
+      ,     REGION_NM       AS REGION_NO_NM
+     FROM (         
+           SELECT  B.COMP_CD
+                 , B.BRAND_CD
+                 , B.STOR_CD        AS STOR_CD
+                 , NVL(LS.STOR_NM, B.STOR_NM)   AS STOR_NM
+                 , B.STOR_TP        AS STOR_TP
+                 , B.BUSI_NM        AS BUSI_NM
+                 , B.TEL_NO         AS TEL_NO
+                 , B.SIDO_CD        AS SIDO_CD
+                 , B.REGION_CD      AS REGION_CD
+                 , B.TRAD_AREA      AS TRAD_AREA
+                 , B.SV_USER_ID     AS SV_USER_ID
+                 , D.USER_NM        AS SV_USER_NM
+                 , B.APP_DIV        AS APP_DIV
+                 , B.NATION_CD
+                 , LN.NATION_NM
+                 , B.REGION_NO
+                 , LR.REGION_NM
+              FROM (
+                           SELECT   BRAND_CD
+                              ,     STOR_CD
+                           FROM  TOUCH_STORE_UI
+                           WHERE COMP_CD   = ${SCH_COMP_CD}
+                             AND BRAND_CD  = ${SCH_BRAND_CD}
+                             AND TOUCH_DIV = ${SCH_TOUCH_DIV}
+                           GROUP BY BRAND_CD, STOR_CD
+                    ) TSU
+                  , STORE B
+                  , THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+                  , ( SELECT CODE_CD, CODE_NM, VAL_C1 FROM CM WHERE COMP_CD = ${SCH_COMP_CD} AND CODE_TP = '00565' ) C
+                  , ( SELECT CODE_CD, CODE_NM FROM CM WHERE COMP_CD = ${SCH_COMP_CD} AND CODE_TP = '00650' ) E
+                  , (
+                        SELECT  BRAND_CD
+                             ,  STOR_CD
+                             ,  STOR_NM
+                          FROM  LANG_STORE
+                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                           AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                           AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                           AND  USE_YN      = 'Y'
+                    ) LS
+                  , (
+                        SELECT  U.COMP_CD
+                             ,  U.USER_ID
+                             ,  NVL(L.LANG_NM, U.USER_NM)   AS USER_NM
+                          FROM  HQ_USER     U
+                             ,  (
+                                    SELECT  COMP_CD
+                                         ,  PK_COL
+                                         ,  LANG_NM
+                                      FROM  LANG_TABLE
+                                     WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                       AND  TABLE_NM    = 'HQ_USER'
+                                       AND  COL_NM      = 'USER_NM'
+                                       AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                                       AND  USE_YN      = 'Y'
+                                )           L
+                         WHERE  L.COMP_CD(+)    = U.COMP_CD
+                           AND  L.PK_COL(+)     = LPAD(U.USER_ID, 10 , ' ')
+                           AND  U.COMP_CD       = ${SCH_COMP_CD}
+                    )       D
+                  , (
+                       SELECT  LN.NATION_CD
+                            ,  NVL(L.LANG_NM, LN.NATION_NM)    AS NATION_NM
+                         FROM  L_NATION        LN
+                            ,  (
+                                   SELECT  PK_COL
+                                        ,  LANG_NM
+                                     FROM  LANG_TABLE
+                                    WHERE  COMP_CD     = 'ZZZ'
+                                      AND  TABLE_NM    = 'L_NATION'
+                                      AND  COL_NM      = 'NATION_NM'
+                                      AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                                      AND  USE_YN      = 'Y'
+                               )   L
+                        WHERE  L.PK_COL(+) = LPAD(LN.NATION_CD, 3, ' ')
+                          AND  LN.USE_YN   = 'Y'
+                    )       LN
+                  , (
+                       SELECT  LR.NATION_CD
+                            ,  LR.REGION_NO
+                            ,  NVL(L.LANG_NM, LR.REGION_NM)    AS REGION_NM
+                         FROM  L_REGION        LR
+                            ,  (
+                                   SELECT  PK_COL
+                                        ,  LANG_NM
+                                     FROM  LANG_TABLE
+                                    WHERE  COMP_CD     = 'ZZZ'
+                                      AND  TABLE_NM    = 'L_REGION'
+                                      AND  COL_NM      = 'REGION_NM'
+                                      AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                                      AND  USE_YN      = 'Y'
+                               )   L
+                        WHERE  L.PK_COL(+) = LPAD(LR.REGION_NO, 3, ' ')
+                          AND  LR.USE_YN   = 'Y'
+                   )       LR
+             WHERE TSU.BRAND_CD = B.BRAND_CD
+               AND TSU.STOR_CD  = B.STOR_CD
+               AND B.STOR_CD    = A.STOR_CD
+               AND B.STOR_TP    = C.CODE_CD
+               AND B.SV_USER_ID = D.USER_ID(+)
+               AND B.APP_DIV    = E.CODE_CD(+)
+               AND B.BRAND_CD   = LS.BRAND_CD(+)
+               AND B.STOR_CD    = LS.STOR_CD(+)
+               AND B.NATION_CD  = LN.NATION_CD(+)
+               AND B.NATION_CD  = LR.NATION_CD(+)
+               AND B.REGION_NO  = LR.REGION_NO(+)
+               AND B.COMP_CD    = ${SCH_COMP_CD}
+               AND B.BRAND_CD   = ${SCH_BRAND_CD}
+               AND B.USE_YN     = 'Y'
+               AND (${SCH_DEPT_CD} IS NULL OR B.DEPT_CD = ${SCH_DEPT_CD})
+               AND (${SCH_TEAM_CD} IS NULL OR B.TEAM_CD = ${SCH_TEAM_CD})
+               AND (${SCH_SV_USER_ID} IS NULL OR B.SV_USER_ID = ${SCH_SV_USER_ID})
+               AND (${SCH_STOR_TP} IS NULL OR B.STOR_TP = ${SCH_STOR_TP})
+               AND (${SCH_SIDO_CD} IS NULL OR B.SIDO_CD = ${SCH_SIDO_CD})
+               AND (${SCH_REGION_CD} IS NULL OR B.REGION_CD = ${SCH_REGION_CD})
+               AND (${SCH_TRAD_AREA} IS NULL OR B.TRAD_AREA = ${SCH_TRAD_AREA})
+               AND (${SCH_APP_DIV} IS NULL OR B.APP_DIV = ${SCH_APP_DIV})
+               AND (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+        ) A
+   WHERE (${SCH_STOR_TXT} IS NULL OR (STOR_NM LIKE '%'|| ${SCH_STOR_TXT} || '%' OR STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+   ORDER BY STOR_CD
+]]></query>
+
+<query name='POP_ITEM_H_Q'><![CDATA[
+   SELECT   I.COMP_CD
+      ,     I.ITEM_CD
+      ,     I.ITEM_NM
+      ,     B.SALE_PRC
+      ,     B.SALE_PRC_CTRL
+      ,     C.M_CLASS_NM
+   FROM (
+            SELECT   A.COMP_CD
+               ,     A.ITEM_CD
+               ,     NVL(L.ITEM_POS_NM, A.ITEM_POS_NM)  AS ITEM_NM
+               ,     A.L_CLASS_CD
+               ,     A.M_CLASS_CD
+            FROM (
+                     SELECT   I.COMP_CD
+                        ,     I.ITEM_CD
+                        ,     MAX(I.ITEM_POS_NM) AS ITEM_POS_NM
+                        ,     MAX(NVL(IC.L_CLASS_CD, I.L_CLASS_CD))  AS L_CLASS_CD
+                        ,     MAX(NVL(IC.M_CLASS_CD, I.M_CLASS_CD))  AS M_CLASS_CD
+                     FROM (
+                                SELECT  P.COMP_CD
+                                     ,  P.BRAND_CD
+                                     ,  PM.ITEM_CD
+                                  FROM  CS_PROGRAM      P
+                                     ,  CS_PROGRAM_MATL PM
+                                 WHERE  P.COMP_CD       = PM.COMP_CD
+                                   AND  P.PROGRAM_ID    = PM.PROGRAM_ID
+                                   AND  P.COMP_CD       = ${SCH_COMP_CD}
+                                   AND  P.BRAND_CD      = ${SCH_BRAND_CD}
+                                   AND  P.USE_YN        = 'Y'
+                                   AND  PM.USE_YN       = 'Y'
+                                 GROUP  BY P.COMP_CD, P.BRAND_CD, PM.ITEM_CD
+                            )           PM
+                        , ITEM_CHAIN I
+                        , ITEM_CLASS IC
+                     WHERE PM.COMP_CD = I.COMP_CD
+                       AND PM.BRAND_CD= I.BRAND_CD
+                       AND PM.ITEM_CD = I.ITEM_CD
+                       AND I.COMP_CD  = IC.COMP_CD(+)
+                       AND I.ITEM_CD  = IC.ITEM_CD(+)
+                       AND I.COMP_CD  = ${SCH_COMP_CD}
+                       AND I.BRAND_CD = ${SCH_BRAND_CD}
+                       AND I.ORD_SALE_DIV IN ('2', '3')
+                       AND I.USE_YN = 'Y'
+                       AND (${L_CLASS_CD} IS NULL OR NVL(IC.L_CLASS_CD, I.L_CLASS_CD) = ${L_CLASS_CD})
+                       AND (${M_CLASS_CD} IS NULL OR NVL(IC.M_CLASS_CD, I.M_CLASS_CD) = ${M_CLASS_CD})
+                       AND (${S_CLASS_CD} IS NULL OR NVL(IC.S_CLASS_CD, I.S_CLASS_CD) = ${S_CLASS_CD})
+                       AND IC.ORG_CLASS_CD(+) = '00'
+                     GROUP BY I.COMP_CD, I.BRAND_CD, I.ITEM_CD
+                 ) A,
+                 (
+                     SELECT   ITEM_CD   
+                        ,     ITEM_POS_NM
+                     FROM  LANG_ITEM
+                     WHERE COMP_CD = ${SCH_COMP_CD} 
+                       AND LANGUAGE_TP = DECODE(${LANG_TP}, NULL, ' ', ${LANG_TP} ) 
+                       AND USE_YN      = 'Y'  
+                  ) L
+            WHERE A.ITEM_CD = L.ITEM_CD(+)
+         ) I,
+         ITEM B,
+         ( 
+            SELECT  M.L_CLASS_CD 
+            ,       M.M_CLASS_CD 
+            ,       DECODE(L.M_CLASS_NM , NULL , M.M_CLASS_NM , L.M_CLASS_NM) AS M_CLASS_NM
+            FROM    ITEM_M_CLASS M
+            ,       (
+                        SELECT  PK_COL AS CLASS_CD
+                        ,       LANG_NM AS M_CLASS_NM
+                        FROM    LANG_TABLE
+                        WHERE   COMP_CD  = ${SCH_COMP_CD}
+                        AND     TABLE_NM = 'ITEM_M_CLASS'
+                        AND     COL_NM = 'CLASS_NM'
+                        AND     LANGUAGE_TP = DECODE(${LANG_TP}, NULL, ' ', ${LANG_TP} )  
+                        AND     USE_YN      = 'Y'
+                    ) L
+            WHERE  M.COMP_CD||M.ORG_CLASS_CD||M.L_CLASS_CD || M.M_CLASS_CD = CLASS_CD(+)
+              AND  M.COMP_CD = ${SCH_COMP_CD}
+            
+         ) C
+   WHERE I.COMP_CD = B.COMP_CD(+)
+     AND I.ITEM_CD = B.ITEM_CD(+)
+     AND B.COMP_CD(+) = ${SCH_COMP_CD}
+     AND I.L_CLASS_CD = C.L_CLASS_CD(+)
+     AND I.M_CLASS_CD = C.M_CLASS_CD(+)
+     AND (${SCH_ITEM_TXT} IS NULL OR (I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_CD LIKE '%'|| ${SCH_ITEM_TXT} || '%'))
+   ORDER BY ITEM_NM
+]]></query>
+
+<query name='POP_ITEM_S_Q'><![CDATA[
+   SELECT   COMP_CD
+      ,     BRAND_CD
+      ,     ITEM_CD
+      ,     ITEM_NM
+      ,     SALE_PRC
+      ,     SALE_PRC_CTRL
+      ,     M_CLASS_NM
+   FROM (
+            SELECT   A.COMP_CD
+               ,     BRAND_CD
+               ,     A.ITEM_CD
+               ,     NVL(L.ITEM_POS_NM, A.ITEM_POS_NM)  AS ITEM_NM
+               ,     SALE_PRC
+               ,     SALE_PRC_CTRL
+               ,     C.M_CLASS_NM
+            FROM (
+                     SELECT   A.COMP_CD
+                        ,     A.BRAND_CD
+                        ,     A.ITEM_CD
+                        ,     A.ITEM_POS_NM
+                        ,     DECODE(A.SALE_PRC_CTRL, 'H', A.SALE_PRC, NVL(B.STOR_SALE_PRC, A.SALE_PRC)) AS SALE_PRC
+                        ,     A.SALE_PRC_CTRL
+                        ,     NVL(IC.L_CLASS_CD, A.L_CLASS_CD)  AS L_CLASS_CD
+                        ,     NVL(IC.M_CLASS_CD, A.M_CLASS_CD)  AS M_CLASS_CD
+                     FROM   (
+                                SELECT  P.COMP_CD
+                                     ,  P.BRAND_CD
+                                     ,  PM.ITEM_CD
+                                  FROM  CS_PROGRAM      P
+                                     ,  CS_PROGRAM_MATL PM
+                                 WHERE  P.COMP_CD       = PM.COMP_CD
+                                   AND  P.PROGRAM_ID    = PM.PROGRAM_ID
+                                   AND  P.COMP_CD       = ${SCH_COMP_CD}
+                                   AND  P.BRAND_CD      = ${SCH_BRAND_CD}
+                                   AND  P.USE_YN        = 'Y'
+                                   AND  PM.USE_YN       = 'Y'
+                                 GROUP  BY P.COMP_CD, P.BRAND_CD, PM.ITEM_CD
+                            )           PM
+                        ,  ITEM_CHAIN A
+                        ,  ITEM_CLASS IC
+                        ,  (
+                              SELECT S.*
+                              FROM ITEM_STORE S
+                              WHERE S.COMP_CD  = ${SCH_COMP_CD}
+                                AND S.BRAND_CD = ${SCH_BRAND_CD}
+                                AND S.STOR_CD  = ${SCH_STOR_CD}
+                                AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S.SALE_START_DT AND NVL(S.SALE_CLOSE_DT, '99991231')
+                           ) B
+                     WHERE PM.COMP_CD   = A.COMP_CD
+                       AND PM.BRAND_CD  = A.BRAND_CD
+                       AND PM.ITEM_CD   = A.ITEM_CD
+                       AND A.COMP_CD = IC.COMP_CD(+)
+                       AND A.ITEM_CD = IC.ITEM_CD(+)
+                       AND A.COMP_CD = B.COMP_CD(+)
+                       AND A.ITEM_CD = B.ITEM_CD(+)
+                       AND A.COMP_CD = ${SCH_COMP_CD}
+                       AND A.BRAND_CD = ${SCH_BRAND_CD}
+                       AND A.STOR_TP = (
+                                          SELECT   STOR_TP
+                                          FROM STORE
+                                          WHERE COMP_CD  = ${SCH_COMP_CD}
+                                            AND BRAND_CD = ${SCH_BRAND_CD}
+                                            AND STOR_CD  = ${SCH_STOR_CD}
+                                       )
+                       AND A.ORD_SALE_DIV IN ('2', '3')
+                       AND A.USE_YN = 'Y'
+                       AND (${L_CLASS_CD} IS NULL OR NVL(IC.L_CLASS_CD, A.L_CLASS_CD) = ${L_CLASS_CD})
+                       AND (${M_CLASS_CD} IS NULL OR NVL(IC.M_CLASS_CD, A.M_CLASS_CD) = ${M_CLASS_CD})
+                       AND (${S_CLASS_CD} IS NULL OR NVL(IC.S_CLASS_CD, A.S_CLASS_CD) = ${S_CLASS_CD})
+                       AND IC.ORG_CLASS_CD(+) = '00'
+                 ) A,
+                 (
+                     SELECT   COMP_CD
+                        ,     ITEM_CD   
+                        ,     ITEM_POS_NM
+                     FROM   LANG_ITEM
+                     WHERE  COMP_CD     = ${SCH_COMP_CD}
+                       AND  LANGUAGE_TP = ${LANG_TP}
+                       AND  USE_YN      = 'Y'
+                  ) L,
+                  ( 
+                     SELECT  M.COMP_CD
+                     ,       M.L_CLASS_CD 
+                     ,       M.M_CLASS_CD 
+                     ,       DECODE(L.M_CLASS_NM , NULL , M.M_CLASS_NM , L.M_CLASS_NM) AS M_CLASS_NM
+                     FROM    ITEM_M_CLASS M
+                     ,       (
+                             SELECT  PK_COL AS CLASS_CD
+                             ,       LANG_NM AS M_CLASS_NM
+                             FROM    LANG_TABLE
+                             WHERE   COMP_CD = ${SCH_COMP_CD}
+                             AND     TABLE_NM = 'ITEM_M_CLASS'
+                             AND     COL_NM = 'CLASS_NM'
+                             AND     LANGUAGE_TP = ${LANG_TP}
+                             AND     USE_YN      = 'Y'
+                         ) L
+                     WHERE  M.COMP_CD||M.ORG_CLASS_CD||M.L_CLASS_CD || M.M_CLASS_CD = CLASS_CD(+)
+                       AND  M.COMP_CD  = ${SCH_COMP_CD}
+                  ) C
+            WHERE A.COMP_CD = L.COMP_CD(+)
+            AND   A.ITEM_CD = L.ITEM_CD(+)
+            AND   A.L_CLASS_CD = C.L_CLASS_CD(+)
+            AND   A.M_CLASS_CD = C.M_CLASS_CD(+)  
+         ) I            
+   WHERE (${SCH_ITEM_TXT} IS NULL OR (ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%' OR ITEM_CD LIKE '%'|| ${SCH_ITEM_TXT} || '%'))
+   ORDER BY ITEM_NM
+]]></query>
+
+<query name='ITEM_PRC_Q'><![CDATA[
+   SELECT   A.BRAND_CD
+      ,     A.ITEM_CD
+      ,     A.ITEM_NM
+      ,     A.SALE_PRC_CTRL
+      ,     DECODE(A.SALE_PRC_CTRL, 'H', A.SALE_PRC, NVL(B.STOR_SALE_PRC, A.SALE_PRC)) AS SALE_PRC
+      ,     A.SALE_VAT_YN
+      ,     A.SALE_VAT_RULE
+      ,     A.SALE_VAT_IN_RATE*100     AS SALE_VAT_IN_RATE
+      ,     A.SALE_VAT_OUT_RATE*100    AS SALE_VAT_OUT_RATE
+   FROM ITEM_CHAIN A
+      , (
+            SELECT S.*
+            FROM ITEM_STORE S
+            WHERE S.COMP_CD  = ${SCH_COMP_CD}
+              AND S.BRAND_CD = ${SCH_BRAND_CD}
+              AND S.STOR_CD  = ${SCH_STOR_CD}
+              AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S.SALE_START_DT AND NVL(S.SALE_CLOSE_DT, '99991231')
+         ) B
+   WHERE A.COMP_CD  = B.COMP_CD(+)
+     AND A.ITEM_CD  = B.ITEM_CD(+)
+     AND A.COMP_CD  = ${SCH_COMP_CD}
+     AND A.BRAND_CD = ${SCH_BRAND_CD}
+     AND A.STOR_TP  = (
+                        SELECT   STOR_TP
+                        FROM STORE
+                        WHERE COMP_CD  = ${SCH_COMP_CD}
+                          AND BRAND_CD = ${SCH_BRAND_CD}
+                          AND STOR_CD  = ${SCH_STOR_CD}
+                     )
+     AND A.ITEM_CD = ${SCH_ITEM_CD}
+]]></query>
+
+<query name='ITEM_PRC_2_Q'><![CDATA[
+   SELECT   A.BRAND_CD
+      ,     A.ITEM_CD
+      ,     A.ITEM_NM
+      ,     A.SALE_PRC_CTRL
+      ,     DECODE(A.SALE_PRC_CTRL, 'H', A.SALE_PRC, NVL(B.STOR_SALE_PRC, A.SALE_PRC)) AS SALE_PRC
+      ,     A.SALE_VAT_YN
+      ,     A.SALE_VAT_RULE
+      ,     A.SALE_VAT_IN_RATE      AS SALE_VAT_IN_RATE
+      ,     A.SALE_VAT_OUT_RATE     AS SALE_VAT_OUT_RATE
+   FROM ITEM_CHAIN A
+      , (
+            SELECT S.*
+            FROM ITEM_STORE S
+            WHERE S.COMP_CD  = ${SCH_COMP_CD}
+              AND S.BRAND_CD = ${SCH_BRAND_CD}
+              AND S.STOR_CD  = ${SCH_STOR_CD}
+              AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN S.SALE_START_DT AND NVL(S.SALE_CLOSE_DT, '99991231')
+         ) B
+   WHERE A.COMP_CD  = B.COMP_CD(+)
+     AND A.ITEM_CD  = B.ITEM_CD(+)
+     AND A.COMP_CD  = ${SCH_COMP_CD}
+     AND A.BRAND_CD = ${SCH_BRAND_CD}
+     AND A.STOR_TP  = (
+                        SELECT   STOR_TP
+                        FROM STORE
+                        WHERE COMP_CD  = ${SCH_COMP_CD}
+                          AND BRAND_CD = ${SCH_BRAND_CD}
+                          AND STOR_CD  = ${SCH_STOR_CD}
+                     )
+     AND A.ITEM_CD = ${SCH_ITEM_CD}
+]]></query>
+
+<query name='GROUP_MOVE_H_U'><![CDATA[
+    MERGE INTO TOUCH_UI TT
+    USING ( 
+            SELECT  COMP_CD
+                 ,  BRAND_CD
+                 ,  TOUCH_DIV
+                 ,  ${MOVE_TGT_TOUCH_GR_CD}     AS TOUCH_GR_CD
+                 ,  TOUCH_CD
+                 ,  TOUCH_TP
+                 ,  TOUCH_NM
+                 ,  BTN_COLOR1
+                 ,  BTN_COLOR2
+                 ,  FONT_COLOR
+                 ,  FONT_SIZE
+                 ,  IMG_YN
+                 ,  IMG_PATH
+                 ,  ${MOVE_TGT_POSITION}        AS POSITION
+                 ,  ${USE_YN}                   AS USE_YN
+              FROM  TOUCH_UI
+             WHERE  COMP_CD       = ${MOVE_SRC_COMP_CD}
+               AND  BRAND_CD      = ${MOVE_SRC_BRAND_CD}
+               AND  TOUCH_DIV     = ${MOVE_SRC_TOUCH_DIV}
+               AND  TOUCH_GR_CD   = ${MOVE_SRC_TOUCH_GR_CD}
+               AND  TOUCH_CD      = ${MOVE_SRC_TOUCH_CD}
+               AND  TOUCH_TP      = ${MOVE_SRC_TOUCH_TP}
+          ) ST
+       ON (
+                TT.COMP_CD      = ST.COMP_CD
+            AND TT.BRAND_CD     = ST.BRAND_CD
+            AND TT.TOUCH_DIV    = ST.TOUCH_DIV
+            AND TT.TOUCH_GR_CD  = ST.TOUCH_GR_CD
+            AND TT.TOUCH_CD     = ST.TOUCH_CD
+          )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  TOUCH_TP    =  ST.TOUCH_TP
+             ,  TOUCH_NM    =  ST.TOUCH_NM
+             ,  BTN_COLOR1  =  ST.BTN_COLOR1
+             ,  BTN_COLOR2  =  ST.BTN_COLOR2
+             ,  FONT_COLOR  =  ST.FONT_COLOR
+             ,  FONT_SIZE   =  ST.FONT_SIZE
+             ,  IMG_YN      =  ST.IMG_YN
+             ,  IMG_PATH    =  ST.IMG_PATH
+             ,  POSITION    =  ST.POSITION
+             ,  USE_YN      =  ST.USE_YN
+             ,  UPD_DT      =  SYSDATE
+             ,  UPD_USER    =  ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (   
+                COMP_CD
+            ,   BRAND_CD
+            ,   TOUCH_DIV 
+            ,   TOUCH_GR_CD
+            ,   TOUCH_CD
+            ,   TOUCH_TP
+            ,   TOUCH_NM
+            ,   BTN_COLOR1
+            ,   BTN_COLOR2
+            ,   FONT_COLOR
+            ,   FONT_SIZE
+            ,   IMG_YN
+            ,   IMG_PATH
+            ,   POSITION
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER 
+            ,   UPD_DT 
+            ,   UPD_USER
+        ) VALUES (
+                ST.COMP_CD
+            ,   ST.BRAND_CD
+            ,   ST.TOUCH_DIV
+            ,   ST.TOUCH_GR_CD
+            ,   ST.TOUCH_CD
+            ,   ST.TOUCH_TP
+            ,   ST.TOUCH_NM
+            ,   ST.BTN_COLOR1
+            ,   ST.BTN_COLOR2
+            ,   ST.FONT_COLOR
+            ,   ST.FONT_SIZE
+            ,   ST.IMG_YN
+            ,   ST.IMG_PATH
+            ,   ST.POSITION
+            ,   ST.USE_YN
+            ,   SYSDATE
+            ,   ${INST_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+        )
+ ]]></query>
+
+<query name='GROUP_MOVE_S_U'><![CDATA[
+    MERGE INTO TOUCH_STORE_UI TT
+    USING ( 
+            SELECT  COMP_CD
+                 ,  BRAND_CD
+                 ,  STOR_CD
+                 ,  TOUCH_DIV
+                 ,  ${MOVE_TGT_TOUCH_GR_CD}     AS TOUCH_GR_CD
+                 ,  TOUCH_CD
+                 ,  TOUCH_TP
+                 ,  TOUCH_NM
+                 ,  BTN_COLOR1
+                 ,  BTN_COLOR2
+                 ,  FONT_COLOR
+                 ,  FONT_SIZE
+                 ,  IMG_YN
+                 ,  IMG_PATH
+                 ,  ${MOVE_TGT_POSITION}        AS POSITION
+                 ,  ${USE_YN}                   AS USE_YN
+              FROM  TOUCH_STORE_UI
+             WHERE  COMP_CD       = ${MOVE_SRC_COMP_CD}
+               AND  BRAND_CD      = ${MOVE_SRC_BRAND_CD}
+               AND  STOR_CD       = ${MOVE_SRC_STOR_CD}
+               AND  TOUCH_DIV     = ${MOVE_SRC_TOUCH_DIV}
+               AND  TOUCH_GR_CD   = ${MOVE_SRC_TOUCH_GR_CD}
+               AND  TOUCH_CD      = ${MOVE_SRC_TOUCH_CD}
+               AND  TOUCH_TP      = ${MOVE_SRC_TOUCH_TP}
+          ) ST
+       ON (
+                TT.COMP_CD      = ST.COMP_CD
+            AND TT.BRAND_CD     = ST.BRAND_CD
+            AND TT.STOR_CD      = ST.STOR_CD
+            AND TT.TOUCH_DIV    = ST.TOUCH_DIV
+            AND TT.TOUCH_GR_CD  = ST.TOUCH_GR_CD
+            AND TT.TOUCH_CD     = ST.TOUCH_CD
+          )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  TOUCH_TP    =  ST.TOUCH_TP
+             ,  TOUCH_NM    =  ST.TOUCH_NM
+             ,  BTN_COLOR1  =  ST.BTN_COLOR1
+             ,  BTN_COLOR2  =  ST.BTN_COLOR2
+             ,  FONT_COLOR  =  ST.FONT_COLOR
+             ,  FONT_SIZE   =  ST.FONT_SIZE
+             ,  IMG_YN      =  ST.IMG_YN
+             ,  IMG_PATH    =  ST.IMG_PATH
+             ,  POSITION    =  ST.POSITION
+             ,  USE_YN      =  ST.USE_YN
+             ,  UPD_DT      =  SYSDATE
+             ,  UPD_USER    =  ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (   
+                COMP_CD
+            ,   BRAND_CD
+            ,   STOR_CD
+            ,   TOUCH_DIV 
+            ,   TOUCH_GR_CD
+            ,   TOUCH_CD
+            ,   TOUCH_TP
+            ,   TOUCH_NM
+            ,   BTN_COLOR1
+            ,   BTN_COLOR2
+            ,   FONT_COLOR
+            ,   FONT_SIZE
+            ,   IMG_YN
+            ,   IMG_PATH
+            ,   POSITION
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER 
+            ,   UPD_DT 
+            ,   UPD_USER
+        ) VALUES (
+                ST.COMP_CD
+            ,   ST.BRAND_CD
+            ,   ST.STOR_CD
+            ,   ST.TOUCH_DIV
+            ,   ST.TOUCH_GR_CD
+            ,   ST.TOUCH_CD
+            ,   ST.TOUCH_TP
+            ,   ST.TOUCH_NM
+            ,   ST.BTN_COLOR1
+            ,   ST.BTN_COLOR2
+            ,   ST.FONT_COLOR
+            ,   ST.FONT_SIZE
+            ,   ST.IMG_YN
+            ,   ST.IMG_PATH
+            ,   ST.POSITION
+            ,   ST.USE_YN
+            ,   SYSDATE
+            ,   ${INST_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+        )
+ ]]></query>
+
+<query name='CHECK_ITEM_H_Q'><![CDATA[
+   SELECT   ITEM_CD
+   FROM ITEM
+   WHERE COMP_CD = ${SCH_COMP_CD}
+     AND ITEM_CD = ${SCH_ITEM_CD}
+     AND USE_YN = 'Y'
+]]></query>
+
+<query name='CHECK_ITEM_S_Q'><![CDATA[
+   SELECT   ITEM_CD
+   FROM ITEM_CHAIN
+   WHERE COMP_CD = ${SCH_COMP_CD}
+     AND BRAND_CD = ${SCH_BRAND_CD}
+     AND STOR_TP = (
+                        SELECT   STOR_TP
+                        FROM STORE
+                        WHERE COMP_CD = ${SCH_COMP_CD}
+                          AND BRAND_CD = ${SCH_BRAND_CD}
+                          AND STOR_CD = ${SCH_STOR_CD}
+                   )
+     AND ITEM_CD = ${SCH_ITEM_CD}
+     AND USE_YN = 'Y'
+]]></query> 
+
+<query name='TOUCH_UI_CJ_H_D'><![CDATA[
+    UPDATE TOUCH_UI 
+    SET    USE_YN       = 'N'
+         , UPD_DT       = SYSDATE
+         , UPD_USER     = ${UPD_USER}
+    WHERE  COMP_CD      = ${MOVE_SRC_COMP_CD}
+      AND  BRAND_CD     = ${MOVE_SRC_BRAND_CD}
+      AND  TOUCH_DIV    = ${MOVE_SRC_TOUCH_DIV}
+      AND  TOUCH_GR_CD  = ${MOVE_SRC_TOUCH_GR_CD}
+      AND  TOUCH_CD     = ${MOVE_SRC_TOUCH_CD}
+      AND  TOUCH_TP     = ${MOVE_SRC_TOUCH_TP}
+ ]]></query>
+
+<query name='TOUCH_UI_CJ_S_D'><![CDATA[
+    UPDATE TOUCH_STORE_UI 
+    SET    USE_YN       = 'N'
+         , UPD_DT       = SYSDATE
+         , UPD_USER     = ${UPD_USER}
+    WHERE  COMP_CD      = ${MOVE_SRC_COMP_CD}
+      AND  BRAND_CD     = ${MOVE_SRC_BRAND_CD}
+      AND  STOR_CD      = ${MOVE_SRC_STOR_CD}
+      AND  TOUCH_DIV    = ${MOVE_SRC_TOUCH_DIV}
+      AND  TOUCH_GR_CD  = ${MOVE_SRC_TOUCH_GR_CD}
+      AND  TOUCH_CD     = ${MOVE_SRC_TOUCH_CD}
+      AND  TOUCH_TP     = ${MOVE_SRC_TOUCH_TP}
+ ]]></query>
+ 
+</SQLResource>
+

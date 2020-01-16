@@ -1,0 +1,531 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='STORE_JOIN_Q'><![CDATA[
+    SELECT  J.COMP_CD
+         ,  J.BRAND_CD
+         ,  J.STOR_CD
+         ,  S.SALE_DT
+         ,  MAX(J.JOIN_COMP_CD)     AS JOIN_COMP_CD
+         ,  MAX(J.JOIN_BRAND_CD)    AS JOIN_BRAND_CD
+         ,  MAX(J.JOIN_STOR_CD)     AS JOIN_STOR_CD
+         ,  MAX(J.JOIN_STOR_NM)     AS JOIN_STOR_NM
+         ,  MAX(J.JOIN_ITEM_CD)     AS JOIN_ITEM_CD
+         ,  MAX(J.JOIN_ITEM_NM)     AS JOIN_ITEM_NM
+      FROM  STORE_JOIN          J
+         ,  SALE_JDS            S
+     WHERE  J.COMP_CD       = S.COMP_CD
+       AND  J.BRAND_CD      = S.BRAND_CD
+       AND  J.STOR_CD       = S.STOR_CD
+       AND  J.COMP_CD       = ${SCH_COMP_CD}
+       AND  J.JOIN_COMP_CD  = ${SCH_JOIN_COMP_CD}
+       AND  J.USE_YN        = 'Y'
+       AND  S.SALE_DT       = NVL(${SCH_SALE_DT}, TO_CHAR(SYSDATE, 'YYYYMMDD'))
+       AND  S.GIFT_DIV      = '0'
+     GROUP  BY J.COMP_CD
+         ,  J.BRAND_CD
+         ,  J.STOR_CD
+         ,  S.SALE_DT
+]]></query>
+
+<query name='KORAIL_SALE_SEND_LOG_I'><![CDATA[
+     MERGE  INTO KORAIL_SALE_SEND_LOG   TT
+     USING  (
+                SELECT  COMP_CD
+                     ,  SALE_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  POS_NO
+                     ,  BILL_NO
+                     ,  SALE_QTY
+                     ,  SALE_AMT
+                     ,  (DC_AMT + ENR_AMT)      AS DC_AMT
+                     ,  (GRD_I_AMT + GRD_O_AMT) AS GRD_AMT
+                     ,  ((GRD_I_AMT + GRD_O_AMT) - (VAT_I_AMT + VAT_O_AMT))     AS NET_AMT
+                     ,  (VAT_I_AMT + VAT_O_AMT) AS VAT_AMT
+                  FROM  SALE_HD     H
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  SALE_DT     = ${SCH_SALE_DT}
+                   AND  BRAND_CD    = ${SCH_BRAND_CD}
+                   AND  STOR_CD     = ${SCH_STOR_CD}
+                   AND  GIFT_DIV    = '0'
+                   AND  NOT EXISTS  (
+                                        SELECT  '1'
+                                          FROM  KORAIL_SALE_SEND_LOG
+                                         WHERE  COMP_CD     = H.COMP_CD
+                                           AND  SALE_DT     = H.SALE_DT
+                                           AND  BRAND_CD    = H.BRAND_CD
+                                           AND  STOR_CD     = H.STOR_CD
+                                           AND  POS_NO      = H.POS_NO
+                                           AND  BILL_NO     = H.BILL_NO
+                                           AND  SEND_YN     = 'Y'
+                                    )
+            )   ST
+        ON  (
+                    TT.COMP_CD          = ST.COMP_CD
+               AND  TT.SALE_DT          = ST.SALE_DT
+               AND  TT.BRAND_CD         = ST.BRAND_CD
+               AND  TT.STOR_CD          = ST.STOR_CD
+               AND  TT.POS_NO           = ST.POS_NO
+               AND  TT.BILL_NO          = ST.BILL_NO
+            )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  TT.SALE_QTY     = ST.SALE_QTY
+             ,  TT.SALE_AMT     = ST.SALE_AMT
+             ,  TT.DC_AMT       = ST.DC_AMT
+             ,  TT.GRD_AMT      = ST.GRD_AMT
+             ,  TT.NET_AMT      = ST.NET_AMT
+             ,  TT.VAT_AMT      = ST.VAT_AMT
+             ,  TT.SEND_YN      = 'R'
+             ,  TT.UPD_DT       = SYSDATE
+             ,  TT.UPD_USER     = 'BATCH'
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                TT.COMP_CD
+             ,  TT.SALE_DT
+             ,  TT.BRAND_CD
+             ,  TT.STOR_CD
+             ,  TT.POS_NO
+             ,  TT.BILL_NO
+             ,  TT.SALE_QTY
+             ,  TT.SALE_AMT
+             ,  TT.DC_AMT
+             ,  TT.GRD_AMT
+             ,  TT.NET_AMT
+             ,  TT.VAT_AMT
+             ,  TT.SEND_YN
+             ,  TT.INST_DT
+             ,  TT.INST_USER
+             ,  TT.UPD_DT
+             ,  TT.UPD_USER
+        ) VALUES (
+                ST.COMP_CD
+             ,  ST.SALE_DT
+             ,  ST.BRAND_CD
+             ,  ST.STOR_CD
+             ,  ST.POS_NO
+             ,  ST.BILL_NO
+             ,  ST.SALE_QTY
+             ,  ST.SALE_AMT
+             ,  ST.DC_AMT
+             ,  ST.GRD_AMT
+             ,  ST.NET_AMT
+             ,  ST.VAT_AMT
+             ,  'R'
+             ,  SYSDATE
+             ,  'BATCH'
+             ,  SYSDATE
+             ,  'BATCH'
+        )
+]]></query>
+
+<query name='STORE_HD_Q'><![CDATA[
+    SELECT  ${SCH_JOIN_STOR_CD}                 AS DEPT_CD
+         ,  L.SALE_DT
+         ,  TO_CHAR(L.POS_NO, 'FM0009')         AS POS_NO
+         ,  ${SCH_JOIN_ITEM_CD}                 AS ITEM_CD
+         ,  SUBSTRB(${SCH_JOIN_ITEM_NM}, 1, 30) AS ITEM_NM
+         ,  ABS(SUM(S.SALE_QTY))                AS SALE_QTY
+         ,  ABS(SUM(S.GRD_I_AMT + S.GRD_O_AMT)) AS SALE_AMT
+         ,  ABS(SUM((S.GRD_I_AMT + S.GRD_O_AMT) - (S.VAT_I_AMT + S.VAT_O_AMT)))     AS SALE_AMT_SUP
+         ,  ABS(SUM(S.VAT_I_AMT + S.VAT_O_AMT)) AS SALE_VAT
+         ,  '1'                                 AS TAX_TYPE
+         ,  ${SCH_JOIN_BRAND_CD}                AS CUST_CD
+      FROM  KORAIL_SALE_SEND_LOG    L
+         ,  SALE_HD                 S
+     WHERE  L.COMP_CD   = S.COMP_CD
+       AND  L.SALE_DT   = S.SALE_DT
+       AND  L.BRAND_CD  = S.BRAND_CD
+       AND  L.STOR_CD   = S.STOR_CD
+       AND  L.POS_NO    = S.POS_NO
+       AND  L.BILL_NO   = S.BILL_NO
+       AND  L.COMP_CD   = ${SCH_COMP_CD}
+       AND  L.SALE_DT   = ${SCH_SALE_DT}
+       AND  L.BRAND_CD  = ${SCH_BRAND_CD}
+       AND  L.STOR_CD   = ${SCH_STOR_CD}
+       AND  S.GIFT_DIV  = '0'
+       AND  L.SEND_YN   = 'R'
+     GROUP  BY L.COMP_CD, L.SALE_DT, L.BRAND_CD, L.STOR_CD, L.POS_NO
+]]></query>
+
+<query name='VI_A0025_SA130_I'><![CDATA[
+     MERGE  INTO VI_A0025_SA130
+     USING  DUAL
+        ON  (
+                    DEPT_CD     = ${DEPT_CD}
+               AND  SALE_DT     = ${SALE_DT}
+               AND  POS_NO      = ${POS_NO}
+               AND  ITEM_CD     = ${ITEM_CD}
+            )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  SALE_QTY        = ${SALE_QTY}
+             ,  SALE_AMT        = ${SALE_AMT}
+             ,  SALE_AMT_SUP    = ${SALE_AMT_SUP}
+             ,  SALE_VAT        = ${SALE_VAT}
+             ,  TAX_TYPE        = ${TAX_TYPE}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                DEPT_CD
+             ,  SALE_DT
+             ,  POS_NO
+             ,  ITEM_CD
+             ,  ITEM_NM
+             ,  SALE_QTY
+             ,  SALE_AMT
+             ,  SALE_AMT_SUP
+             ,  SALE_VAT
+             ,  TAX_TYPE
+             ,  CUST_CD
+        ) VALUES (
+                ${DEPT_CD}
+             ,  ${SALE_DT}
+             ,  ${POS_NO}
+             ,  ${ITEM_CD}
+             ,  ${ITEM_NM}
+             ,  ${SALE_QTY}
+             ,  ${SALE_AMT}
+             ,  ${SALE_AMT_SUP}
+             ,  ${SALE_VAT}
+             ,  ${TAX_TYPE}
+             ,  ${CUST_CD}
+        )
+]]></query>
+
+<query name='STORE_DT_Q'><![CDATA[
+    SELECT  ${SCH_JOIN_STOR_CD}                                     AS DEPT_CD
+         ,  SD.SALE_DT                                              AS SALE_DT
+         ,  TO_CHAR(SD.POS_NO, 'FM0009')                            AS POS_NO
+         ,  SUBSTR(SD.BILL_NO, -4)                                  AS DEAL_NO
+         ,  SD.SEQ                                                  AS SEQ
+         ,  SD.ITEM_CD                                              AS ITEM_CD
+         ,  SUBSTRB(I.ITEM_NM, 1, 30)                               AS ITEM_NM
+         ,  ABS(SD.SALE_PRC)                                        AS SALE_PRICE
+         ,  ABS(SD.SALE_QTY)                                        AS SALE_QTY
+         ,  ABS(SD.GRD_AMT)                                         AS SALE_AMT
+         ,  ABS(SD.NET_AMT)                                         AS SALE_AMT_SUP
+         ,  ABS(SD.VAT_AMT)                                         AS SALE_VAT
+         ,  CASE WHEN I.SALE_VAT_YN = 'Y' THEN '1' ELSE '2' END     AS TAX_TYPE
+         ,  SD.SALE_TM                                              AS SALE_TIME
+         ,  SD.SALE_DIV                                             AS SALE_TYPE
+         ,  NVL(SS.DEAL_TYPE, '')                                   AS DEAL_TYPE
+         ,  ${SCH_JOIN_BRAND_CD}                                    AS CUST_CD
+      FROM  SALE_DT                 SD
+         ,  ITEM                    I
+         ,  KORAIL_SALE_SEND_LOG    L
+         ,  (
+                SELECT  COMP_CD
+                     ,  SALE_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  POS_NO
+                     ,  BILL_NO
+                     ,  CASE WHEN COUNT(*) = 1 THEN (
+                                                        CASE WHEN MAX(PAY_DIV) IN ('10', '30')  THEN '01'
+                                                             WHEN MAX(PAY_DIV) IN ('20')        THEN '02'
+                                                             WHEN MAX(PAY_DIV) IN ('40', '60', '62', '70', '71', '72', '73', '74', '77', '83', '93', '94') THEN '03'
+                                                             WHEN MAX(PAY_DIV) IN ('68', '69')  THEN '04'
+                                                             ELSE '06'
+                                                        END
+                                                    )
+                             ELSE '99'
+                        END         AS DEAL_TYPE
+                  FROM  SALE_ST
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  SALE_DT     = ${SCH_SALE_DT}
+                   AND  BRAND_CD    = ${SCH_BRAND_CD}
+                   AND  STOR_CD     = ${SCH_STOR_CD}
+                   AND  GIFT_DIV    = '0'
+                 GROUP  BY COMP_CD
+                     ,  SALE_DT
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  POS_NO
+                     ,  BILL_NO
+            )   SS
+     WHERE  SD.COMP_CD  = I.COMP_CD
+       AND  SD.ITEM_CD  = I.ITEM_CD
+       AND  SD.COMP_CD  = L.COMP_CD
+       AND  SD.SALE_DT  = L.SALE_DT
+       AND  SD.BRAND_CD = L.BRAND_CD
+       AND  SD.STOR_CD  = L.STOR_CD
+       AND  SD.POS_NO   = L.POS_NO
+       AND  SD.BILL_NO  = L.BILL_NO
+       AND  SD.COMP_CD  = SS.COMP_CD
+       AND  SD.SALE_DT  = SS.SALE_DT
+       AND  SD.BRAND_CD = SS.BRAND_CD
+       AND  SD.STOR_CD  = SS.STOR_CD
+       AND  SD.POS_NO   = SS.POS_NO
+       AND  SD.BILL_NO  = SS.BILL_NO
+       AND  SD.COMP_CD  = ${SCH_COMP_CD}
+       AND  SD.SALE_DT  = ${SCH_SALE_DT}
+       AND  SD.BRAND_CD = ${SCH_BRAND_CD}
+       AND  SD.STOR_CD  = ${SCH_STOR_CD}
+       AND  SD.GIFT_DIV = '0'
+       AND  SD.T_SEQ    = 0
+       AND  L.COMP_CD   = ${SCH_COMP_CD}
+       AND  L.SEND_YN   = 'R'
+]]></query>
+
+<query name='VI_A0025_SA100_I'><![CDATA[
+     MERGE  INTO VI_A0025_SA100
+     USING  DUAL
+        ON  (
+                    DEPT_CD     = ${DEPT_CD}
+               AND  SALE_DT     = ${SALE_DT}
+               AND  POS_NO      = ${POS_NO}
+               AND  DEAL_NO     = ${DEAL_NO}
+               AND  SEQ         = ${SEQ}
+            )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  SALE_QTY        = ${SALE_QTY}
+             ,  SALE_AMT        = ${SALE_AMT}
+             ,  SALE_AMT_SUP    = ${SALE_AMT_SUP}
+             ,  SALE_VAT        = ${SALE_VAT}
+             ,  TAX_TYPE        = ${TAX_TYPE}
+             ,  SALE_TIME       = ${SALE_TIME}
+             ,  SALE_TYPE       = ${SALE_TYPE}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                DEPT_CD
+             ,  SALE_DT
+             ,  POS_NO
+             ,  DEAL_NO
+             ,  SEQ
+             ,  ITEM_CD
+             ,  ITEM_NM
+             ,  SALE_PRICE
+             ,  SALE_QTY
+             ,  SALE_AMT
+             ,  SALE_AMT_SUP
+             ,  SALE_VAT
+             ,  TAX_TYPE
+             ,  SALE_TIME
+             ,  SALE_TYPE
+             ,  CUST_CD
+        ) VALUES (
+                ${DEPT_CD}
+             ,  ${SALE_DT}
+             ,  ${POS_NO}
+             ,  ${DEAL_NO}
+             ,  ${SEQ}
+             ,  ${ITEM_CD}
+             ,  ${ITEM_NM}
+             ,  ${SALE_PRICE}
+             ,  ${SALE_QTY}
+             ,  ${SALE_AMT}
+             ,  ${SALE_AMT_SUP}
+             ,  ${SALE_VAT}
+             ,  ${TAX_TYPE}
+             ,  ${SALE_TIME}
+             ,  ${SALE_TYPE}
+             ,  ${CUST_CD}
+        )
+]]></query>
+
+<query name='STORE_ST_Q'><![CDATA[
+    SELECT  ${SCH_JOIN_STOR_CD}                                     AS DEPT_CD
+         ,  ST.SALE_DT                                              AS SALE_DT                 -- 운영
+         ,  TO_CHAR(ST.POS_NO, 'FM0009')                            AS POS_NO
+         ,  ST.BILL_NO                                              AS DEAL_NO
+         ,  SH.CUST_CNT                                             AS CUST_CNT
+         ,  ABS(ST.PAY_10_AMT + ST.PAY_30_AMT)                      AS CASH_AMT
+         ,  ABS(ST.RTN_10_AMT + ST.RTN_30_AMT)                      AS CASH_RTN_AMT
+         ,  ABS(ST.PAY_20_AMT)                                      AS CARD_AMT
+         ,  ABS(ST.RTN_20_AMT)                                      AS CARD_RTN_AMT
+         ,  ABS(ST.PAY_40_AMT + ST.PAY_60_AMT + ST.PAY_62_AMT + ST.PAY_70_AMT + ST.PAY_71_AMT + ST.PAY_72_AMT + ST.PAY_73_AMT + ST.PAY_74_AMT + ST.PAY_77_AMT + ST.PAY_83_AMT + ST.PAY_93_AMT + ST.PAY_94_AMT)  AS GIFT_AMT
+         ,  ABS(ST.RTN_40_AMT + ST.RTN_60_AMT + ST.RTN_62_AMT + ST.RTN_70_AMT + ST.RTN_71_AMT + ST.RTN_72_AMT + ST.RTN_73_AMT + ST.RTN_74_AMT + ST.RTN_77_AMT + ST.RTN_83_AMT + ST.RTN_93_AMT + ST.RTN_94_AMT)  AS GIFT_RTN_AMT
+         ,  ABS(ST.PAY_68_AMT + ST.PAY_69_AMT)                      AS POINT_AMT
+         ,  ABS(ST.RTN_68_AMT + ST.RTN_69_AMT)                      AS POINT_RTN_AMT
+         ,  ''                                                      AS TMONEY_AMT
+         ,  ''                                                      AS TMONEY_RTN_AMT
+         ,  ABS(ST.ETC_AMT)                                         AS ETC_AMT
+         ,  ABS(ST.ETC_RTN_AMT)                                     AS ETC_RTN_AMT
+         ,  ABS(ST.PAY_10_AMT + ST.RTN_10_AMT 
+              + ST.PAY_20_AMT + ST.RTN_20_AMT
+              + ST.PAY_30_AMT + ST.RTN_30_AMT
+              + ST.PAY_40_AMT + ST.RTN_40_AMT
+              + ST.PAY_60_AMT + ST.RTN_60_AMT
+              + ST.PAY_62_AMT + ST.RTN_62_AMT
+              + ST.PAY_68_AMT + ST.RTN_68_AMT
+              + ST.PAY_69_AMT + ST.RTN_69_AMT
+              + ST.PAY_70_AMT + ST.RTN_70_AMT
+              + ST.PAY_71_AMT + ST.RTN_71_AMT
+              + ST.PAY_72_AMT + ST.RTN_72_AMT
+              + ST.PAY_73_AMT + ST.RTN_73_AMT
+              + ST.PAY_74_AMT + ST.RTN_74_AMT
+              + ST.PAY_77_AMT + ST.RTN_77_AMT
+              + ST.PAY_83_AMT + ST.RTN_83_AMT
+              + ST.PAY_93_AMT + ST.RTN_93_AMT
+              + ST.PAY_94_AMT + ST.RTN_94_AMT
+              + ST.ETC_AMT + ST.ETC_RTN_AMT)                        AS TOTAL_AMT
+         ,  ${SCH_JOIN_BRAND_CD}                                    AS CUST_CD
+      FROM  (
+                SELECT  L.COMP_CD
+                     ,  L.SALE_DT
+                     ,  L.BRAND_CD
+                     ,  L.STOR_CD 
+                     ,  L.POS_NO
+                     ,  TO_CHAR(MAX(S.BILL_NO), 'FM0009')           AS BILL_NO
+                     ,  SUM(CASE WHEN S.PAY_DIV = '10' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_10_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '10' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_10_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '20' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_20_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '20' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_20_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '30' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_30_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '30' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_30_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '40' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_40_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '40' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_40_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '60' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_60_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '60' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_60_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '62' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_62_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '62' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_62_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '68' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_68_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '68' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_68_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '69' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_69_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '69' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_69_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '70' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_70_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '70' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_70_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '71' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_71_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '71' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_71_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '72' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_72_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '72' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_72_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '73' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_73_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '73' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_73_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '74' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_74_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '74' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_74_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '77' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_77_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '77' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_77_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '83' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_83_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '83' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_83_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '93' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_93_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '93' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_93_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '94' AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS PAY_94_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV = '94' AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS RTN_94_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV NOT IN ('10', '20', '30', '40', '60', '62', '68', '69', '70', '71', '72', '73', '74', '77', '83', '93', '94') AND SALE_DIV = '1' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS ETC_AMT
+                     ,  SUM(CASE WHEN S.PAY_DIV NOT IN ('10', '20', '30', '40', '60', '62', '68', '69', '70', '71', '72', '73', '74', '77', '83', '93', '94') AND SALE_DIV = '2' THEN S.PAY_AMT - (S.CHANGE_AMT + S.REMAIN_AMT) ELSE 0 END)    AS ETC_RTN_AMT
+                  FROM  KORAIL_SALE_SEND_LOG    L
+                     ,  SALE_ST                 S
+                 WHERE  L.COMP_CD   = S.COMP_CD
+                   AND  L.SALE_DT   = S.SALE_DT
+                   AND  L.BRAND_CD  = S.BRAND_CD
+                   AND  L.STOR_CD   = S.STOR_CD
+                   AND  L.POS_NO    = S.POS_NO
+                   AND  L.BILL_NO   = S.BILL_NO
+                   AND  L.COMP_CD   = ${SCH_COMP_CD}
+                   AND  L.SALE_DT   = ${SCH_SALE_DT}
+                   AND  L.BRAND_CD  = ${SCH_BRAND_CD}
+                   AND  L.STOR_CD   = ${SCH_STOR_CD}
+                   AND  S.GIFT_DIV  = '0'
+                   AND  L.SEND_YN   = 'R'
+                 GROUP  BY L.COMP_CD, L.SALE_DT, L.BRAND_CD, L.STOR_CD, L.POS_NO
+            )   ST
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.SALE_DT
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  S.POS_NO
+                     ,  SUM(CASE WHEN S.SALE_DIV = '1' THEN S.CUST_F_CNT ELSE 0 END)    AS CUST_CNT
+                  FROM  SALE_HD     S
+                 WHERE  S.COMP_CD   = ${SCH_COMP_CD}
+                   AND  S.SALE_DT   = ${SCH_SALE_DT}
+                   AND  S.BRAND_CD  = ${SCH_BRAND_CD}
+                   AND  S.STOR_CD   = ${SCH_STOR_CD}
+                   AND  S.GIFT_DIV  = '0'
+                 GROUP  BY S.COMP_CD, S.SALE_DT, S.BRAND_CD, S.STOR_CD, S.POS_NO
+            )   SH
+        WHERE   ST.COMP_CD  = SH.COMP_CD
+          AND   ST.SALE_DT  = SH.SALE_DT
+          AND   ST.BRAND_CD = SH.BRAND_CD
+          AND   ST.STOR_CD  = SH.STOR_CD
+          AND   ST.POS_NO   = SH.POS_NO 
+]]></query>
+
+<query name='VI_A0025_SA110_I'><![CDATA[
+     MERGE  INTO VI_A0025_SA110
+     USING  DUAL
+        ON  (
+                    DEPT_CD     = ${DEPT_CD}
+               AND  SALE_DT     = ${SALE_DT}
+               AND  POS_NO      = ${POS_NO}
+            )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  DEAL_NO         = ${DEAL_NO}
+             ,  CUST_CNT        = ${CUST_CNT}
+             ,  CASH_AMT        = ${CASH_AMT}
+             ,  CASH_RTN_AMT    = ${CASH_RTN_AMT}
+             ,  CARD_AMT        = ${CARD_AMT}
+             ,  CARD_RTN_AMT    = ${CARD_RTN_AMT}
+             ,  GIFT_AMT        = ${GIFT_AMT}
+             ,  GIFT_RTN_AMT    = ${GIFT_RTN_AMT}
+             ,  POINT_AMT       = ${POINT_AMT}
+             ,  POINT_RTN_AMT   = ${POINT_RTN_AMT}
+             ,  TMONEY_AMT      = ${TMONEY_AMT}
+             ,  TMONEY_RTN_AMT  = ${TMONEY_RTN_AMT}
+             ,  ETC_AMT         = ${ETC_AMT}
+             ,  ETC_RTN_AMT     = ${ETC_RTN_AMT}
+             ,  TOTAL_AMT       = ${TOTAL_AMT}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                DEPT_CD
+             ,  SALE_DT
+             ,  POS_NO
+             ,  DEAL_NO
+             ,  CUST_CNT
+             ,  CASH_AMT
+             ,  CASH_RTN_AMT
+             ,  CARD_AMT
+             ,  CARD_RTN_AMT
+             ,  GIFT_AMT
+             ,  GIFT_RTN_AMT
+             ,  POINT_AMT
+             ,  POINT_RTN_AMT
+             ,  TMONEY_AMT
+             ,  TMONEY_RTN_AMT
+             ,  ETC_AMT
+             ,  ETC_RTN_AMT
+             ,  TOTAL_AMT
+             ,  CUST_CD
+        ) VALUES (
+                ${DEPT_CD}
+             ,  ${SALE_DT}
+             ,  ${POS_NO}
+             ,  ${DEAL_NO}
+             ,  ${CUST_CNT}
+             ,  ${CASH_AMT}
+             ,  ${CASH_RTN_AMT}
+             ,  ${CARD_AMT}
+             ,  ${CARD_RTN_AMT}
+             ,  ${GIFT_AMT}
+             ,  ${GIFT_RTN_AMT}
+             ,  ${POINT_AMT}
+             ,  ${POINT_RTN_AMT}
+             ,  ${TMONEY_AMT}
+             ,  ${TMONEY_RTN_AMT}
+             ,  ${ETC_AMT}
+             ,  ${ETC_RTN_AMT}
+             ,  ${TOTAL_AMT}
+             ,  ${CUST_CD}
+        )
+]]></query>
+
+<query name='KORAIL_SALE_SEND_LOG_U'><![CDATA[
+    UPDATE  KORAIL_SALE_SEND_LOG
+       SET  SEND_YN     = ${UPD_SEND_YN}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = 'BATCH'
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  SALE_DT     = ${SCH_SALE_DT}
+       AND  BRAND_CD    = ${SCH_BRAND_CD}
+       AND  STOR_CD     = ${SCH_STOR_CD}
+       AND  SEND_YN     = ${SCH_SEND_YN}
+]]></query>
+
+</SQLResource>

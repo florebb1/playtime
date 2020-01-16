@@ -1,0 +1,532 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- 회원 조회 -->
+<query name='COUPON_MAIN_LIST_Q'><![CDATA[ 
+    SELECT  CST.CUST_ID
+          , decrypt(CST.CUST_NM) AS CUST_NM
+          , CPN.COUPON_CD
+          , MST.COUPON_NM
+          , CPN.CERT_NO
+          ,(
+            SELECT  DIG.GRP_NM
+            FROM    C_COUPON_ITEM_GRP GRP
+                  , DC_ITEM_GRP       DIG
+            WHERE   GRP.COMP_CD   = CPN.COMP_CD
+            AND     GRP.BRAND_CD  = CPN.BRAND_CD
+            AND     GRP.GRP_SEQ   = CPN.GRP_SEQ
+            AND     GRP.BRAND_CD  = DIG.BRAND_CD
+            AND     GRP.DC_DIV    = DIG.DC_DIV
+            AND     GRP.GRP_SEQ   = DIG.GRP_SEQ
+            AND     GRP.LVL_CD    = CPN.PRT_LVL_CD
+            AND     GRP.COUPON_CD = CPN.COUPON_CD
+            AND     ROWNUM        = 1
+           ) AS GRP_NM
+          , FN_GET_FORMAT_HP_NO (decrypt(CST.MOBILE)) as MOBILE
+          , CPN.CERT_FDT
+          , CPN.CERT_TDT
+          , CPN.USE_STAT
+          , CPN.BRAND_CD
+          , CPN.STOR_CD
+          , CPN.COMP_CD
+          , GET_COMMON_CODE_NM(CST.COMP_CD, '00275', dc.DC_FG, ${SCH_LANGUAGE}) as DC_FG_NM
+          , dc.DC_VALUE
+          , CPN.USE_YN
+    FROM    C_CUST        CST
+          , C_COUPON_CUST CPN
+          , C_COUPON_MST  MST
+          , DC            DC
+    WHERE   CST.COMP_CD     = CPN.COMP_CD
+    AND     CST.CUST_ID     = CPN.CUST_ID
+    AND     MST.COMP_CD     = CPN.COMP_CD
+    AND     MST.BRAND_CD   IN (CPN.BRAND_CD, '0000')
+    AND     MST.COUPON_CD   = CPN.COUPON_CD
+    AND     MST.COMP_CD     = DC.COMP_CD
+    AND     MST.BRAND_CD    = DC.BRAND_CD
+    AND     MST.DC_DIV      = DC.DC_DIV
+    AND     CST.COMP_CD     = ${SCH_COMP_CD}
+    AND     CST.CUST_ID     = ${SCH_CUST_ID}
+    AND     (${SCH_BRAND_CD} IS NULL OR CPN.BRAND_CD = ${SCH_BRAND_CD})
+    AND     CST.USE_YN      = 'Y'
+    AND     MST.USE_YN      = 'Y'
+    AND    (
+            CST.CUST_STAT = '2' 
+            OR
+            CST.CUST_STAT = '9' AND CST.LEAVE_DT >= TO_CHAR(SYSDATE - 90, 'YYYYMMDD')
+           )
+    ORDER BY
+            CPN.CERT_FDT DESC
+          , CPN.COUPON_CD
+          , CPN.CERT_NO
+]]></query>
+
+<query name='COUPON_SUB_HIST_Q'><![CDATA[
+        SELECT  CPN.SALE_DT
+              , CPN.STOR_CD
+              , STO.STOR_NM
+              , CPN.BILL_NO
+              , CPN.ITEM_CD
+              , ITM.ITEM_NM
+              , CPN.SALE_QTY
+              , CPN.SALE_AMT
+              , CPN.DC_AMT
+              , CPN.GRD_AMT
+              , CPN.USE_STAT
+              , GET_COMMON_CODE_NM(CPN.COMP_CD, '01615', CPN.USE_STAT, ${SCH_LANGUAGE}) AS USE_STAT_NM
+        FROM   (
+                SELECT  SDT.COMP_CD
+                      , SDT.SALE_DT
+                      , SDT.STOR_CD
+                      , SDT.BILL_NO
+                      , SDT.ITEM_CD
+                      , SDT.SALE_QTY
+                      , SDT.SALE_AMT
+                      , SDT.DC_AMT + SDT.ENR_AMT AS DC_AMT
+                      , SDT.GRD_AMT
+                      , CST.USE_STAT
+                      , CST.BRAND_CD
+                      , CST.UPD_DT               AS SORT_DT
+                      , '1' ORD
+                FROM    C_COUPON_CUST CST
+                      , SALE_DT       SDT
+                WHERE   CST.COMP_CD  = ${SCH_COMP_CD}
+                AND     CST.CUST_ID  = ${SCH_CUST_ID}
+                AND     CST.USE_YN   = 'Y'
+                AND     CST.COUPON_CD= ${SCH_COUPON_CD}
+                AND     CST.CERT_NO  = ${SCH_CERT_NO}
+                AND     CST.STOR_CD  = ${SCH_STOR_CD}
+                AND     CST.COMP_CD  = SDT.COMP_CD
+                AND     CST.USE_DT   = SDT.SALE_DT
+                AND     CST.BRAND_CD = SDT.BRAND_CD
+                AND     CST.STOR_CD  = SDT.STOR_CD
+                AND     CST.POS_NO   = SDT.POS_NO
+                AND     CST.BILL_NO  = SDT.BILL_NO
+                UNION ALL
+                SELECT  SDT.COMP_CD
+                      , SDT.SALE_DT
+                      , SDT.STOR_CD
+                      , SDT.BILL_NO
+                      , SDT.ITEM_CD
+                      , SDT.SALE_QTY
+                      , SDT.SALE_AMT
+                      , SDT.DC_AMT + SDT.ENR_AMT as DC_AMT
+                      , SDT.GRD_AMT
+                      , HIS.USE_STAT
+                      , HIS.BRAND_CD
+                      , HIS.INST_DT as SORT_DT
+                      , '2' ORD
+                FROM    C_COUPON_CUST_HIS HIS
+                      , SALE_DT           SDT
+                WHERE   HIS.COMP_CD  = ${SCH_COMP_CD}
+                AND     HIS.COUPON_CD= ${SCH_COUPON_CD}
+                AND     HIS.CERT_NO  = ${SCH_CERT_NO}
+                AND     HIS.STOR_CD  = ${SCH_STOR_CD}
+                AND     HIS.COMP_CD  = SDT.COMP_CD
+                AND     HIS.USE_DT   = SDT.SALE_DT
+                AND     HIS.BRAND_CD = SDT.BRAND_CD
+                AND     HIS.STOR_CD  = SDT.STOR_CD
+                AND     HIS.POS_NO   = SDT.POS_NO
+                AND     HIS.BILL_NO  = SDT.BILL_NO
+               ) CPN
+             , (
+                SELECT  I.COMP_CD
+                      , I.ITEM_CD
+                      , NVL(I.ITEM_NM, I2.ITEM_NM)   AS ITEM_NM
+                FROM    ITEM           I
+                      , LANG_ITEM      I2
+                WHERE   I.COMP_CD        = I2.COMP_CD(+)
+                AND     I.ITEM_CD        = I2.ITEM_CD(+)
+                AND     I.COMP_CD        = ${SCH_COMP_CD}
+                AND     I2.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+                AND     I2.USE_YN(+)     = 'Y'
+               ) ITM
+             , (
+                SELECT  S.COMP_CD
+                      , S.BRAND_CD
+                      , S.STOR_CD
+                      , NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                FROM    STORE           S
+                     ,  LANG_STORE      L
+                WHERE  S.COMP_CD       = L.COMP_CD (+)
+                AND    S.BRAND_CD      = L.BRAND_CD(+)
+                AND    S.STOR_CD       = L.STOR_CD (+)
+                AND    S.COMP_CD       = ${SCH_COMP_CD}
+                AND    L.LANGUAGE_TP(+)= ${SCH_LANGUAGE}
+                AND    L.USE_YN(+)     = 'Y'
+               ) STO
+        WHERE   CPN.COMP_CD  = STO.COMP_CD (+)
+        AND     CPN.BRAND_CD = STO.BRAND_CD(+)
+        AND     CPN.STOR_CD  = STO.STOR_CD (+)
+        AND     CPN.COMP_CD  = ITM.COMP_CD (+)
+        AND     CPN.ITEM_CD  = ITM.ITEM_CD (+)
+        ORDER BY
+                CPN.ORD
+              , CPN.SORT_DT DESC
+              , CPN.SALE_DT DESC
+              , CPN.STOR_CD
+              , STO.STOR_NM
+              , CPN.BILL_NO DESC
+              , CPN.ITEM_CD
+]]></query>
+
+<query name='COUPON_STATUS_U'><![CDATA[ 
+    UPDATE C_COUPON_CUST
+       SET CERT_TDT = CASE WHEN ${USE_STAT} = '33' THEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') ELSE ${CERT_TDT} END
+         , USE_STAT = ${USE_STAT}
+         , USE_DT = CASE WHEN ${USE_STAT} IN ('10','11','32','33') THEN TO_CHAR(SYSDATE,'YYYYMMDD') ELSE NULL END
+         , USE_TM = CASE WHEN ${USE_STAT} IN ('10','11','32','33') THEN TO_CHAR(SYSDATE,'HH24MISS') ELSE NULL END
+         , UPD_USER = ${SCH_USER_ID}
+         , UPD_DT   = SYSDATE
+    WHERE COMP_CD   = ${SCH_COMP_CD}
+      AND BRAND_CD  = ${SCH_BRAND_CD}
+      AND COUPON_CD = ${COUPON_CD}
+      AND CERT_NO   = ${CERT_NO}
+]]></query>
+
+<query name='C_CARD_REM_CASH_Q'><![CDATA[ 
+    SELECT  SAV_CASH - USE_CASH REM_CASH
+    FROM    C_CARD
+    WHERE   COMP_CD  = ${SCH_COMP_CD}
+    AND     CARD_ID  = encrypt(${SCH_CARD_ID})
+]]></query>
+
+<query name='COUPON_MST_I'><![CDATA[ 
+    INSERT INTO C_COUPON_MST(
+                COMP_CD
+              , COUPON_CD
+              , COUPON_NM
+              , ISSUE_DT
+              , START_DT
+              , CLOSE_DT
+              , CUST_CNT
+              , CERT_YN
+              , DC_DIV
+              , COUPON_DIV
+              , COUPON_RMK
+              , BRAND_CD                         
+              , INST_USER
+              , INST_DT 
+              , COUPON_STAT
+              , USE_YN
+              , RESTRI_YN
+              , MAX_PROM_CNT )
+       VALUES ( ${SCH_COMP_CD}
+              , ${COUPON_CD}
+              , ${COUPON_NM}
+              , ${ISSUE_DT}
+              , ${START_DT}
+              , ${CLOSE_DT}
+              , NVL(${CUST_CNT},0)
+              , ${CERT_YN}
+              , ${DC_DIV}
+              , ${COUPON_DIV}
+              , ${COUPON_RMK}
+              , ${SCH_BRAND_CD}
+              , ${SCH_USER_ID}
+              , SYSDATE  
+              , ${COUPON_STAT}
+              , NVL(${USE_YN},'N') 
+              , NVL(${RESTRI_YN},'N') 
+              , NVL(${MAX_PROM_CNT},'0')  )
+]]></query>
+
+<query name='COUPON_MST_U'><![CDATA[ 
+    UPDATE C_COUPON_MST
+       SET COUPON_NM = ${COUPON_NM}
+         , ISSUE_DT = ${ISSUE_DT}
+         , START_DT = ${START_DT}
+         , CLOSE_DT = ${CLOSE_DT}
+         , CERT_YN  = ${CERT_YN}
+         , DC_DIV   = ${DC_DIV}
+         , COUPON_DIV = ${COUPON_DIV}
+         , COUPON_RMK = ${COUPON_RMK}
+         , BRAND_CD = ${SCH_BRAND_CD}  
+         , UPD_USER = ${SCH_USER_ID}
+         , UPD_DT   = SYSDATE
+         , COUPON_STAT = ${COUPON_STAT}
+         , USE_YN = ${USE_YN}
+         , RESTRI_YN = ${RESTRI_YN}
+         , MAX_PROM_CNT = NVL(${MAX_PROM_CNT},'0')
+    WHERE COMP_CD   = ${SCH_COMP_CD}
+    AND   COUPON_CD = ${COUPON_CD}
+]]></query>
+
+
+<query name='POPUP_DC_Q'><![CDATA[ 
+     SELECT DC_DIV
+          , DC_NM
+          , DC_FG
+          , DC_VALUE
+          , DC_FDATE
+          , DC_TDATE
+          , DC_FTIME
+          , DC_TTIME          
+       FROM DC
+      WHERE COMP_CD = ${SCH_COMP_CD}
+        AND ( ${SCH_BRAND_CD} IS NULL OR  BRAND_CD = ${SCH_BRAND_CD})
+        AND ( DC_DIV DC = '' OR DC_NM = ${COUPON_CD} )
+      ORDER BY ORD_RANK
+]]></query>
+
+<query name='COUPON_U'><![CDATA[ 
+     UPDATE C_COUPON_MST
+        SET START_DT = ${P_START_DT} 
+          , CLOSE_DT = ${P_CLOSE_DT} 
+          , ISSUE_DT = ${P_ISSUE_DT} 
+          , COUPON_NM  = ${P_COUPON_NM} 
+          , COUPON_DIV = ${P_COUPON_DIV}  -- 01770 쿠폰 종류
+          , CERT_YN    = ${P_CERT_YN}     -- 01775 인증여부
+          , COUPON_MSG = ${P_COUPON_MSG} 
+          , DC_DIV     = ${P_DC_DIV} 
+          , COUPON_RMK = ${P_COUPON_RMK}              
+       FROM C_COUPON_MST mst
+      WHERE COMP_CD  = ${SCH_COMP_CD}
+        AND ( ${SCH_BRAND_CD} IS NULL OR  BRAND_CD = ${SCH_BRAND_CD})
+        AND USE_YN = 'Y'
+        AND COUPON_CD = ${COUPON_CD} 
+]]></query>
+
+<query name='COUPON_CUST_I_EACH'><![CDATA[
+    MERGE INTO C_COUPON_CUST CCC
+    USING  (
+            SELECT  CST.COMP_CD
+                 ,  ${COUPON_CD} AS COUPON_CD
+                 ,  NVL((
+	                     SELECT  MIN(GRP_SEQ) 
+	                     FROM    C_COUPON_ITEM_GRP
+	                     WHERE   COMP_CD   = ${COMP_CD}
+	                     AND     LVL_CD    = CST.LVL_CD
+	                     AND     COUPON_CD = ${COUPON_CD}
+	                    ) , '0') AS GRP_SEQ
+                 ,  CST.LVL_CD
+                 , (   
+                    SELECT  'C0'                                                        || -- 쿠폰 인증법호 영문자 고정(C0)
+                            SUBSTR(TO_CHAR(ORA_HASH( ${COMP_CD}, 100),  '000'), 2)      || -- 영업조직 해쉬값 3자리 000 ~ 999
+                            SUBSTR(TO_CHAR(SYSDATE, 'YYYY'), 3, 2)                      || -- 년 2자리    14 ~ 99
+                            CHR(TO_NUMBER(TO_CHAR(SYSDATE, 'MM')) + 64)                 || -- 월 1자리    A  ~ L
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT, '00000'), 2, 1)            || -- 순번 1자리  0  ~ 9
+                            TO_CHAR(SYSDATE, 'DD')                                      || -- 일 2자리    01 ~ 31
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT,  '00000'),  3, 1)          || -- 순번 1자리  0  ~ 9
+                            CHR(TO_NUMBER(TO_CHAR(SYSDATE, 'HH24')) + 64)               || -- 시간 1자리  A  ~ Y
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT, '00000'), 4, 1)            || -- 순번 1자리  0  ~ 9
+                            TO_CHAR(SYSDATE, 'MI')                                      || -- 분   2자리  00 ~ 59
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT, '00000'), 5, 1)            || -- 순번 1자리  0  ~ 9
+                            SUBSTR(TO_CHAR(SYSTIMESTAMP, 'FF3')      , 2 ,2)            || -- 초   2자리  00 ~ 59
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT, '00000'), 6, 1)            AS CERT_NO      -- 순번 1자리  0  ~ 9
+                    FROM   (
+                            SELECT  MOD(COUNT(*), 99999) AS CERT_CNT
+                            FROM  C_COUPON_CUST
+                            WHERE  COMP_CD = ${COMP_CD}
+                           )
+                    CONNECT  BY ROWNUM <= 1
+                   ) CERT_NO
+                 ,  CST.CUST_ID
+                 ,  CST.MOBILE
+                 ,  TO_CHAR(SYSDATE   , 'YYYYMMDD') CERT_FDT
+                 ,  TO_CHAR(SYSDATE+30, 'YYYYMMDD') CERT_TDT
+                 ,  '01' USE_STAT
+                 , (
+                    SELECT  BRAND_CD
+                    FROM    C_COUPON_MST
+                    WHERE   COMP_CD   = ${COMP_CD}
+                    AND     COUPON_CD = ${COUPON_CD}
+                   ) AS BRAND_CD
+            FROM    C_CUST CST
+            WHERE   CST.COMP_CD = ${COMP_CD}
+            AND     CST.CUST_ID = ${CUST_ID}
+           ) V01
+    ON (
+            V01.COMP_CD   = CCC.COMP_CD
+        AND V01.COUPON_CD = CCC.COUPON_CD
+        AND V01.CERT_NO   = CCC.CERT_NO
+       )
+    WHEN NOT MATCHED THEN
+        INSERT (  
+                COMP_CD
+              , COUPON_CD
+              , GRP_SEQ
+              , PRT_LVL_CD
+              , CERT_NO
+              , CUST_ID
+              , MOBILE
+              , CERT_FDT
+              , CERT_TDT
+              , USE_STAT
+              , BRAND_CD
+              , USE_YN
+              , INST_USER
+              , INST_DT
+              , UPD_USER
+              , UPD_DT
+               )
+          VALUES
+               (
+                V01.COMP_CD
+              , V01.COUPON_CD
+              , V01.GRP_SEQ
+              , V01.LVL_CD
+              , V01.CERT_NO
+              , V01.CUST_ID
+              , V01.MOBILE
+              , V01.CERT_FDT
+              , V01.CERT_TDT
+              , V01.USE_STAT
+              , V01.BRAND_CD
+              , 'Y'
+              , ${SCH_USER_ID}
+              , SYSDATE
+              , ${SCH_USER_ID}
+              , SYSDATE
+               )
+ ]]></query>
+ 
+ <query name='COUPON_CUST_I_ALL'><![CDATA[
+    MERGE INTO C_COUPON_CUST CCC
+    USING  (
+            SELECT  CST.COMP_CD
+                 ,  ${COUPON_CD} AS COUPON_CD
+                 ,  NVL(GRP.GRP_SEQ, '0') AS GRP_SEQ
+                 ,  CST.LVL_CD
+                 ,  SUBSTR(CRT.CERT_NO, 1, 19)||SUBSTR(TO_CHAR(ROWNUM), LENGTH(TO_CHAR(ROWNUM)), 1) AS CERT_NO
+                 ,  CST.CUST_ID
+                 ,  CST.MOBILE
+                 ,  TO_CHAR(SYSDATE   , 'YYYYMMDD') CERT_FDT
+                 ,  TO_CHAR(SYSDATE+30, 'YYYYMMDD') CERT_TDT
+                 ,  '01' USE_STAT
+                 , (
+                    SELECT  BRAND_CD
+                    FROM    C_COUPON_MST
+                    WHERE   COMP_CD   = ${COMP_CD}
+                    AND     COUPON_CD = ${COUPON_CD}
+                   ) AS BRAND_CD
+            FROM    C_CUST CST
+                 ,  C_COUPON_ITEM_GRP GRP
+                 , (   
+                    SELECT  COMP_CD
+                          , 'C0'                                                        || -- 쿠폰 인증법호 영문자 고정(C0)
+                            SUBSTR(TO_CHAR(ORA_HASH(COMP_CD, 100),  '000'), 2)          || -- 영업조직 해쉬값 3자리 000 ~ 999
+                            SUBSTR(TO_CHAR(SYSDATE, 'YYYY'), 3, 2)                      || -- 년 2자리    14 ~ 99
+                            CHR(TO_NUMBER(TO_CHAR(SYSDATE, 'MM')) + 64)                 || -- 월 1자리    A  ~ L
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT, '00000'), 2, 1)            || -- 순번 1자리  0  ~ 9
+                            TO_CHAR(SYSDATE, 'DD')                                      || -- 일 2자리    01 ~ 31
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT,  '00000'),  3, 1)          || -- 순번 1자리  0  ~ 9
+                            CHR(TO_NUMBER(TO_CHAR(SYSDATE, 'HH24')) + 64)               || -- 시간 1자리  A  ~ Y
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT, '00000'), 4, 1)            || -- 순번 1자리  0  ~ 9
+                            TO_CHAR(SYSDATE, 'MI')                                      || -- 분   2자리  00 ~ 59
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT, '00000'), 5, 1)            || -- 순번 1자리  0  ~ 9
+                            SUBSTR(TO_CHAR(SYSTIMESTAMP, 'FF3')      , 2 ,2)            || -- 초   2자리  00 ~ 59
+                            SUBSTR(TO_CHAR(LEVEL + CERT_CNT, '00000'), 6, 1)            AS CERT_NO      -- 순번 1자리  0  ~ 9
+                    FROM   (
+                            SELECT  COMP_CD
+                                  , MOD(COUNT(*), 99999) AS CERT_CNT
+                            FROM    C_COUPON_CUST
+                            WHERE   COMP_CD   = ${COMP_CD}
+                            AND     COUPON_CD = ${COUPON_CD}
+                            GROUP BY
+                                    COMP_CD
+                           )
+                    CONNECT  BY ROWNUM <= 1
+                   ) CRT
+            WHERE   CST.COMP_CD = CRT.COMP_CD
+            AND     CST.COMP_CD = GRP.COMP_CD  (+)
+            AND     CST.LVL_CD  = GRP.LVL_CD   (+)
+            AND     ${COUPON_CD}= GRP.COUPON_CD(+) 
+            AND     CST.COMP_CD = ${COMP_CD}
+            AND     CST.CUST_ID = ${CUST_ID}
+           ) V01
+    ON (
+            V01.COMP_CD   = CCC.COMP_CD
+        AND V01.COUPON_CD = CCC.COUPON_CD
+        AND V01.CERT_NO   = CCC.CERT_NO
+       )
+    WHEN NOT MATCHED THEN
+        INSERT (  
+                COMP_CD
+              , COUPON_CD
+              , GRP_SEQ
+              , PRT_LVL_CD
+              , CERT_NO
+              , CUST_ID
+              , MOBILE
+              , CERT_FDT
+              , CERT_TDT
+              , USE_STAT
+              , BRAND_CD
+              , USE_YN
+              , INST_USER
+              , INST_DT
+              , UPD_USER
+              , UPD_DT
+               )
+          VALUES
+               (
+                V01.COMP_CD
+              , V01.COUPON_CD
+              , V01.GRP_SEQ
+              , V01.LVL_CD
+              , V01.CERT_NO
+              , V01.CUST_ID
+              , V01.MOBILE
+              , V01.CERT_FDT
+              , V01.CERT_TDT
+              , V01.USE_STAT
+              , V01.BRAND_CD
+              , 'Y'
+              , ${SCH_USER_ID}
+              , SYSDATE
+              , ${SCH_USER_ID}
+              , SYSDATE
+               )
+ ]]></query>
+
+<!-- 쿠폰검색 -->
+<query name='COUPON_LIST_Q'><![CDATA[
+    SELECT CC.COUPON_CD
+         , CC.COUPON_NM
+         , CC.DC_DIV
+         , DC.DC_NM
+         , CC.CERT_YN
+         , CC.START_DT
+         , CC.CLOSE_DT
+         , CC.ISSUE_DT
+         , TO_CHAR(TO_DATE(ISSUE_DT,'YYYYMMDD')+30, 'YYYYMMDD') as ISSUE_DT_30
+         , CC.COUPON_STAT
+         , CASE WHEN CC.CLOSE_DT > TO_CHAR(SYSDATE,'YYYYMMDD') THEN TO_CHAR(TO_DATE(CC.START_DT, 'YYYYMMDD') + TO_NUMBER(TO_CHAR(SYSDATE, 'DD')) - 1, 'YYYYMMDD')
+                ELSE CC.CLOSE_DT
+           END EVT_CLOSE_DT
+      FROM C_COUPON_MST CC
+         , DC           DC
+         ,(
+            SELECT  C.CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM) AS CODE_NM
+            FROM    COMMON C
+                 , (
+                    SELECT  CODE_CD
+                         ,  CODE_NM
+                    FROM    LANG_COMMON
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     CODE_TP     = '01775'
+                    AND     LANGUAGE_TP = ${SCH_LANGUAGE}
+                    AND     USE_YN      = 'Y'
+                   ) L
+             WHERE  C.COMP_CD = ${SCH_COMP_CD}
+               AND  C.CODE_CD = L.CODE_CD(+)
+               AND  C.CODE_TP = '01775'
+               AND  C.USE_YN  = 'Y'
+             ) CM
+    WHERE   CC.COMP_CD    = DC.COMP_CD
+    AND     CC.BRAND_CD   = DC.BRAND_CD
+    AND     CC.DC_DIV     = DC.DC_DIV
+    AND     CC.CERT_YN    = CM.CODE_CD
+    AND     CC.COMP_CD    = ${SCH_COMP_CD}
+    AND     (${SCH_BRAND_CD} IS NULL OR  CC.BRAND_CD = ${SCH_BRAND_CD})
+    AND     CC.COUPON_NM LIKE '%'||${SCH_DC_TXT}||'%'
+    AND     CC.START_DT   <= TO_CHAR(SYSDATE, 'YYYYMMDD')
+    AND     CC.CLOSE_DT   >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+    AND     CC.USE_YN     = 'Y'
+    AND     CC.COUPON_STAT IN ('1','2')
+    AND     DC.DC_CLASS   = '3'
+    ORDER BY CC.COUPON_CD
+]]></query>
+
+</SQLResource>

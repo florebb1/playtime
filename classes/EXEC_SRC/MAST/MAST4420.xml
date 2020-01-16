@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='PL_ACC_MST_Q'><![CDATA[
+    SELECT  '[ ' || ACC_CD || ' ]' || ' ' || ACC_NM       AS ACC_TXT
+         ,  COMP_CD
+         ,  STOR_TP
+         ,  ACC_CD
+         ,  ACC_NM
+         ,  LANG_NM
+         ,  ACC_LVL
+         ,  REF_ACC_CD
+         ,  ACC_DIV
+         ,  TERM_DIV
+         ,  ACC_SEQ
+         ,  USE_YN
+      FROM  (
+                SELECT  PAM.COMP_CD
+                     ,  PAM.STOR_TP
+                     ,  PAM.ACC_CD
+                     ,  PAM.ACC_NM
+                     ,  L.LANG_NM
+                     ,  PAM.ACC_LVL
+                     ,  PAM.REF_ACC_CD
+                     ,  PAM.ACC_DIV
+                     ,  PAM.TERM_DIV
+                     ,  PAM.ACC_SEQ
+                     ,  PAM.USE_YN
+                  FROM  PL_ACC_MST  PAM
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'PL_ACC_MST'
+                               AND  COL_NM      = 'ACC_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.COMP_CD(+)= PAM.COMP_CD
+                   AND  L.PK_COL(+) = LPAD(PAM.ACC_CD, 10, ' ')
+                   AND  PAM.COMP_CD = ${SCH_COMP_CD}
+                   AND  PAM.STOR_TP = ${SCH_STOR_TP}
+                   AND  (${SCH_TERM_DIV} IS NULL OR PAM.TERM_DIV = ${SCH_TERM_DIV})
+                   AND  (${SCH_USE_YN}   IS NULL OR PAM.USE_YN   = ${SCH_USE_YN})
+            )   A
+   CONNECT  BY    A.REF_ACC_CD  = PRIOR A.ACC_CD
+     START  WITH  A.REF_ACC_CD  = '0'
+     ORDER  SIBLINGS BY A.ACC_SEQ
+]]></query>
+
+<query name='PL_ACC_MST_U'><![CDATA[
+    MERGE INTO PL_ACC_MST
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  STOR_TP     = ${STOR_TP}
+           AND  ACC_CD      = ${ACC_CD}
+      )
+    WHEN MATCHED THEN
+        UPDATE      
+           SET  ACC_NM      = ${ACC_NM}
+             ,  ACC_DIV     = ${ACC_DIV}
+             ,  TERM_DIV    = ${TERM_DIV}
+             ,  ACC_SEQ     = ${ACC_SEQ}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  STOR_TP
+             ,  ACC_CD
+             ,  ACC_NM
+             ,  ACC_LVL
+             ,  REF_ACC_CD
+             ,  ACC_DIV
+             ,  TERM_DIV
+             ,  ACC_SEQ
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${STOR_TP}
+             ,  ${ACC_CD}
+             ,  ${ACC_NM}
+             ,  ${ACC_LVL}
+             ,  ${REF_ACC_CD}
+             ,  ${ACC_DIV}
+             ,  ${TERM_DIV}
+             ,  ${ACC_SEQ}
+             ,  ${USE_YN}
+             ,  SYSDATE 
+             ,  ${UPD_USER} 
+             ,  SYSDATE 
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='PL_ACC_MST_LANG_U'><![CDATA[
+    MERGE INTO LANG_TABLE
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  TABLE_NM    = 'PL_ACC_MST'
+           AND  COL_NM      = 'ACC_NM'
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+           AND  PK_COL      = ${PK_COL}
+       )
+    WHEN MATCHED  THEN
+        UPDATE      
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  'PL_ACC_MST'
+             ,  'ACC_NM'
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER} 
+        )
+]]></query>
+
+</SQLResource>

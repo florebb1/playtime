@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='C_CARD_SAV_USE_Q'><![CDATA[ 
+    SELECT  /*+ INDEX(HIS IDX01_C_CARD_SAV_USE_HIS) */
+            SUBSTR(USE_DT ,1 ,6)    AS USE_YM
+          , SUM(SAV_MLG)            AS SAV_MLG
+          , SUM(USE_MLG)            AS USE_MLG
+          , SUM(LOS_MLG_UNUSE)      AS LOS_MLG
+          , SUM(SAV_MLG - USE_MLG - LOS_MLG_UNUSE)  AS REM_MLG
+    FROM    C_CARD_SAV_USE_HIS
+    WHERE   COMP_CD  = ${SCH_COMP_CD}
+    AND     USE_DT  >= ${SCH_GFR_DATE}||'01'
+    AND     USE_DT  <= ${SCH_GTO_DATE}||'31'
+    AND     USE_YN   = 'Y'
+    GROUP BY 
+            SUBSTR(USE_DT, 1 ,6)
+    ORDER BY 
+            1 DESC
+]]></query>
+</SQLResource>
+

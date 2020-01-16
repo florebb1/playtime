@@ -1,0 +1,213 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='GIFT_MST_Q'><![CDATA[
+    SELECT  GM.COMP_CD
+         ,  GM.GIFT_STAT_CD
+         ,  C.GIFT_STAT_NM
+         ,  GM.GIFT_NO
+         ,  GM.S_SALE_DT
+         ,  NVL(L.GIFT_NM, GCM.GIFT_NM) AS GIFT_NM
+         ,  GM.PRICE
+         ,  GM.ISSUE_DT
+         ,  GM.ISSUE_YEAR
+         ,  GM.ISSUE_SEQ
+         ,  GM.EXP_DT
+      FROM  GIFT_MST    GM
+         ,  (
+                SELECT  B1.COMP_CD
+                     ,  B1.CODE_CD                     AS GIFT_STAT_CD
+                     ,  NVL(B2.CODE_NM, B1.CODE_NM)    AS GIFT_STAT_NM
+                  FROM  COMMON B1
+                     ,  (  
+                            SELECT  COMP_CD
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON  
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '00185'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP} 
+                               AND  USE_YN      = 'Y'
+                        )   B2
+                 WHERE  B1.COMP_CD = B2.COMP_CD(+)
+                   AND  B1.CODE_CD = B2.CODE_CD(+)
+                   AND  B1.COMP_CD = ${SCH_COMP_CD}
+                   AND  B1.CODE_TP = '00185'
+                   AND  B1.USE_YN  = 'Y'
+            )  C
+         ,  GIFT_CODE_MST   GCM
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL  AS GIFT_CD
+                     ,  LANG_NM AS GIFT_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'GIFT_CODE_MST'
+                   AND  COL_NM      = 'GIFT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  GM.COMP_CD      = C.COMP_CD(+)
+       AND  GM.GIFT_STAT_CD = C.GIFT_STAT_CD(+)
+       AND  GM.COMP_CD      = GCM.COMP_CD
+       AND  GM.GIFT_CD      = GCM.GIFT_CD
+       AND  L.COMP_CD(+)    = GCM.COMP_CD
+       AND  L.GIFT_CD(+)    = LPAD(GCM.GIFT_CD, 2, ' ')
+       AND  GM.S_SALE_DT BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  (${SCH_GIFT_NO}  IS NULL OR (GM.GIFT_NO  LIKE '%'||${SCH_GIFT_NO} ||'%'))
+     ORDER  BY GM.S_SALE_DT DESC, GM.GIFT_NO
+]]></query>
+
+<query name='GIFT_STAT_Q'><![CDATA[
+    SELECT  CASE WHEN GIFT_STAT_CD IS NULL THEN '01'
+                 WHEN GIFT_STAT_CD IN ('40', '41', '42') THEN '02'
+                 WHEN GIFT_STAT_CD IN ('10', '11', '12', '21', '31', '50', '51', '99') THEN '03'
+                 ELSE ''
+            END     GIFT_ERR_CD
+         ,  GIFT_STAT_CD
+         ,  GIFT_CD
+      FROM  (
+                SELECT  GIFT_STAT_CD
+                     ,  GIFT_CD
+                  FROM  GIFT_MST
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  GIFT_NO = ${SCH_GIFT_NO}
+            )
+]]></query>
+
+<query name='GIFT_MST_U'><![CDATA[
+    UPDATE  GIFT_MST
+       SET  GIFT_STAT_CD    = ${GIFT_STAT_CD}
+         ,  STAT_CHG_DT     = TO_CHAR(SYSDATE, 'YYYYMMDD')
+         ,  S_SALE_DT       = ${S_SALE_DT}
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${USER_ID}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  GIFT_NO         = ${GIFT_NO}
+]]></query>
+
+<query name='GIFT_ERR_LOG_I'><![CDATA[
+    INSERT INTO GIFT_ERR_LOG
+    (
+            COMP_CD
+        ,   GIFT_NO
+        ,   SEQ
+        ,   GIFT_CD
+        ,   GIFT_STAT_CD
+        ,   PROC_DT
+        ,   GIFT_ERR_CD
+    ) VALUES (
+            ${COMP_CD}
+        ,   ${GIFT_NO}
+        ,   (
+                SELECT  NVL(MAX(TO_NUMBER(SEQ)), 0) + 1 AS SEQ
+                  FROM  GIFT_ERR_LOG
+                 WHERE  COMP_CD     = ${COMP_CD}
+                   AND  GIFT_NO     = ${GIFT_NO}
+            )
+        ,   ${GIFT_CD}
+        ,   ${GIFT_STAT_CD}
+        ,   TO_CHAR(SYSDATE, 'YYYYMMDD')
+        ,   ${GIFT_ERR_CD}
+    )
+]]></query>
+
+<query name='GIFT_MST_D'><![CDATA[
+    UPDATE  GIFT_MST
+       SET  GIFT_STAT_CD    = (
+                                SELECT  GIFT_STAT_CD
+                                  FROM  GIFT_MST_LOG
+                                 WHERE  COMP_CD = ${COMP_CD}
+                                   AND  GIFT_NO = ${GIFT_NO}
+                                   AND  CHG_NO  = (
+                                                    SELECT  MAX(CHG_NO)
+                                                      FROM  GIFT_MST_LOG
+                                                     WHERE  COMP_CD = ${COMP_CD}
+                                                       AND  GIFT_NO = ${GIFT_NO}
+                                                  )
+                              )
+         ,  STAT_CHG_DT     = TO_CHAR(SYSDATE, 'YYYYMMDD')
+         ,  S_SALE_DT       = ''
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${USER_ID}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  GIFT_NO         = ${GIFT_NO}
+]]></query>
+
+<query name='GIFT_ERR_LOG_Q'><![CDATA[
+    SELECT  GL.COMP_CD
+         ,  GL.GIFT_NO
+         ,  GL.SEQ
+         ,  NVL(L.GIFT_NM, GCM.GIFT_NM) AS GIFT_NM
+         ,  C1.GIFT_STAT_NM
+         ,  GL.PROC_DT
+         ,  C2.GIFT_ERR_NM
+      FROM  GIFT_ERR_LOG    GL
+         ,  (
+                SELECT  B1.COMP_CD
+                     ,  B1.CODE_CD                     AS GIFT_STAT_CD
+                     ,  NVL(B2.CODE_NM, B1.CODE_NM)    AS GIFT_STAT_NM
+                  FROM  COMMON B1
+                     ,  (  
+                            SELECT  COMP_CD
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON  
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '00185'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP} 
+                               AND  USE_YN      = 'Y'
+                        )   B2
+                 WHERE  B1.COMP_CD = B2.COMP_CD(+)
+                   AND  B1.CODE_CD = B2.CODE_CD(+)
+                   AND  B1.COMP_CD = ${SCH_COMP_CD}
+                   AND  B1.CODE_TP = '00185'
+                   AND  B1.USE_YN  = 'Y'
+            )  C1
+         ,  (
+                SELECT  B1.COMP_CD
+                     ,  B1.CODE_CD                     AS GIFT_ERR_CD
+                     ,  NVL(B2.CODE_NM, B1.CODE_NM)    AS GIFT_ERR_NM
+                  FROM  COMMON B1
+                     ,  (  
+                            SELECT  COMP_CD
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON  
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = '01135'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP} 
+                               AND  USE_YN      = 'Y'
+                        )   B2
+                 WHERE  B1.COMP_CD = B2.COMP_CD(+)
+                   AND  B1.CODE_CD = B2.CODE_CD(+)
+                   AND  B1.COMP_CD = ${SCH_COMP_CD}
+                   AND  B1.CODE_TP = '01135'
+                   AND  B1.USE_YN  = 'Y'
+            )  C2
+         ,  GIFT_CODE_MST   GCM
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL  AS GIFT_CD
+                     ,  LANG_NM AS GIFT_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'GIFT_CODE_MST'
+                   AND  COL_NM      = 'GIFT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  GL.COMP_CD      = C1.COMP_CD(+)
+       AND  GL.GIFT_STAT_CD = C1.GIFT_STAT_CD(+)
+       AND  GL.COMP_CD      = C2.COMP_CD(+)
+       AND  GL.GIFT_ERR_CD  = C2.GIFT_ERR_CD(+)
+       AND  GL.COMP_CD      = GCM.COMP_CD
+       AND  GL.GIFT_CD      = GCM.GIFT_CD
+       AND  L.COMP_CD(+)    = GCM.COMP_CD
+       AND  L.GIFT_CD(+)    = LPAD(GCM.GIFT_CD, 2, ' ')
+       AND  GL.PROC_DT BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  (${SCH_GIFT_NO}  IS NULL OR (GL.GIFT_NO  LIKE '%'||${SCH_GIFT_NO} ||'%'))
+     ORDER  BY GL.GIFT_NO, GL.SEQ
+]]></query>
+
+</SQLResource>

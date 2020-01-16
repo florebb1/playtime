@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PlayTime</title>
+        <meta charset="UTF-8">
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+        <link crossorigin="anonymous" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" rel="stylesheet">
+        <link href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css" rel="stylesheet" type="text/css">
+        <link href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css" rel="stylesheet">
+        <link href='//cdn.jsdelivr.net/jquery.slick/1.4.1/slick.css' rel='stylesheet'>
+        <link href="/css/slick.css" rel="stylesheet" type="text/css"/>
+        <link href="/css/bootstrap.css" rel="stylesheet" type="text/css">
+        <style>
+            body {
+                margin: 0;
+            }
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            ul {
+                list-style: none;
+                padding-left: 0;
+            }
+            .qrcode {
+                height: 540px;
+                margin: 0 8%;
+                color: #fff;
+                background-color: #FFCA02;
+                border-radius: 20px;
+            }
+            .menu {
+                height: 30px;
+                background-color: #fff;
+                text-align: center;
+                color: #808080;
+            }
+            .slick-active {
+                color: #000 !important;
+            }
+            #login-btn {
+                border: 1px solid #fff;
+                border-radius: 10px;
+            }
+            .triangle {
+                width: 0;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+            }
+            .displayNon {
+                display: none;
+            }
+            div.select_box {
+                position: relative;
+                height: 50px;
+                border: none;
+                background-color: #f8f8f8;
+            }
+            div.select_box label {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+            div.select_box select.color {
+                width: 100%;
+                height: 40px;
+                min-height: 40px;
+                line-height: 40px;
+                padding: 0 10px;
+                opacity: 0;
+            }
+            .playtime_bonus {
+                margin: 2rem 8%;
+                background-color: #FFCA02;
+                border-radius: 20px;
+                padding: 0.5rem;
+            }
+            .playtime_bonus_in {
+                height: 170px;
+                background-color: #fff;
+                border-radius: 20px;
+            }
+            .playtime_bonus_logo {
+                display: -webkit-box;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-flex: 1;
+                -ms-flex: 1;
+                flex-grow: 1;
+                -webkit-box-align: center;
+                -ms-flex-align: center;
+                align-items: center;
+                -webkit-box-pack: center;
+                -ms-flex-pack: center;
+                justify-content: center;
+                height: 100px;
+            }
+            .playtime_bonus_logo img {
+                width: 160px;
+                height: 100px;
+                object-fit: contain;
+            }
+            .playtime_bonus_info {
+            }
+            .playtime_bonus_info p {
+                line-height: 160%;
+                margin: 0;
+                padding: 0 0 0 15px;
+            }
+            .playtime_bonus_info .pb_left {
+                float: left;
+                width: 60%;
+                font-size: 17px;
+            }
+            .playtime_bonus_info .pb_right {
+                float: right;
+                width: 40%;
+                font-size: 35px;
+                font-weight: 500;
+                /* letter-spacing:5px; */
+                text-align: center;
+            }
+            .login-btn {
+                width: 100%;
+                height: 40px;
+                background-color: #FFCA02;
+                color: #fff;
+                font-weight: 700;
+                font-size: 15px;
+                border: 1px solid #fff;
+                border-radius: 10px;
+            }
+            .carousel-control.left {
+                background-image: -webkit-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                background-image: -o-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, 0)), to(rgba(0, 0, 0, 0.0001)));
+                background-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1))
+                background-repeat: repeat-x;
+            }
+            .carousel-control.right {
+                background-image: -webkit-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                background-image: -o-linear-gradient(left, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, 0)), to(rgba(0, 0, 0, 0.0001)));
+                background-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.0001) 100%);
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1))
+                background-repeat: repeat-x;
+            }
+            .angle-icon {
+                font-size: 24px;
+                color: #333;
+            }
+            a.carousel-control > span {
+                display: block;
+                height: 100%;
+                position: relative;
+            }
+            a.carousel-control > span > i.chevron-left {
+                position: absolute;
+                top: 45%;
+                left: 10px;
+            }
+            a.carousel-control > span > i.chevron-right {
+                position: absolute;
+                top: 45%;
+                right: 10px;
+            }
+			.box-sh-gnt {
+                -webkit-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+                -moz-box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+                box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+            }
+            #img_form_url {
+	            border-radius: 15px;
+				width: 90%;
+				height: 90%;
+				margin: auto;
+				padding-top: 10px;
+                padding-left:5px;
+               
+            }
+        </style>
+    </head>
+    <body>
+        <form action="/api/mbl_0510.jsp" id="membership_frm" method="POST">
+            <input id="before_bar" type="hidden" value="0">
+            <input name="COMP_CD" type="hidden" value="010">
+            <input id="USER_ID" name="USER_ID" type="hidden" value="MOBILE">
+            <input id="CUST_ID" name="CUST_ID" type="hidden">
+        </form>
+        <!-- header -->
+        <div id="header" class="box-sh-gnt" style="position:fixed; top:0px; left:0px; height:100px; right:0px;overflow:hidden;">
+            <div style="margin:20px 5.5% 20px 5.5%; height:30px; text-align:center;">
+                <!-- mypage -->
+                <div style="float:left; width:25%; text-align:left;">
+                    <img id="user" src="/images/navi/mypage.png" style="height:30px; width:30px;"></i>
+                </div>
+                <!-- logo -->
+                <div style="float:left; width:50%; text-align:center;padding-top:2px"><img src="/images/logo.png" style="width:160px;  text-align:center;"></div>
+                <!-- push messenge -->
+                <div style="float:left; width:25%; text-align:right; font-size:23px; color:#808080;"><!-- <i class="far fa-bell"></i> --></div>
+            </div>
+            <!-- THUMBNAILS -->
+            <div style="position:relative">
+                <div class="slider-nav-thumbnails" style="position: relative;">
+                    <div>
+                        <div class="menu slick-active" id="menu1" slide="slide_1">나의 멤버십</div>
+                    </div>
+                    <div>
+                        <div class="menu" id="menu2" slide="slide_2">멤버십 안내</div>
+                    </div>
+                    <div>
+                        <div class="menu" id="menu3" slide="slide_3">멤버십 프로그램</div>
+                    </div>
+                </div>
+                <div id="nav_bar" style="position:absolute;top:27px;left:0%;width:33.3%;">
+                    <div style="height:3px; background-color:#FFCA02; width:100%;"></div>
+                </div>
+            </div>
+        </div>
+        <div id="content" style="position:fixed; top:100px; bottom:60px; left:0px; right:0px; overflow-y:scroll !important;">
+            <!-- MAIN SLIDES -->
+            <div class="slider">
+                <!-- my membership -->
+                <div data-index="1">
+                    <!-- blank -->
+                    <div style="height:40px;"></div>
+                    <!-- qrcode -->
+                    <div class="qrcode">
+                        <!-- blank -->
+                        <div style="height:20px;"></div>
+                        <!-- background #fff -->
+                        <div style="margin:0 5% 0 5%; background-color:#fff; height:260px; border-radius:15px;">
+                            <!-- <img id="img_form_url"> -->
+                            <div id="img_form_url"></div>
+                            <div id="cust_num" style="color:#000; text-align:center; margin-top:5px;"></div>
+                        </div>
+                        <div style="margin:30px 5% 10px 5%;">
+                            <div class="nsrB" style="width:100%; font-size:30px; clear:both;">
+                                <div id="point" style="float:left; width:80%;"></div>
+                                <div style="float:left; width:20%; text-align:right;">
+                                    <i class="fas fa-chevron-right" id="memberpoint"></i>
+                                </div>
+                            </div>
+                            <div class="nsB" style="margin:20px 0; font-size:14px;">
+                                <span style="font-size:20px; line-height:40px;">나의 멤버스 코드</span><br>입장시 반드시 QR코드를 태깅해주세요.<br>접촉시 자동으로 포인트가 적립됩니다.
+                            </div>
+                            <div style="text-align:center; margin:30px 0;">
+                                <button class="login-btn" id="couponbtn" style="font-size:20px; height:50px;" type="button">나의 쿠폰함</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel slide" data-interval="false" data-ride="carousel" id="carousel-example-generic">
+                        <!-- Wrapper for slides -->
+                        <div class="carousel-inner" id="carousel" role="listbox"></div>
+                        <!-- Controls -->
+                        <a class="left carousel-control" data-slide="prev" href="#carousel-example-generic" role="button">
+                            <span>
+                                <i class="fas fa-chevron-left angle-icon chevron-left"></i>
+                            </span>
+                        </a>
+                        <a class="right carousel-control" data-slide="next" href="#carousel-example-generic" role="button">
+                            <span>
+                                <i class="fas fa-chevron-right angle-icon chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                    <div style="min-height:200px;"></div>
+                </div>
+                <!-- membership infomation -->
+                <div data-index="2">
+                    <div style="height:115px; margin:30px 8%;">
+                        <div class="nsL" style="font-size:16px; text-align:center; height: 30%;">포인트제도 소개</div>
+                        <div class="nsR" style="font-size:20px; line-height:160%;height:70%; color:#000;text-align: center;">결제하신 금액의 일정 비율을<br>포인트로 적립해드려요.</div>
+                    </div>
+                    <div>
+                        <img src="/images/2.png" style="max-width:100%; height:auto;">
+                    </div>
+                    <div style="padding:34px 0;">
+                        <div class="nsR" style="font-size:18px; text-align:center; margin:0 5.5%;">포인트 적립</div><br>
+                        <div class="nsR" style="font-size:13px; text-align:center; line-height:20px; color:#808080; margin:0 5.5%;">
+                            플레이타임그룹 매장이용시
+                            <b style="color:#000;">입장금액의 3% 적립</b><br>다회권구매 및 다회권 이용은 적립에서 제외됩니다.<br>타 프로모션, 이벤트 참여시 적립에서 제외됩니다.<br>부가상품은 적립에서 제외됩니다.
+                        </div>
+                    </div>
+                    <div style="background-color:#f5f5f5; padding:35px 0;">
+                        <div class="nsR" style="font-size:18px; text-align:center; margin:0 5.5%;">포인트 사용방법</div><br>
+                        <div class="nsR" style="text-align:center; color:#808080; line-height:20px; font-size:13px; margin:0 5.5%;">
+                            포인트 사용은
+                            <b style="color:#000;">최소 1,000P이상</b>
+                            입니다.<br>포인트는
+                            <b style="color:#000;">100P 단위로 현금처럼 사용가능</b>합니다.<br>이용 시에는 포인트 적립에서 제외됩니다.<br>적립매장과 사용매장이 동일해야 사용가능합니다.<br>타 쿠폰과 중복적용이 불가능하니 유의해주세요!
+                        </div>
+                    </div>
+                    <div class="nsR" style="font-size:18px; height:70px; text-align:center;">
+                        <div style="padding:20px;">자주하는 질문</div>
+                    </div>
+                    <!-- F&Q -->
+                    <div class="select_box nsB" style="text-align:center; font-size:15px;">
+                        <label for="color">모든 질문</label>
+                        <select class="color" title="select color">
+                            <option value="0">모든 질문</option>color
+                            <option value="1">회원</option>
+                            <option value="2">회원등급</option>
+                            <option value="3">스탬프</option>
+                            <option value="4">쿠폰</option>
+                            <option value="5">선불카드</option>
+                        </select>
+                    </div>
+                    <section id="memberSection" style="clear:both; padding-top:20px; display:block;">
+<!--
+                        <div class="nsB" id="memberQuestion" style="font-size:18px; height:40px; text-align:center; margin:20px 8%;"></div>
+                        <div class="nsR" id="memberAnswer" style="background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;"></div>
+-->
+                    </section>
+                    <section id="levelSection" style="clear:both; padding-top:20px; display:block;">
+<!--
+                        <div class="nsB" id="levelQuestion" style="font-size:18px; height:40px; text-align:center; margin:20px 8%;"></div>
+                        <div class="nsR" id="levelAnswer" style="background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;"></div>
+-->
+                    </section>
+                    <section id="stempSection" style="clear:both; padding-top:20px; display:block;">
+<!--
+                        <div class="nsB" id="stempQuestion" style="font-size:18px; height:40px; text-align:center; margin:20px 8%;"></div>
+                        <div class="nsR" id="stempAnswer" style="background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;"></div>
+-->
+                    </section>
+                    <section id="couponSection" style="clear:both; padding-top:20px; display:block;">
+<!--
+                        <div class="nsB" id="couponQuestion" style="font-size:18px; height:40px; text-align:center; margin:20px 8%;"></div>
+                        <div class="nsR" id="couponAnswer" style="background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;"></div>
+-->
+                    </section>
+                    <section id="cardSection" style="clear:both; padding-top:20px; display:block;">
+<!--
+                        <div class="nsB" id="cardQuestion" style="font-size:18px; height:40px; text-align:center; margin:20px 8%;"></div>
+                        <div class="nsR" id="cardAnswer" style="background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;"></div>
+-->
+                    </section>
+                </div>
+                <!-- membership program -->
+                <div data-index="3">
+                    <div style="height:115px; margin:30px 8%;">
+                        <div class="nsL" style="font-size:16px; text-align:center; height: 30%;">플레이멤버스 소개</div>
+                        <div class="nsR" style="font-size:20px; line-height:160%;height:70%; color:#000;text-align: center;">더 많은 혜택의 제공을 위해<br>끊임없이 노력하겠습니다.</div>
+                    </div>
+                    <div style="height:250px;">
+                        <img src="/images/3.png" style="max-width:100%; height:100%;">
+                    </div>
+                    <div style="padding:30px 0;">
+                        <div class="nsR" style="font-size:18px; text-align:center;">멤버십 등급 안내</div>
+                        <div class="nsR" style="font-size:13px; text-align:center; line-height:20px; color:#808080; padding-top:20px;">
+                            플레이멤버스에는 4가지의 등급이 있으며<br>등급별로 다양한 혜택이 준비되어 있습니다.<br>등급은 승급 직후부터 6개월간 유지되며,<br>재산정은 등급 조정일 이후<br>6개월동안의 이용 현황을 반영하여 산정됩니다.
+                        </div>
+                    </div>
+                    <div style="width:100%; display:flex;">
+                        <div id="welcome" style="width:25%; display: inline-block;"><img src="/images/icon/Welcome.png" style="max-width:60%; margin:0 auto;"></div>
+                        <div id="friend" style="width:25%; display: inline-block;"><img src="/images/icon/Friend.png" style="max-width:50%; margin:0 auto;"></div>
+                        <div id="famiy" style="width:25%; display: inline-block;"><img src="/images/icon/Famiy.png" style="max-width:50%; margin:0 auto;"></div>
+                        <div id="vip" style="width:25%; display: inline-block;"><img src="/images/icon/vip.png" style="max-width:40%; margin:0 auto;"></div>
+                    </div>
+                    <div class="triangle" id="wel_tri" style="border-bottom: 15px solid #ffc902; margin:0 4%;"></div>
+                    <div class="triangle" id="fri_tri" style="border-bottom: 15px solid #0388cf; margin:0 30%; display:none;"></div>
+                    <div class="triangle" id="fam_tri" style="border-bottom: 15px solid #f05a20; margin:0 56%; display:none;"></div>
+                    <div class="triangle" id="vip_tri" style="border-bottom: 15px solid #000; margin:0 82%; display:none;"></div>
+                    <div id="welcomeInfo" style="min-height:200px; background-color:#ffc902; color:#fff; border: 1px solid #ffc902;">
+                        <div style="padding:10px 8%; font-size:15px;">Welcome<br>플레이 멤버스에 오신 것을 환영합니다!</div>
+                        <div style="padding:10px 8%; font-size:13px;">혜택안내<br>- 입장금액의 3%적립 (다회권은 적립이 제외됩니다.)<br>- 가입기념 3000원 할인쿠폰 증정<br>- 1회 이용시 등급상향</div>
+                    </div>
+                    <div id="friendInfo" style="min-height:200px; background-color:#0388cf; color:#fff; border: 1px solid #0388cf; display:none;">
+                        <div style="padding:10px 8%; font-size:15px;">Friend<br>플레이 멤버스의 친구가 되셨습니다!</div>
+                        <div style="padding:10px 8%; font-size:13px;">혜택안내<br>- 입장금액의 3%적립 (다회권은 적립이 제외됩니다.)<br>- 생일시 50%할인쿠폰 증정<br>- 3회 이용시 등급상향</div>
+                    </div>
+                    <div id="familyInfo" style="min-height:200px; background-color:#f05a20; color:#fff; border: 1px solid #f05a20; display:none;">
+                        <div style="padding:10px 8%; font-size:15px;">Family<br>플레이 멤버스의 가족이 되셨습니다!</div>
+                        <div style="padding:10px 8%; font-size:13px;">혜택안내<br>- 입장금액의 3%적립 (다회권은 적립이 제외됩니다.)<br>- 생일시 1회 무료 이용쿠폰 증정<br>- 3회 이용시 등급상향</div>
+                    </div>
+                    <div id="vipInfo" style="min-height:200px; background-color:#000; color:#fff; border: 1px solid #000; display:none;">
+                        <div style="padding:10px 8%; font-size:15px;">V.I.P<br>플레이 멤버스의 V.I.P가 되셨습니다!</div>
+                        <div style="padding:10px 8%; font-size:13px;">
+                            <span class="nsB">혜택안내</span><br>- 입장금액의 3%적립 (다회권은 적립이 제외됩니다.)<br>- 생일시 1회 무료 이용쿠폰 증정<br>- 6개월마다 30분 무료 혜택</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box-sh-gnt" id="footer" style="position:fixed; bottom:0px; height:60px; left:0px; right:0px; overflow:hidden;">
+            <div style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/yellowcode.png" style="width:60%;"></div>
+            <div id="home" style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/home.png" style="width:60%;"></div>
+            <div id="store" style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/store.png" style="width:60%;"></div>
+            <div id="play" style="float:left; height:100%; width:25%; text-align:center;"><img src="/images/navi/play.png" style="width:60%;"></div>
+        </div>        
+        <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+        <script src='//cdnjs.cloudflare.com/ajax/libs/foundation/5.5.0/js/foundation.min.js'></script>
+        <script src='//cdn.jsdelivr.net/jquery.slick/1.4.1/slick.min.js'></script>
+        <script src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+        <script src="/js/qrcode.min.js"></script>
+        <script type="text/javascript">
+            function setCookie(name, value, days) {
+                var d = new Date;
+                d.setTime(d.getTime() + 24 * 60 * 60 * 1000 * days);
+                document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+            }
+            function getCookie(name) {
+                var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+                return v
+                    ? v[2]
+                    : null;
+            }
+            function numberWithCommas(x) {
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            $(document).on('ready', function () {
+                // 매장 관련 쿠키 삭제
+                setCookie('tab', null, -1);
+                setCookie('brand', null, -1);
+                setCookie('area', null, -1);
+                setCookie('tab_main', null, -1);
+	             // 다회권 숨김
+                $('#carousel-example-generic').hide();
+                
+                var select = $("select.color");
+                select.change(function () {
+                    var select_name = $(this).children("option:selected").text();
+                    $(this).siblings("label").text(select_name);
+                });
+                var user = getCookie('user');
+                if(user == null || user == "") {
+                	document.location.href="/login.html";
+                }else {
+//                     console.log("//chart.googleapis.com/chart?cht=qr&chs=500x500&chl="+user+"&chld=|0");
+                    $('#cust_num').html(user);
+	                // $("#img_form_url").attr("src", "//chart.googleapis.com/chart?cht=qr&chs=500x500&chl="+user+"&chld=|0");
+                    var width = $("#img_form_url").width() - 20;
+                    var height = $("#img_form_url").height()-20;
+//                     console.log($("#img_form_url").height());
+
+                    new QRCode(document.getElementById("img_form_url"), {
+                        text : user,
+                        width: width,
+                        height: height
+                    });
+	                $("#CUST_ID").val(user);
+                }
+               
+                var datas = $("#membership_frm").serialize();
+                $.ajax({
+                    url: "/api/mbl_ADM_0003.jsp",
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) { 
+// 	                    console.log(response);
+
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0; i < response.RESULT.length; i++) {
+                                if (response.RESULT[i].USE_INFO == "Y") {
+                                    if (response.RESULT[i].FAQ_TYPE == "01") {
+                                        var res = "";
+                                        res += "<div class='memberQuestion nsB' style='font-size:18px; height:40px; text-align:center; margin:20px 8%;'>" 
+                                        	+ "<div style='float:left; width:10%; font-size:35px;'>Q</div>" 
+                                        	+ "<div style='float:left; width:80%; font-size:15px; padding-top:10px;'>" 
+                                        	+ response.RESULT[i].FAQ_Q 
+                                        	+ "</div>" 
+                                        	+ "<div style='float:left; width:10%; font-size:15px; color:#808080; padding-top:10px;'><i class='memQ fas fa-chevron-down'></i></div>"
+                                        	+"</div>"
+                                        	
+											+ "<div class='nsR memberAnswer' style='background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;'>"
+                                        	+ "<div style='display:inline-block; width:20%; font-size:35px;'>A</div" 
+                                        	+ "><div style='display:inline-block; width:75%; text-align:left;'>" 
+                                        	+ response.RESULT[i].FAQ_A 
+                                        	+ "</div>"
+                                        	+ "</div>"
+                                        $("#memberSection").append(res);
+                                    } else if (response.RESULT[i].FAQ_TYPE == "02") {
+                                        var res = "";
+                                        res += "<div class='nsB levelQuestion' style='font-size:18px; height:40px; text-align:center; margin:20px 8%;'>"
+                                        	+ "<div style='float:left; width:10%; font-size:35px;'>Q</div>" 
+                                        	+ "<div style='float:left; width:80%; font-size:15px; padding-top:10px;'>" 
+                                        	+ response.RESULT[i].FAQ_Q 
+                                        	+ "</div>" 
+                                        	+ "<div style='float:left; width:10%; font-size:15px; color:#808080; padding-top:10px;'><i class='levQ fas fa-chevron-down'></i></div>"
+                                        	+"</div>"
+                                        	
+											+ "<div class='nsR levelAnswer' style='background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;'>"
+                                        	+ "<div style='display:inline-block; width:20%; font-size:35px;'>A</div" 
+											+ "><div style='display:inline-block; width:75%; text-align:left;'>" 
+											+ response.RESULT[i].FAQ_A 
+											+ "</div>"
+											+ "</div>"											
+                                        $("#levelSection").append(res);
+
+                                    } else if (response.RESULT[i].FAQ_TYPE == "03") {
+                                        var res = "";
+                                        res += "<div class='nsB stempQuestion' style='font-size:18px; height:40px; text-align:center; margin:20px 8%;'>"
+                                        	+"<div style='float:left; width:10%; font-size:35px;'>Q</div>" 
+                                        	+ "<div style='float:left; width:80%; font-size:15px; padding-top:10px;'>" 
+                                        	+ response.RESULT[i].FAQ_Q 
+                                        	+ "</div>" 
+                                        	+ "<div style='float:left; width:10%; font-size:15px; color:#808080; padding-top:10px;'><i class='steQ fas fa-chevron-down'></i></div>"
+                                        	+ "</div>"
+                                        	
+											+ "<div class='nsR stempAnswer' style='background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;'>"
+                                        	+ "<div style='display:inline-block; width:20%; font-size:35px;'>A</div" 
+                                        	+ "><div style='display:inline-block; width:75%; text-align:left;'>" 
+                                        	+ response.RESULT[i].FAQ_A 
+                                        	+ "</div>"
+                                        	+ "</div>"
+                                        $("#stempSection").append(res);
+                                        
+                                    } else if (response.RESULT[i].FAQ_TYPE == "04") {
+                                        var res = "";
+                                        res += "<div class='nsB couponQuestion' style='font-size:18px; height:40px; text-align:center; margin:20px 8%;'>"
+                                        	+ "<div style='float:left; width:10%; font-size:35px;'>Q</div>" 
+                                        	+ "<div style='float:left; width:80%; font-size:15px; padding-top:10px;'>"
+                                        	+ response.RESULT[i].FAQ_Q 
+                                        	+ "</div>" 
+                                        	+ "<div style='float:left; width:10%; font-size:15px; color:#808080; padding-top:10px;'><i class='couQ fas fa-chevron-down'></i></div>"
+                                        	+ "</div>"
+											+ "<div class='nsR couponAnswer' style='background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;'>"
+                                        	+ "<div style='display:inline-block; width:20%; font-size:35px;'>A</div" 
+                                        	+ "><div style='display:inline-block; width:75%; text-align:left;'>" 
+                                        	+ response.RESULT[i].FAQ_A 
+                                        	+ "</div>"
+											+ "</div>"
+                                        $("#couponSection").append(res);
+                                        
+                                    } else if (response.RESULT[i].FAQ_TYPE == "05") {
+                                        var res = "";
+                                        res += "<div class='nsB cardQuestion' style='font-size:18px; height:40px; text-align:center; margin:20px 8%;'>"
+                                        	+ "<div style='float:left; width:10%; font-size:35px;'>Q</div>" 
+                                        	+ "<div style='float:left; width:80%; font-size:15px; padding-top:10px;'>" 
+                                        	+ response.RESULT[i].FAQ_Q 
+                                        	+ "</div>" 
+                                        	+ "<div style='float:left; width:10%; font-size:15px; color:#808080; padding-top:10px;'><i class='carQ fas fa-chevron-down'></i></div>"
+                                        	+ "</div>"
+                                        res += "<div class='nsR cardAnswer' style='background-color:#f8f8f8; text-align:center; display:none; padding:20px 0;'>"
+                                        	+ "<div style='display:inline-block; width:20%; font-size:35px;'>A</div" 
+                                        	+ "><div style='display:inline-block; width:75%; text-align:left;'>" 
+                                        	+ response.RESULT[i].FAQ_A 
+                                        	+ "</div>"
+                                        	+ "</div>"
+                                        $("#cardSection").append(res);
+
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                });
+                var datas = $("#membership_frm").serialize();
+                $.ajax({
+                    url: "/api/mbl_0510.jsp",
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: datas,
+                    success: function (response) { 
+	                    console.log(response);
+
+                        if (response.RESULT.length != 0) {
+                            for (var i = 0, sum = 0; i < response.RESULT.length; i++) {
+                            	sum = sum + parseInt(response.RESULT[i].ABL_PT);
+							}
+	                        $("#point").html(numberWithCommas(sum) + "P");
+	                    }else {
+	                        $("#point").html("0 P");
+	                    }
+
+					}
+            	});
+            $.ajax({
+                url: "/api/mbl_0560.jsp",
+                type: 'POST',
+                dataType: 'JSON',
+                data: datas,
+                success: function (response) { 
+// 	                console.log(response);
+                    var result = "";
+
+                    if(response.RESULT.length != 0) {
+                        for(var i = 0; i < response.RESULT.length; i++) {
+                            if(i == 0) {
+	                            if(response.RESULT[0].MUSE_DIV == 1) {
+		                            result += "<div class='item active'>" 
+		                            	+ "<div class='playtime_bonus'>" 
+		                            	+ "<div class='playtime_bonus_in'>" 
+		                            	+ "<input type='hidden' name='PROGRAM_ID' class=" + response.RESULT[i].PROGRAM_ID + ">" 
+		                            	+ "<input type='hidden' name='MUSE_NO' class=" + response.RESULT[i].MUSE_NO + ">" 
+		                            	+ "<input type='hidden' name='MUSE_CERT_NO' class=" + response.RESULT[i].MUSE_CERT_NO + ">" 
+		                            	+ "<div id class='playtime_bonus_logo'><img id='sto_img0' src=''></div>" 
+		                            	+ "<div class='playtime_bonus_info'>" + "<div class='pb_left'>" 
+		                            	+ "<p class='nsB'>" + response.RESULT[i].STOR_NM + "</p>" 
+		                            	+ "<p class='nsB'>" + response.RESULT[i].BRAND_NM + "</p>" 
+		                            	+ "</div>" 
+		                            	+ "<div class='pb_right'>" + response.RESULT[i].MUSE_REM_CNT + "/" + response.RESULT[i].MUSE_OFR_CNT + "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>"
+	                            }else if(response.RESULT[0].MUSE_DIV == 2) {
+		                            result += "<div class='item active'>" 
+		                            	+ "<div class='playtime_bonus'>" 
+		                            	+ "<div class='playtime_bonus_in'>" 
+		                            	+ "<input type='hidden' name='PROGRAM_ID' class=" + response.RESULT[i].PROGRAM_ID + ">" 
+		                            	+ "<input type='hidden' name='MUSE_NO' class=" + response.RESULT[i].MUSE_NO + ">" 
+		                            	+ "<input type='hidden' name='MUSE_CERT_NO' class=" + response.RESULT[i].MUSE_CERT_NO + ">" 
+		                            	+ "<div class='playtime_bonus_logo'><img id='sto_img0' src=''></div>" 
+		                            	+ "<div class='playtime_bonus_info'>" + "<div class='pb_left'>" 
+		                            	+ "<p class='nsB'>" + response.RESULT[i].STOR_NM + "</p>" 
+		                            	+ "<p class='nsB'>" + response.RESULT[i].BRAND_NM + "</p>" 
+		                            	+ "</div>" 
+		                            	+ "<div class='pb_right' style='font-size:20px; padding-top:10px;'>" + response.RESULT[i].MUSE_REM_TM + "/" + response.RESULT[i].MUSE_OFR_TM + "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>"
+	                            }
+                            }else {
+	                            if(response.RESULT[i].MUSE_DIV == 1) {
+			                        result += "<div class='item'>" 
+	                                	+ "<div class='playtime_bonus'>" 
+	                                	+ "<div class='playtime_bonus_in'>" 
+	                                	+ "<input type='hidden' name='PROGRAM_ID' class='" + response.RESULT[i].PROGRAM_ID + "'>" 
+	                                	+ "<input type='hidden' name='MUSE_NO' class='" + response.RESULT[i].MUSE_NO + "'>" 
+	                                	+ "<input type='hidden' name='MUSE_CERT_NO' class='" + response.RESULT[i].MUSE_CERT_NO + "'>" 
+	                                	+ "<div class='playtime_bonus_logo'><img id='sto_img"+i+"' src=''></div>" + "<div class='playtime_bonus_info'>" 
+	                                	+ "<div class='pb_left'>" + "<p class='nsB'>" + response.RESULT[i].STOR_NM + "</p>" 
+	                                	+ "<p class='nsB'>" + response.RESULT[i].BRAND_NM + "</p>" 
+	                                	+ "</div>" 
+	                                	+ "<div class='pb_right'>" + response.RESULT[i].MUSE_REM_CNT + "/" + response.RESULT[i].MUSE_OFR_CNT 
+	                                	+ "</div>" 
+	                                	+ "</div>" 
+	                                	+ "</div>" 
+	                                	+ "</div>" 
+	                                	+ "</div>"
+		                        }else if(response.RESULT[i].MUSE_DIV == 2) {
+		                            result += "<div class='item active'>" 
+		                            	+ "<div class='playtime_bonus'>" 
+		                            	+ "<div class='playtime_bonus_in'>" 
+		                            	+ "<input type='hidden' name='PROGRAM_ID' class=" + response.RESULT[i].PROGRAM_ID + ">" 
+		                            	+ "<input type='hidden' name='MUSE_NO' class=" + response.RESULT[i].MUSE_NO + ">" 
+		                            	+ "<input type='hidden' name='MUSE_CERT_NO' class=" + response.RESULT[i].MUSE_CERT_NO + ">" 
+		                            	+ "<div class='playtime_bonus_logo'><img id='sto_img"+i+"' src=''></div>" 
+		                            	+ "<div class='playtime_bonus_info'>" + "<div class='pb_left'>" 
+		                            	+ "<p class='nsB'>" + response.RESULT[i].STOR_NM + "</p>" 
+		                            	+ "<p class='nsB'>" + response.RESULT[i].BRAND_NM + "</p>" 
+		                            	+ "</div>" 
+		                            	+ "<div class='pb_right' style='font-size:20px; padding-top:10px;'>" + response.RESULT[i].MUSE_REM_TM + "/" + response.RESULT[i].MUSE_OFR_TM + "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>" 
+		                            	+ "</div>"
+                            	}
+                            }
+                        }
+                        $("#carousel").append(result);
+	                    for(var i=0; i < response.RESULT.length; i++ ) {
+							if(response.RESULT[i].BRAND_CD == "102") {
+								$("#sto_img"+i).attr('src', '/images/store/sa_logo.png');
+							}else if(response.RESULT[i].BRAND_CD == "109") {
+								$("#sto_img"+i).attr('src', '/images/store/li_logo.png');
+							}else if(response.RESULT[i].BRAND_CD == "201") {
+								$("#sto_img"+i).attr('src', '/images/store/ch_logo.png');
+							}else if(response.RESULT[i].BRAND_CD == "301") {
+								$("#sto_img"+i).attr('src', '/images/store/ee_logo.png');
+							}else if(response.RESULT[i].BRAND_CD == "302") {
+								$("#sto_img"+i).attr('src', '/images/store/sab_logo.jpg');
+							}else if(response.RESULT[i].BRAND_CD == "401") {
+								$("#sto_img"+i).attr('src', '/images/store/ba_logo.jpg');
+							}else if(response.RESULT[i].BRAND_CD == "501") {
+								$("#sto_img"+i).attr('src', '/images/store/sas_logo.png');
+							}else {
+								$("#sto_img"+i).attr('src', '/images/25.png');
+							}
+                        }
+                        $('#carousel-example-generic').show();
+                    }
+
+                }
+            });
+            $(document).on("click", ".playtime_bonus_in", function () {
+                var pro = $(this).find($("input[name=PROGRAM_ID]"));
+                var pro2 = pro.attr('class');
+                var mus_no = $(this).find($("input[name=MUSE_NO]"));
+                var mus_no2 = mus_no.attr('class');
+                var mus_ce = $(this).find($("input[name=MUSE_CERT_NO]"));
+                var mus_ce2 = mus_ce.attr('class');
+//                 console.log(mus_ce2);
+                document.location.href = "/member_etc_coupon.html?PROGRAM_ID=" + pro2 + "&MUSE_NO=" + mus_no2 + "&MUSE_CERT_NO=" + mus_ce2;
+            });
+            $("#memberCard1").click(function () {
+                document.location.href = "/member_card.html";
+            });
+            $("#user").click(function () {
+                document.location.href = "/mypage.html";
+            });
+            $("#memberpoint").click(function () {
+                document.location.href = "/member_point.html";
+            });
+            $("#couponbtn").click(function () {
+                document.location.href = "/membership_coupon_list.html";
+            });
+            // footer move evant
+            $("#home").click(function () {
+                document.location.href = "/main.html";
+            });
+            $('#store').click(function () {
+                document.location.href = "/store.html";
+            });
+            $('#play').click(function () {
+                document.location.href = "/infomation.html";
+            });
+            $("#welcome")
+                .click(function () {
+                    $("#wel_tri").show();
+                    $("#welcomeInfo").show();
+                    $("#fri_tri").hide();
+                    $("#friendInfo").hide();
+                    $("#fam_tri").hide();
+                    $("#familyInfo").hide();
+                    $("#vip_tri").hide();
+                    $("#vipInfo").hide();
+                })
+                $("#friend")
+                .click(function () {
+                    $("#wel_tri").hide();
+                    $("#welcomeInfo").hide();
+                    $("#fri_tri").show();
+                    $("#friendInfo").show();
+                    $("#fam_tri").hide();
+                    $("#familyInfo").hide();
+                    $("#vip_tri").hide();
+                    $("#vipInfo").hide();
+                })
+                $("#famiy")
+                .click(function () {
+                $("#wel_tri").hide();
+                $("#welcomeInfo").hide();
+                $("#fri_tri").hide();
+                $("#friendInfo").hide();
+                $("#fam_tri").show();
+                $("#familyInfo").show();
+                $("#vip_tri").hide();
+                $("#vipInfo").hide();
+            })
+            $("#vip")
+                .click(function () {
+                $("#wel_tri").hide();
+                $("#welcomeInfo").hide();
+                $("#fri_tri").hide();
+                $("#friendInfo").hide();
+                $("#fam_tri").hide();
+                $("#familyInfo").hide();
+                $("#vip_tri").show();
+                $("#vipInfo").show();
+            })
+            $(".color").change(function () {
+                if ($(".color").val() == "0") {
+                    $("#memberSection").show();
+                    $("#levelSection").show();
+                    $("#stempSection").show();
+                    $("#couponSection").show();
+                    $("#cardSection").show();
+                } else if ($(".color").val() == "1") {
+                    $("#memberSection").show();
+                    $("#levelSection").hide();
+                    $("#stempSection").hide();
+                    $("#couponSection").hide();
+                    $("#cardSection").hide();
+                } else if ($(".color").val() == "2") {
+                    $("#memberSection").hide();
+                    $("#levelSection").show();
+                    $("#stempSection").hide();
+                    $("#couponSection").hide();
+                    $("#cardSection").hide();
+                } else if ($(".color").val() == "3") {
+                    $("#memberSection").hide();
+                    $("#levelSection").hide();
+                    $("#stempSection").show();
+                    $("#couponSection").hide();
+                    $("#cardSection").hide();
+                } else if ($(".color").val() == "4") {
+                    $("#memberSection").hide();
+                    $("#levelSection").hide();
+                    $("#stempSection").hide();
+                    $("#couponSection").show();
+                    $("#cardSection").hide();
+                } else if ($(".color").val() == "5") {
+                    $("#memberSection").hide();
+                    $("#levelSection").hide();
+                    $("#stempSection").hide();
+                    $("#couponSection").hide();
+                    $("#cardSection").show();
+                }
+                $('.slider').slick('reinit');
+            });
+			$(document).on("click",".memberQuestion",function(){
+				var an = $(this).next();
+				var icon = $(this).find($('.memQ'));
+                an.slideToggle('fast', function () {
+                    $('.slider').slick('reinit');
+                });
+				if(icon.hasClass("fa-chevron-down")) {
+					icon.removeClass("fa-chevron-down");
+					icon.addClass("fa-chevron-up");
+				}else {
+					icon.removeClass("fa-chevron-up");
+					icon.addClass("fa-chevron-down");
+				}
+            });
+			$(document).on("click",".levelQuestion",function(){ 
+				var an = $(this).next();
+				var icon = $(this).find($('.levQ'));
+                an.slideToggle('fast', function () {
+                    $('.slider').slick('reinit');
+                });
+                if (icon.hasClass("fa-chevron-down")) {
+                    icon.removeClass("fa-chevron-down");
+                    icon.addClass("fa-chevron-up");
+                } else {
+                    icon.removeClass("fa-chevron-up");
+                    icon.addClass("fa-chevron-down");
+                }
+            });
+			$(document).on("click",".stempQuestion",function(){
+				var an = $(this).next();
+				var icon = $(this).find($('.steQ'));
+                an.slideToggle('fast', function () {
+                    $('.slider').slick('reinit');
+                });
+                if (icon.hasClass("fa-chevron-down")) {
+                    icon.removeClass("fa-chevron-down");
+                    icon.addClass("fa-chevron-up");
+                } else {
+                    icon.removeClass("fa-chevron-up");
+                    icon.addClass("fa-chevron-down");
+                }
+            });
+			$(document).on("click",".couponQuestion",function(){
+				var an = $(this).next();
+				var icon = $(this).find($('.couQ'));
+                an.slideToggle('fast', function () {
+                    $('.slider').slick('reinit');
+                });
+                if ($("#couQ").hasClass("fa-chevron-down")) {
+                    $("#couQ").removeClass("fa-chevron-down");
+                    $("#couQ").addClass("fa-chevron-up");
+                } else {
+                    $("#couQ").removeClass("fa-chevron-up");
+                    $("#couQ").addClass("fa-chevron-down");
+                }
+            });
+            $(document).on("click",".cardQuestion",function(){
+				var an = $(this).next();
+				var icon = $(this).find($('.carQ'));
+                an.slideToggle('fast', function () {
+                    $('.slider').slick('reinit');
+                });
+                if ($("#carQ").hasClass("fa-chevron-down")) {
+                    $("#carQ").removeClass("fa-chevron-down");
+                    $("#carQ").addClass("fa-chevron-up");
+                } else {
+                    $("#carQ").removeClass("fa-chevron-up");
+                    $("#carQ").addClass("fa-chevron-down");
+                }
+            });
+            $('.membership_card').slick({swipe: true, arrows: false, infinite: false, centerMode: true, centerPadding: '20px'});
+            $('.slider').slick({
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                arrows: false,
+                fade: false,
+                asNavFor: '.slider-nav-thumbnails',
+                infinite: false,
+                adaptiveHeight: true,
+                swipe: false
+            });
+            $('.slider-nav-thumbnails').slick({
+                slidesToShow: 3,
+                slidesToScroll: 1,
+                asNavFor: '.slider',
+                dots: true,
+                focusOnSelect: true,
+                infinite: false
+            });
+            // remove active class from all thumbnail slides
+            $('.slider-nav-thumbnails').removeClass('slick-active');
+            // set active class to first thumbnail slides
+            $('.slider-nav-thumbnails').eq(0).addClass('slick-active');
+            // On before slide change match active thumbnail to current slide
+            $('.slider .slider-nav-thumbnails').on('beforeChange', function (event, slick, currentSlide, nextSlide) {
+                var mySlideNumber = nextSlide;
+                $('.slider-nav-thumbnails').removeClass('slick-active');
+                $('.slider-nav-thumbnails').eq(mySlideNumber).addClass('slick-active');
+            });
+            // UPDATED
+            $('.slider').on('afterChange', function (event, slick, currentSlide) {
+                $('.content').hide();
+                $('.content[data-id=' + (
+                currentSlide + 1) + ']').show();
+                if (!$(event.target).hasClass('membership_card')) {
+                    $('.menu').removeClass('slick-active');
+                    var before = $('#before_bar').val();
+                    var move = before - currentSlide;
+                    if (currentSlide == 0) {
+                        $('#menu1').addClass('slick-active');
+                        if (move == 1) {
+                            $('#nav_bar').animate({left: '0'});
+                        } else if (move == 2) {
+                            $('#nav_bar').animate({left: '0'});
+                        }
+                        $('#before_bar').val(currentSlide);
+                    } else if (currentSlide == 1) {
+                        $("#menu2").addClass("slick-active");
+                        if (move == -1) {
+                            $('#nav_bar').animate({left: '33.3%'});
+                        } else if (move == 1) {
+                            $('#nav_bar').animate({left: '33.3%'});
+                        }
+                        $('#before_bar').val(currentSlide);
+                    } else if (currentSlide == 2) {
+                        $("#menu3").addClass("slick-active");
+                        if (move == -1) {
+                            $('#nav_bar').animate({left: '66.6%'});
+                        } else if (move == -2) {
+                            $('#nav_bar').animate({left: '66.6%'});
+                        }
+                        $('#before_bar').val(currentSlide);
+                    }
+                }
+            });
+        });
+        </script>
+    </body>
+</html>

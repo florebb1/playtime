@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+   <!-- 
+      [ORDR4280M0]찬스로스대상품목 , [ORDR4290M0]찬스로스재고관리 START ======================================================================//
+      REMARK : STORE_PROD_ITEM TABLE의 PK.관리구분(MNG_DIV) => 공통(01320) [1:찬스로스, 2:재고관리]
+   -->   
+    <!-- 점포상품복사 팝업 창  ( 데이터 조회) -->   
+    <query name='PROD_STOR_ITEM_COPY_P'><![CDATA[
+    SELECT  S.STOR_CD
+         ,  NVL(LS.STOR_NM, S.STOR_NM)  AS STOR_NM
+      FROM  STORE S
+         ,  (
+                SELECT  COMP_CD
+                     ,  STOR_CD
+                     ,  STOR_NM
+                  FROM  LANG_STORE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                   AND  BRAND_CD    = ${BRAND_CD}
+                   AND  USE_YN      = 'Y'
+            ) LS
+         ,  COMMON C
+     WHERE  S.COMP_CD   = ${SCH_COMP_CD}
+       AND  S.BRAND_CD  = ${BRAND_CD}
+       AND  S.COMP_CD   = LS.COMP_CD(+)
+       AND  S.STOR_CD   = LS.STOR_CD(+) 
+       AND  S.USE_YN    = 'Y'
+       AND  S.COMP_CD   = C.COMP_CD
+       AND  S.STOR_TP   = C.CODE_CD
+       AND  C.CODE_TP   = '00565'
+       AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+       AND  C.USE_YN    = 'Y'
+       AND  (NVL(LENGTH(${SCH_STOR_TXT} ),0)=0 OR (NVL(LENGTH(${SCH_STOR_TXT} ),0)>0
+       AND  (S.STOR_NM LIKE ('%'|| ${SCH_STOR_TXT} || '%') OR S.STOR_CD LIKE ('%'|| ${SCH_STOR_TXT} || '%')) ))
+       @SEARCH_STAND_STOR_CD@
+       @SEARCH_STOR_TP@
+     GROUP BY S.STOR_CD, LS.STOR_NM, S.STOR_NM
+     ORDER BY STOR_CD
+    ]]></query>
+   
+    <!-- 점포  데이터 조회 -->   
+    <query name='StoreCountPopupSearch'><![CDATA[     
+    SELECT  SS.STOR_CD
+         ,  NVL(LS.STOR_NM, S.STOR_NM)  AS STOR_NM
+      FROM  STORE_PROD_ITEM SS
+         ,  STORE S
+         ,  (
+                SELECT  COMP_CD
+                     ,  STOR_CD
+                     ,  STOR_NM
+                  FROM  LANG_STORE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                   AND  BRAND_CD    = ${BRAND_CD}
+                   AND  USE_YN      = 'Y'
+            ) LS           
+     WHERE   SS.COMP_CD    = ${SCH_COMP_CD}
+       AND   SS.BRAND_CD   = ${BRAND_CD} 
+       AND   SS.MNG_DIV    = ${MNG_DIV}
+       AND   SS.COMP_CD    = S.COMP_CD(+)
+       AND   SS.BRAND_CD   = S.BRAND_CD(+)
+       AND   SS.STOR_CD    = S.STOR_CD(+)
+       AND   SS.COMP_CD    = LS.COMP_CD(+)
+       AND   SS.STOR_CD    = LS.STOR_CD(+)   
+       AND   (NVL(LENGTH(${SCH_STOR_TXT} ),0)=0 OR (NVL(LENGTH(${SCH_STOR_TXT} ),0)>0
+       AND (S.STOR_NM LIKE ('%'|| ${SCH_STOR_TXT} || '%') OR S.STOR_CD LIKE ('%'|| ${SCH_STOR_TXT} || '%')) ))    
+       @SEARCH_STOR_TP@   
+     GROUP BY SS.STOR_CD, LS.STOR_NM, S.STOR_NM   
+   ]]></query>
+   
+   <!-- 점포 상품 복사 - 삭제 (팝업)) PK.관리구분(MNG_DIV) => 공통(01320) [1:찬스로스, 2:재고관리]  추가-->
+   <query name='PROD_STOR_ITEM_P_D'><![CDATA[   
+      DELETE   FROM STORE_PROD_ITEM 
+       WHERE   COMP_CD  = ${COMP_CD}
+         AND   BRAND_CD = ${BRAND_CD} 
+         AND   STOR_CD  = ${STOR_CD} 
+         AND   MNG_DIV  = ${MNG_DIV}
+   ]]></query>  
+   
+   <query name='PROD_STOR_ITEM_P_D2'><![CDATA[   
+      DELETE   FROM STORE_PROD_ITEM 
+       WHERE   COMP_CD  = ${COMP_CD}
+         AND   BRAND_CD = ${BRAND_CD} 
+         AND   STOR_CD  = ${STOR_CD} 
+         AND   MNG_DIV  = ${MNG_DIV}
+         @ITEM_CD@  
+   ]]></query>  
+      
+      
+   <!-- 점포 상품 복사 - 저장(팝업)) PK.관리구분(MNG_DIV) => 공통(01320) [1:찬스로스, 2:재고관리]  추가-->
+   <query name='PROD_STOR_ITEM_P_I'><![CDATA[
+      INSERT INTO 
+           STORE_PROD_ITEM
+           (
+                    COMP_CD
+               ,    BRAND_CD
+               ,    STOR_CD
+               ,    ITEM_CD
+               ,    MNG_DIV
+               ,    USE_YN 
+               ,    INST_DT 
+               ,    INST_USER 
+               ,    UPD_DT 
+               ,    UPD_USER
+           )
+           SELECT   COMP_CD
+               ,    BRAND_CD
+               ,    ${STOR_CD}
+               ,    ITEM_CD
+               ,    ${MNG_DIV}
+               ,    MAX(USE_YN)     AS USE_YN
+               ,    SYSDATE
+               ,    ${INST_USER}
+               ,    SYSDATE
+               ,    ${UPD_USER}
+           FROM     STORE_PROD_ITEM 
+          WHERE     COMP_CD  = ${COMP_CD}
+            AND     BRAND_CD = ${BRAND_CD}
+            AND     STOR_CD  = ${SCH_STOR_CD}
+            AND     MNG_DIV  = ${MNG_DIV}
+       GROUP BY     COMP_CD, BRAND_CD, ITEM_CD
+   ]]></query>    
+
+  <query name='PROD_STOR_ITEM_P_I2'><![CDATA[
+      INSERT INTO 
+           STORE_PROD_ITEM
+           (
+                    COMP_CD
+               ,    BRAND_CD
+               ,    STOR_CD
+               ,    ITEM_CD
+               ,    MNG_DIV
+               ,    USE_YN 
+               ,    INST_DT 
+               ,    INST_USER 
+               ,    UPD_DT 
+               ,    UPD_USER
+           )
+           SELECT   COMP_CD
+               ,    BRAND_CD
+               ,    ${STOR_CD}
+               ,    ITEM_CD
+               ,    ${MNG_DIV}
+               ,    MAX(USE_YN)     AS USE_YN
+               ,    SYSDATE
+               ,    ${INST_USER}
+               ,    SYSDATE
+               ,    ${UPD_USER}
+           FROM     STORE_PROD_ITEM 
+          WHERE     COMP_CD  = ${COMP_CD}
+            AND     BRAND_CD = ${BRAND_CD}
+            AND     STOR_CD  = ${SCH_STOR_CD}
+            AND     MNG_DIV  = ${MNG_DIV}
+            @ITEM_CD@  
+       GROUP BY     COMP_CD, BRAND_CD, ITEM_CD
+   ]]></query>    
+   
+   
+  <!-- 
+      [ORDR4280M0]찬스로스대상품목 , [ORDR4290M0]찬스로스재고관리   END ======================================================================//
+   -->  
+                
+</SQLResource>
+

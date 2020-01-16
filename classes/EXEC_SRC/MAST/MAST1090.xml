@@ -1,0 +1,376 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='PARA_COMPANY_Q'><![CDATA[ 
+    SELECT  C.COMP_CD
+         ,  NVL(L.LANG_NM, C.COMP_NM)   AS COMP_NM
+         ,  P.MEMB_YN
+         ,  P.CUST_DIV
+         ,  P.CARD_DIV
+         ,  P.PROC_TYPE
+      FROM  COMPANY         C
+         ,  (
+                SELECT  ${SCH_COMP_CD}                          AS COMP_CD
+                     ,  MAX(CASE WHEN PC.PARA_CD = '2001' THEN NVL(PC.PARA_VAL, PM.PARA_DEFAULT) END)   AS MEMB_YN
+                     ,  MAX(CASE WHEN PC.PARA_CD = '2002' THEN NVL(PC.PARA_VAL, PM.PARA_DEFAULT) END)   AS CUST_DIV
+                     ,  MAX(CASE WHEN PC.PARA_CD = '2003' THEN NVL(PC.PARA_VAL, PM.PARA_DEFAULT) END)   AS CARD_DIV
+                     ,  MAX(DECODE(PC.COMP_CD, NULL, 'U', 'R')) AS PROC_TYPE
+                  FROM  PARA_MST        PM
+                     ,  PARA_COMPANY    PC
+                 WHERE  PM.PARA_CD      = PC.PARA_CD(+)
+                   AND  PM.PARA_TABLE   = 'PARA_COMPANY'
+                   AND  PM.USE_YN       = 'Y'
+                   AND  PC.COMP_CD(+)   = ${SCH_COMP_CD}
+                   AND  PC.USE_YN(+)    = 'Y'
+                 GROUP  BY ${SCH_COMP_CD}
+            )               P
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  TABLE_NM    = 'COMPANY'
+                   AND  COL_NM      = 'COMP_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )               L
+     WHERE  C.COMP_CD   = P.COMP_CD(+)
+       AND  C.COMP_CD   = L.PK_COL(+)
+       AND  C.COMP_CD   = ${SCH_COMP_CD}
+       AND  C.USE_YN    = 'Y'
+     ORDER  BY C.COMP_CD
+]]></query>
+
+<query name='PARA_COMPANY_U'><![CDATA[ 
+    MERGE INTO PARA_COMPANY   PC
+    USING (
+                SELECT  ${COMP_CD}      AS COMP_CD
+                     ,  PM.PARA_CD      AS PARA_CD
+                     ,  ${PARA_VAL}     AS PARA_VAL
+                     ,  PM.PARA_DESC    AS PARA_DESC
+                     ,  PM.USE_YN       AS USE_YN
+                  FROM  PARA_MST    PM
+                 WHERE  PARA_TABLE  = 'PARA_COMPANY'
+                   AND  PARA_CD     = ${PARA_CD}
+          )   PM
+    ON (
+                PC.COMP_CD  = PM.COMP_CD
+           AND  PC.PARA_CD  = PM.PARA_CD
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  PARA_VAL        = PM.PARA_VAL
+             ,  USE_YN          = PM.USE_YN
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  PARA_CD
+             ,  PARA_VAL
+             ,  PARA_DESC
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                PM.COMP_CD
+             ,  PM.PARA_CD
+             ,  PM.PARA_VAL
+             ,  PM.PARA_DESC
+             ,  PM.USE_YN
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        ) 
+]]></query>
+
+<query name='BRAND_MEMB_Q'><![CDATA[ 
+    SELECT  B.COMP_CD
+         ,  B.BRAND_CD
+         ,  NVL(L.LANG_NM, B.BRAND_NM)  AS BRAND_NM
+         ,  M.MEMB_YN
+         ,  M.SAV_PT_YN
+         ,  M.SAV_PT_RATE
+         ,  M.SAV_MLG_YN
+         ,  M.USE_YN
+         ,  DECODE(M.BRAND_CD, NULL, 'U', 'R')   AS PROC_TYPE
+      FROM  BRAND           B
+         ,  BRAND_MEMB      M
+         ,  (
+                SELECT  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  TABLE_NM    = 'BRAND'
+                   AND  COL_NM      = 'BRAND_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )               L
+     WHERE  B.COMP_CD   = M.COMP_CD(+)
+       AND  B.BRAND_CD  = M.BRAND_CD(+)
+       AND  B.BRAND_CD  = L.PK_COL(+)
+       AND  B.COMP_CD   = ${SCH_COMP_CD}
+       AND  (${SCH_BRAND_CD} IS NULL OR M.BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_USE_YN}   IS NULL OR M.USE_YN   = ${SCH_USE_YN})
+       AND  B.USE_YN    = 'Y'
+     ORDER  BY B.BRAND_CD
+]]></query>
+
+<query name='BRAND_MEMB_U'><![CDATA[ 
+    MERGE INTO BRAND_MEMB
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  BRAND_CD        = ${BRAND_CD}
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  MEMB_YN         = ${MEMB_YN}
+             ,  SAV_PT_YN       = ${SAV_PT_YN}
+             ,  SAV_PT_RATE     = ${SAV_PT_RATE}
+             ,  SAV_MLG_YN      = ${SAV_MLG_YN}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  BRAND_CD
+             ,  MEMB_YN
+             ,  SAV_PT_YN
+             ,  SAV_PT_RATE
+             ,  SAV_MLG_YN
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${MEMB_YN}
+             ,  ${SAV_PT_YN}
+             ,  ${SAV_PT_RATE}
+             ,  ${SAV_MLG_YN}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        ) 
+]]></query>
+
+<query name='PARA_STORE_Q'><![CDATA[ 
+    SELECT  P.COMP_CD
+         ,  P.BRAND_CD
+         ,  B.BRAND_NM
+         ,  P.STOR_CD
+         ,  NVL(L.STOR_NM, P.STOR_NM)   AS STOR_NM
+         ,  P.SAV_PT_YN
+         ,  P.SAV_MLG_YN
+         ,  P.PROC_TYPE
+      FROM  (
+                SELECT  PM.COMP_CD
+                     ,  PM.BRAND_CD
+                     ,  PM.STOR_TP
+                     ,  PM.STOR_CD
+                     ,  MAX(PM.STOR_NM)                                                                 AS STOR_NM
+                     ,  MAX(CASE WHEN PM.PARA_CD = '3001' THEN NVL(PS.PARA_VAL, PM.PARA_DEFAULT) END)   AS SAV_PT_YN
+                     ,  MAX(CASE WHEN PM.PARA_CD = '3002' THEN NVL(PS.PARA_VAL, PM.PARA_DEFAULT) END)   AS SAV_MLG_YN
+                     ,  MAX(DECODE(PS.COMP_CD, NULL, 'U', 'R'))                                         AS PROC_TYPE
+                  FROM  (
+                            SELECT  S.COMP_CD
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_TP
+                                 ,  S.STOR_CD
+                                 ,  S.STOR_NM
+                                 ,  PM.PARA_CD
+                                 ,  PM.PARA_DEFAULT
+                              FROM  STORE           S
+                                 ,  PARA_MST        PM
+                             WHERE  S.COMP_CD       = ${SCH_COMP_CD}
+                               AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+                               AND  S.USE_YN        = 'Y'
+                               AND  PM.PARA_TABLE   = 'PARA_STORE'
+                               AND  PM.USE_YN       = 'Y'
+                        )               PM
+                     ,  PARA_STORE      PS
+                 WHERE  PM.COMP_CD      = PS.COMP_CD(+)
+                   AND  PM.BRAND_CD     = PS.BRAND_CD(+)
+                   AND  PM.STOR_CD      = PS.STOR_CD(+)
+                   AND  PM.PARA_CD      = PS.PARA_CD(+)
+                   AND  PS.USE_YN(+)    = 'Y'
+                 GROUP  BY PM.COMP_CD, PM.BRAND_CD, PM.STOR_TP, PM.STOR_CD
+            )               P
+         ,  (
+                SELECT  B.COMP_CD
+                     ,  B.BRAND_CD
+                     ,  NVL(L.LANG_NM, B.BRAND_NM)  AS BRAND_NM
+                  FROM  BRAND           B
+                     ,  (
+                            SELECT  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'BRAND'
+                               AND  COL_NM      = 'BRAND_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )               L
+                 WHERE  B.BRAND_CD  = L.PK_COL(+)
+                   AND  B.COMP_CD   = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR B.BRAND_CD = ${SCH_BRAND_CD})
+            )               B
+         ,  (
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  STOR_NM
+                  FROM  LANG_STORE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )               L
+         ,  (
+                SELECT  CODE_CD
+                     ,  CODE_NM
+                     ,  VAL_C1
+                  FROM  COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '00565'
+                   AND  USE_YN  = 'Y'
+            )               C
+     WHERE  P.COMP_CD   = B.COMP_CD
+       AND  P.BRAND_CD  = B.BRAND_CD
+       AND  P.COMP_CD   = L.COMP_CD (+)
+       AND  P.BRAND_CD  = L.BRAND_CD(+)
+       AND  P.STOR_CD   = L.STOR_CD (+)
+       AND  P.STOR_TP   = C.CODE_CD (+)
+       AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)  
+     ORDER  BY P.BRAND_CD, P.STOR_CD
+]]></query>
+
+<query name='PARA_STORE_U'><![CDATA[ 
+    MERGE INTO PARA_STORE   PS
+    USING (
+                SELECT  ${COMP_CD}      AS COMP_CD
+                     ,  ${BRAND_CD}     AS BRAND_CD
+                     ,  ${STOR_CD}      AS STOR_CD
+                     ,  PM.PARA_CD      AS PARA_CD
+                     ,  ${PARA_VAL}     AS PARA_VAL
+                     ,  PM.PARA_DESC    AS PARA_DESC
+                     ,  PM.USE_YN       AS USE_YN
+                  FROM  PARA_MST    PM
+                 WHERE  PARA_TABLE  = 'PARA_STORE'
+                   AND  PARA_CD     = ${PARA_CD}
+          )   PM
+    ON (
+                PS.COMP_CD  = PM.COMP_CD
+           AND  PS.BRAND_CD = PM.BRAND_CD
+           AND  PS.STOR_CD  = PM.STOR_CD
+           AND  PS.PARA_CD  = PM.PARA_CD
+       )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  PARA_VAL        = PM.PARA_VAL
+             ,  USE_YN          = PM.USE_YN
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  PARA_CD
+             ,  PARA_VAL
+             ,  PARA_DESC
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                PM.COMP_CD
+             ,  PM.BRAND_CD
+             ,  PM.STOR_CD
+             ,  PM.PARA_CD
+             ,  PM.PARA_VAL
+             ,  PM.PARA_DESC
+             ,  PM.USE_YN
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        ) 
+]]></query>
+
+
+<query name='LVL_Q'><![CDATA[ 
+    SELECT  COMP_CD
+         ,  LVL_CD
+         ,  LVL_NM
+         ,  LVL_RANK
+         ,  LVL_STD_STR
+         ,  LVL_STD_END
+         ,  SAV_PT_RATE
+         ,  USE_YN
+      FROM  C_CUST_LVL
+     WHERE  COMP_CD = ${SCH_COMP_CD}          
+       AND  (${SCH_USE_YN} IS NULL OR USE_YN  = ${SCH_USE_YN}) 
+     ORDER  BY LVL_RANK, LVL_CD 
+]]></query>
+
+<query name='LVL_U'><![CDATA[ 
+    MERGE INTO C_CUST_LVL
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  LVL_CD      = ${LVL_CD}
+        )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  LVL_NM          = ${LVL_NM}
+             ,  LVL_RANK        = ${LVL_RANK}
+             ,  LVL_STD_STR     = NVL(${LVL_STD_STR}, '0')
+             ,  LVL_STD_END     = NVL(${LVL_STD_END}, '0')
+             ,  SAV_PT_RATE     = NVL(${SAV_PT_RATE}, '0')
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  LVL_CD
+             ,  LVL_NM
+             ,  LVL_RANK
+             ,  LVL_STD_STR
+             ,  LVL_STD_END
+             ,  SAV_PT_RATE
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${LVL_CD}
+             ,  ${LVL_NM}
+             ,  ${LVL_RANK}
+             ,  NVL(${LVL_STD_STR}, '0')
+             ,  NVL(${LVL_STD_END}, '0')
+             ,  NVL(${SAV_PT_RATE}, '0')
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        ) 
+]]></query>
+
+</SQLResource>
+

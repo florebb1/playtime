@@ -1,0 +1,263 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='CS_ENTRY_HD_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  ENTRY_NO
+         ,  ENTRY_DT
+         ,  ENTRY_FTM
+         ,  ENTRY_TTM
+         ,  MEMBER_NO
+         ,  DECRYPT(MEMBER_NM)                      AS MEMBER_NM
+         ,  DECRYPT(ORG_NM)                         AS ORG_NM
+         ,  FN_GET_FORMAT_HP_NO(DECRYPT(MOBILE))    AS MOBILE
+         ,  ENTRY_CNT
+         ,  CASE WHEN USE_YN = 'Y' THEN SALE_AMT
+                 ELSE 0
+            END                                     AS SALE_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN DC_AMT
+                 ELSE 0
+            END                                     AS DC_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN GRD_AMT
+                 ELSE 0
+            END                                     AS GRD_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN VAT_AMT
+                 ELSE 0
+            END                                     AS VAT_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN UNPAID_AMT
+                 ELSE 0
+            END                                     AS UNPAID_AMT
+         ,  USE_YN
+      FROM  CS_ENTRY_HD
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  BRAND_CD    = ${SCH_BRAND_CD}
+       AND  STOR_CD     = ${SCH_STOR_CD}
+       AND  ENTRY_DT    BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+     ORDER  BY ENTRY_NO
+]]></query>
+
+<query name='CS_ENTRY_DT_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  ENTRY_NO
+         ,  ENTRY_SEQ
+         ,  ENTRY_DIV
+         ,  CASE WHEN ENTRY_DIV = '1' THEN MEMBER_NO
+                 WHEN ENTRY_DIV = '2' THEN CHILD_NO
+                 ELSE ''
+            END                                     AS MEMBER_CHILD_NO
+         ,  DECRYPT(ENTRY_NM)                       AS ENTRY_NM
+         ,  SEX_DIV
+         ,  BIRTH_DT
+         ,  AGES
+         ,  BASE_USE_TM
+         ,  ENTRY_FTM
+         ,  ENTRY_TTM
+         ,  FN_GET_FROMAT_HHMM(USE_TM)              AS USE_TM
+         ,  FN_GET_FROMAT_HHMM(IDLE_TM)             AS IDLE_TM
+         ,  FN_GET_FROMAT_HHMM(ADD_TM)              AS ADD_TM
+         ,  CASE WHEN USE_YN = 'Y' THEN USE_AMT
+                 ELSE 0
+            END                                     AS USE_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN ADD_AMT
+                 ELSE 0
+            END                                     AS ADD_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN SALE_AMT
+                 ELSE 0
+            END                                     AS SALE_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN DC_AMT
+                 ELSE 0
+            END                                     AS DC_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN GRD_AMT
+                 ELSE 0
+            END                                     AS GRD_AMT
+         ,  CASE WHEN USE_YN = 'Y' THEN VAT_AMT
+                 ELSE 0
+            END                                     AS VAT_AMT
+         ,  USE_YN
+      FROM  CS_ENTRY_DT
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  ENTRY_NO    = ${SCH_ENTRY_NO}
+     ORDER  BY ENTRY_SEQ
+]]></query>
+
+<query name='CS_ENTRY_PG_Q'><![CDATA[
+    SELECT  EP.COMP_CD
+         ,  EP.ENTRY_NO
+         ,  EP.ENTRY_SEQ
+         ,  EP.PROGRAM_SEQ
+         ,  '[' || EP.PROGRAM_ID || ']'   || P.PROGRAM_NM   AS PROGRAM_NM
+         ,  CASE WHEN EP.MATL_ITEM_CD IS NOT NULL THEN '[' || EP.MATL_ITEM_CD || ']' || I.ITEM_NM
+                 ELSE ''
+            END                                             AS MATL_ITEM_NM
+         ,  EP.BASE_USE_TM
+         ,  EP.BASE_USE_PRC
+         ,  PS.ADD_AMT_TM   AS BASE_ADD_TM
+         ,  EP.BASE_ADD_PRC
+         ,  EP.ADD_DT
+         ,  EP.ENTRY_FTM
+         ,  EP.ENTRY_TTM
+         ,  FN_GET_FROMAT_HHMM(EP.USE_TM)                   AS P_USE_TM
+         ,  FN_GET_FROMAT_HHMM(EP.IDLE_TM)                  AS P_IDLE_TM
+         ,  FN_GET_FROMAT_HHMM(EP.ADD_TM)                   AS P_ADD_TM
+         ,  EP.USE_AMT                                      AS P_USE_AMT
+         ,  EP.ADD_AMT                                      AS P_ADD_AMT
+         ,  EP.SALE_QTY
+         ,  CASE WHEN NVL(EM.MBS_SEQ, 1) = 1 THEN EP.SALE_QTY ELSE 0 END    AS TOT_SALE_QTY
+         ,  EP.SALE_PRC
+         ,  CASE WHEN NVL(EM.MBS_SEQ, 1) = 1 THEN EP.SALE_PRC ELSE 0 END    AS TOT_SALE_PRC
+         ,  EP.SALE_AMT
+         ,  CASE WHEN NVL(EM.MBS_SEQ, 1) = 1 THEN EP.SALE_AMT ELSE 0 END    AS TOT_SALE_AMT
+         ,  EP.DC_AMT
+         ,  CASE WHEN NVL(EM.MBS_SEQ, 1) = 1 THEN EP.DC_AMT   ELSE 0 END    AS TOT_DC_AMT
+         ,  EP.GRD_AMT
+         ,  CASE WHEN NVL(EM.MBS_SEQ, 1) = 1 THEN EP.GRD_AMT  ELSE 0 END    AS TOT_GRD_AMT
+         ,  EP.VAT_AMT
+         ,  CASE WHEN NVL(EM.MBS_SEQ, 1) = 1 THEN EP.VAT_AMT  ELSE 0 END    AS TOT_VAT_AMT
+         ,  CASE WHEN EM.MBS_NO IS NOT NULL THEN '[' || EM.MBS_NO || ']'   || EM.MBS_NM
+                 ELSE ''
+            END                                             AS MBS_NM
+         ,  EM.CERT_NO
+         ,  EM.USE_TM
+         ,  EM.USE_CNT
+         ,  EM.USE_AMT
+         ,  CASE WHEN EP.MATL_ITEM_CD IS NOT NULL THEN 1
+                 ELSE 0
+            END                                             AS USE_MCNT
+         ,  EP.USE_YN
+      FROM  CS_ENTRY_PROGRAM    EP
+         ,  CS_PROGRAM          P
+         ,  CS_PROGRAM_STORE    PS
+         ,  (
+                SELECT  EM.COMP_CD
+                     ,  EM.ENTRY_NO
+                     ,  EM.ENTRY_SEQ
+                     ,  EM.PROGRAM_SEQ
+                     ,  EM.MBS_NO
+                     ,  M.MBS_NM
+                     ,  EM.CERT_NO
+                     ,  USE_TM
+                     ,  USE_CNT
+                     ,  USE_AMT
+                     ,  ROW_NUMBER() OVER (PARTITION BY EM.COMP_CD, EM.ENTRY_NO, EM.ENTRY_SEQ, EM.PROGRAM_SEQ ORDER BY EM.COMP_CD, EM.ENTRY_NO, EM.ENTRY_SEQ, EM.PROGRAM_SEQ, EM.MBS_NO, EM.CERT_NO)    AS MBS_SEQ
+                  FROM  CS_ENTRY_MEMBERSHIP EM
+                     ,  CS_MEMBERSHIP       M
+                 WHERE  EM.COMP_CD      = M.COMP_CD
+                   AND  EM.PROGRAM_ID   = M.PROGRAM_ID
+                   AND  EM.MBS_NO       = M.MBS_NO
+                   AND  EM.COMP_CD      = ${SCH_COMP_CD}
+                   AND  EM.ENTRY_NO     = ${SCH_ENTRY_NO}
+            )       EM
+         ,  ITEM    I
+     WHERE  EP.COMP_CD      = P.COMP_CD
+       AND  EP.PROGRAM_ID   = P.PROGRAM_ID
+       AND  EP.COMP_CD      = PS.COMP_CD
+       AND  EP.PROGRAM_ID   = PS.PROGRAM_ID 
+       AND  EP.COMP_CD      = EM.COMP_CD(+)
+       AND  EP.ENTRY_NO     = EM.ENTRY_NO(+)
+       AND  EP.ENTRY_SEQ    = EM.ENTRY_SEQ(+)
+       AND  EP.PROGRAM_SEQ  = EM.PROGRAM_SEQ(+)
+       AND  EP.COMP_CD      = I.COMP_CD(+)
+       AND  EP.MATL_ITEM_CD = I.ITEM_CD(+)
+       AND  EP.COMP_CD      = ${SCH_COMP_CD}
+       AND  EP.ENTRY_NO     = ${SCH_ENTRY_NO}
+       AND  PS.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  PS.STOR_CD      = ${SCH_STOR_CD}
+     ORDER  BY EP.ENTRY_SEQ, EP.PROGRAM_SEQ
+]]></query>
+
+<query name='SALE_HD_Q'><![CDATA[
+    SELECT  SH.COMP_CD
+         ,  SH.SALE_DT
+         ,  SH.BRAND_CD
+         ,  SH.STOR_CD
+         ,  SH.POS_NO
+         ,  SH.BILL_NO
+         ,  SH.SALE_DIV
+         ,  SH.SORD_TM
+         ,  SH.SALE_TM
+         ,  SH.CUST_M_CNT + SH.CUST_F_CNT       AS CUST_CNT
+         ,  SH.CUST_ID
+         ,  DECRYPT(M.MEMBER_NM)                AS CUST_NM
+         ,  SH.SALE_QTY
+         ,  SH.SALE_AMT
+         ,  SH.DC_AMT + SH.ENR_AMT              AS DC_AMT
+         ,  SH.GRD_I_AMT + SH.GRD_O_AMT         AS GRD_AMT
+         ,  SH.VAT_I_AMT + SH.VAT_O_AMT         AS VAT_AMT
+         ,  SH.ROUNDING
+      FROM  SALE_HD     SH
+         ,  CS_MEMBER   M
+     WHERE  SH.COMP_CD  = M.COMP_CD
+       AND  SH.CUST_ID  = M.MEMBER_NO
+       AND  SH.COMP_CD  = ${SCH_COMP_CD}
+       AND  SH.ENTRY_NO = ${SCH_ENTRY_NO}
+     ORDER  BY SH.SALE_DT, SH.BRAND_CD, SH.STOR_CD, SH.POS_NO, SH.BILL_NO
+]]></query>
+
+<query name='SALE_DT_Q'><![CDATA[
+    SELECT  SD.COMP_CD
+         ,  SD.SALE_DT
+         ,  SD.BRAND_CD
+         ,  SD.STOR_CD
+         ,  SD.POS_NO
+         ,  SD.BILL_NO
+         ,  SD.SEQ
+         ,  SD.SORD_TM
+         ,  SD.SALE_TM
+         ,  SD.DELIVER_TM
+         ,  SD.ITEM_CD
+         ,  I.ITEM_NM
+         ,  SD.SALE_QTY
+         ,  SD.SALE_PRC
+         ,  SD.SALE_AMT
+         ,  D.DC_NM
+         ,  SD.DC_AMT + SD.ENR_AMT      AS DC_AMT
+         ,  SD.GRD_AMT
+         ,  SD.VAT_AMT
+         ,  SD.PROGRAM_ID
+         ,  SD.MBS_NO
+         ,  SD.CERT_NO
+         ,  SD.USE_TM
+         ,  SD.USE_CNT
+         ,  SD.USE_AMT
+         ,  SD.USE_MCNT
+      FROM  SALE_DT     SD
+         ,  ITEM        I
+         ,  DC          D
+     WHERE  SD.COMP_CD  = I.COMP_CD
+       AND  SD.ITEM_CD  = I.ITEM_CD
+       AND  SD.COMP_CD  = D.COMP_CD(+)
+       AND  SD.BRAND_CD = D.BRAND_CD(+)
+       AND  SD.DC_DIV   = D.DC_DIV(+)
+       AND  SD.COMP_CD  = ${SCH_COMP_CD}
+       AND  SD.SALE_DT  = ${SCH_SALE_DT}
+       AND  SD.BRAND_CD = ${SCH_BRAND_CD}
+       AND  SD.STOR_CD  = ${SCH_STOR_CD}
+       AND  SD.POS_NO   = ${SCH_POS_NO}
+       AND  SD.BILL_NO  = ${SCH_BILL_NO}
+       AND  (SD.T_SEQ = '0' OR SD.SUB_ITEM_DIV IN ('2', '3'))
+     ORDER  BY SD.SEQ
+]]></query>
+
+<query name='SALE_ST_Q'><![CDATA[
+    SELECT  SS.COMP_CD
+         ,  SS.SALE_DT
+         ,  SS.BRAND_CD
+         ,  SS.STOR_CD
+         ,  SS.POS_NO
+         ,  SS.BILL_NO
+         ,  SS.SEQ
+         ,  SS.APPR_TM
+         ,  SS.PAY_DIV
+         ,  SS.PAY_AMT - (SS.CHANGE_AMT + SS.REMAIN_AMT)    AS PAY_AMT
+         ,  SS.MBS_NO
+         ,  SS.CERT_NO
+      FROM  SALE_ST         SS
+     WHERE  SS.COMP_CD  = ${SCH_COMP_CD}
+       AND  SS.SALE_DT  = ${SCH_SALE_DT}
+       AND  SS.BRAND_CD = ${SCH_BRAND_CD}
+       AND  SS.STOR_CD  = ${SCH_STOR_CD}
+       AND  SS.POS_NO   = ${SCH_POS_NO}
+       AND  SS.BILL_NO  = ${SCH_BILL_NO}
+     ORDER  BY SS.SEQ
+]]></query>
+
+</SQLResource>

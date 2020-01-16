@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='ITEM_CLASS_Q'><![CDATA[  
+    SELECT  COMP_CD
+         ,  ITEM_CD
+         ,  ITEM_NM
+         ,  ITEM_DIV
+         ,  ORD_SALE_DIV
+         ,  ORG_CLASS_CD
+         ,  L_CLASS_CD
+         ,  M_CLASS_CD
+         ,  S_CLASS_CD
+         ,  USE_YN
+      FROM  (
+                SELECT  IC.COMP_CD
+                     ,  IC.ITEM_CD
+                     ,  I.ITEM_NM
+                     ,  I.ITEM_DIV
+                     ,  I.ORD_SALE_DIV
+                     ,  IC.ORG_CLASS_CD
+                     ,  IC.L_CLASS_CD
+                     ,  IC.M_CLASS_CD
+                     ,  IC.S_CLASS_CD
+                     ,  NVL(IC.USE_YN, 'N')     AS USE_YN
+                  FROM  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ORG_CLASS_CD
+                                 ,  L_CLASS_CD
+                                 ,  M_CLASS_CD
+                                 ,  S_CLASS_CD
+                                 ,  USE_YN
+                              FROM  ITEM_CLASS
+                             WHERE  COMP_CD         = ${SCH_COMP_CD}
+                               AND  ORG_CLASS_CD    = ${SCH_ORG_CLASS_CD}
+                               AND  (${SCH_L_CLASS_CD} IS NULL OR L_CLASS_CD = ${SCH_L_CLASS_CD})
+                               AND  (${SCH_M_CLASS_CD} IS NULL OR M_CLASS_CD = ${SCH_M_CLASS_CD})
+                               AND  (${SCH_S_CLASS_CD} IS NULL OR S_CLASS_CD = ${SCH_S_CLASS_CD})
+                        )   IC
+                     ,  (
+                            SELECT  I.COMP_CD
+                                 ,  I.ITEM_CD
+                                 ,  NVL(L.ITEM_NM, I.ITEM_NM)   AS ITEM_NM
+                                 ,  I.ITEM_DIV
+                                 ,  I.ORD_SALE_DIV
+                              FROM  ITEM    I
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  ITEM_CD
+                                             ,  ITEM_NM
+                                          FROM  LANG_ITEM
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )       L
+                             WHERE  I.COMP_CD   = L.COMP_CD(+)
+                               AND  I.ITEM_CD   = L.ITEM_CD(+)
+                               AND  I.COMP_CD   = ${SCH_COMP_CD}
+                               AND  I.USE_YN    = 'Y'
+                               AND  (${SCH_ITEM_DIV}     IS NULL OR I.ITEM_DIV      = ${SCH_ITEM_DIV})
+                               AND  (${SCH_ORD_SALE_DIV} IS NULL OR I.ORD_SALE_DIV  = ${SCH_ORD_SALE_DIV})
+                        )   I
+                 WHERE  IC.COMP_CD  = I.COMP_CD
+                   AND  IC.ITEM_CD  = I.ITEM_CD
+                   AND  (${SCH_USE_YN} IS NULL OR NVL(IC.USE_YN, 'N') = ${SCH_USE_YN})
+            )   I
+     WHERE  (${SCH_ITEM_TXT} IS NULL OR (I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%'))
+     ORDER  BY I.ITEM_CD
+]]></query>
+ 
+<query name='ITEM_CLASS_U'><![CDATA[
+    MERGE   INTO ITEM_CLASS IC
+    USING   DUAL D
+    ON  ( 
+                IC.COMP_CD      = ${COMP_CD} 
+           AND  IC.ORG_CLASS_CD = ${ORG_CLASS_CD}
+           AND  IC.ITEM_CD      = ${ITEM_CD}
+        )
+    WHEN MATCHED  THEN
+        UPDATE
+           SET  L_CLASS_CD      = ${L_CLASS_CD}
+             ,  M_CLASS_CD      = ${M_CLASS_CD}
+             ,  S_CLASS_CD      = ${S_CLASS_CD}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  ORG_CLASS_CD
+             ,  ITEM_CD
+             ,  L_CLASS_CD
+             ,  M_CLASS_CD
+             ,  S_CLASS_CD 
+             ,  USE_YN 
+             ,  INST_DT 
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${ORG_CLASS_CD}
+             ,  ${ITEM_CD}
+             ,  ${L_CLASS_CD}
+             ,  ${M_CLASS_CD}
+             ,  ${S_CLASS_CD} 
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+    
+</SQLResource>

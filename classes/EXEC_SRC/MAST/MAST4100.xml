@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- VAN사  마스터 조회 -->
+<query name='VAN_Q'><![CDATA[   
+    SELECT  V.COMP_CD
+         ,  V.VAN_CD
+         ,  L.LANG_NM
+         ,  V.VAN_DIV
+         ,  V.VAN_PRI
+         ,  V.KEY_ID
+         ,  V.IP
+         ,  V.PORT
+         ,  V.VAN_UNIT
+         ,  V.PWD_USE_YN
+         ,  V.TEL_NO
+         ,  V.FAX
+         ,  V.HOMEPAGE
+         ,  V.USE_YN
+      FROM  VAN     V
+         ,  ( 
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM 
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'VAN'
+                   AND  COL_NM      = 'VAN_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )        L
+     WHERE  L.COMP_CD(+)    = V.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(V.VAN_CD, 2, ' ') || LPAD(V.VAN_DIV,2,' ')
+       AND  V.COMP_CD       = ${SCH_COMP_CD} 
+       AND  (${SCH_USE_YN} IS NULL OR V.USE_YN = ${SCH_USE_YN})
+     ORDER  BY V.VAN_CD
+]]></query>
+
+<!-- VAN사  마스터  수정 -->
+<query name='VAN_U'><![CDATA[
+    MERGE INTO VAN
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  VAN_CD      = ${VAN_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  VAN_DIV     = ${VAN_DIV}
+             ,  VAN_PRI     = ${VAN_PRI}
+             ,  KEY_ID      = ${KEY_ID}
+             ,  IP          = ${IP}
+             ,  PORT        = ${PORT}
+             ,  VAN_UNIT    = ${VAN_UNIT}
+             ,  PWD_USE_YN  = ${PWD_USE_YN}
+             ,  TEL_NO      = ${TEL_NO}
+             ,  FAX         = ${FAX}
+             ,  HOMEPAGE    = ${HOMEPAGE}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  VAN_CD
+             ,  VAN_DIV
+             ,  VAN_PRI
+             ,  KEY_ID
+             ,  IP
+             ,  PORT
+             ,  VAN_UNIT
+             ,  PWD_USE_YN
+             ,  TEL_NO
+             ,  FAX
+             ,  HOMEPAGE
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (    
+                ${COMP_CD}
+             ,  ${VAN_CD}
+             ,  ${VAN_DIV}
+             ,  ${VAN_PRI}
+             ,  ${KEY_ID}
+             ,  ${IP}
+             ,  ${PORT}
+             ,  ${VAN_UNIT}
+             ,  ${PWD_USE_YN}
+             ,  ${TEL_NO}
+             ,  ${FAX}
+             ,  ${HOMEPAGE}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )
+]]></query>
+
+<!-- 언업타입별  다국어 마스터 수정 [VAN]-->
+<query name='VAN_LANG_U'><![CDATA[ 
+    MERGE INTO LANG_TABLE
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  TABLE_NM    = ${TABLE_NM}
+           AND  COL_NM      = ${COL_NM}
+           AND  LANGUAGE_TP = ${LANG_TP}
+           AND  PK_COL      = ${PK_COL}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (    
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANG_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )
+]]></query>
+
+
+
+</SQLResource>

@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='CUST_GP_SINGLE_Q'><![CDATA[
+    SELECT  M.CUST_GP_ID
+         ,  M.CUST_GP_NM
+      FROM  MARKETING_GP    M
+     WHERE  M.COMP_CD   = ${SCH_COMP_CD}
+       AND  (${SCH_CUST_GP_TXT} IS NULL OR (M.CUST_GP_ID LIKE '%'||${SCH_CUST_GP_TXT}||'%' OR M.CUST_GP_NM LIKE '%'||${SCH_CUST_GP_TXT}||'%'))
+       AND  M.USE_YN    = 'Y'
+]]></query>
+
+<query name='CUST_GP_LIST_Q'><![CDATA[
+    SELECT  M.COMP_CD
+         ,  M.CUST_GP_ID
+         ,  M.CUST_GP_NM
+         , (SELECT COUNT(CUST_ID) FROM MARKETING_GP_CUST C WHERE COMP_CD = ${SCH_COMP_CD} AND  C.CUST_GP_ID = M.CUST_GP_ID)   AS CUST_GP_CNT
+      FROM  MARKETING_GP    M
+     WHERE  M.COMP_CD   = ${SCH_COMP_CD}
+       AND  (${SCH_CUST_GP_TXT} IS NULL OR (M.CUST_GP_ID LIKE '%'||${SCH_CUST_GP_TXT}||'%' OR M.CUST_GP_NM LIKE '%'||${SCH_CUST_GP_TXT}||'%'))
+       AND  M.USE_YN    = 'Y'
+     ORDER  BY M.CUST_GP_ID DESC
+]]></query>
+
+</SQLResource>
+

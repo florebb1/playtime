@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='WORDPACK_Q'><![CDATA[
+    SELECT  A.MSG_CD                   AS KEY_WORD_CD
+         ,  REPLACE(REPLACE(A.MESSAGE,'\"','"'), '\''', '''') AS WORD_NM
+         ,  A.USE_YN                   AS USE_YN
+         ,  B.MESSAGE                  AS WORD_NM_FL
+         ,  NVL(B.USE_YN, 'Y' )        AS USE_YN_FL
+      FROM  WORDPACK_MSG A
+         ,  WORDPACK_MSG B
+     WHERE  A.MSG_CD        = B.MSG_CD(+)
+       AND  B.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+       AND  A.LANGUAGE_TP   = ${S_LANGUAGE}
+       AND  (${SCH_KEY_WORD_TXT}IS NULL OR (A.MSG_CD = ${SCH_KEY_WORD_TXT} OR A.MESSAGE LIKE '%'||${SCH_KEY_WORD_TXT}||'%' OR B.MESSAGE LIKE '%'||${SCH_KEY_WORD_TXT}||'%'))
+       AND  (${SCH_USE_YN}      IS NULL OR A.USE_YN = ${SCH_USE_YN})
+]]></query>
+
+<query name='KEY_WORD_CD_DUP_CHECK_Q'><![CDATA[
+    SELECT  MSG_CD AS KEY_WORD_CD 
+      FROM  WORDPACK_MSG
+     WHERE  MSG_CD  = ${SCH_KEY_WORD_CD}
+]]></query>
+
+<query name='WORDPACK_SEQ'><![CDATA[
+    SELECT  NVL(MAX(TO_NUMBER(MSG_CD)),0) + 1   AS MSG_CD
+      FROM  WORDPACK_MSG
+]]></query>
+
+<query name='WORDPACK_U'><![CDATA[
+    MERGE INTO WORDPACK_MSG
+    USING DUAL
+    ON (        MSG_CD      = ${KEY_WORD_CD}
+            AND LANGUAGE_TP = ${LANGUAGE_TP}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  MESSAGE     = REPLACE(REPLACE(${WORD_NM},'"','\"'), '''', '\''')
+             ,  UPD_DT      = SYSDATE
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (   
+                MSG_CD
+             ,  LANGUAGE_TP
+             ,  MESSAGE
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${KEY_WORD_CD}
+             ,  ${LANGUAGE_TP}
+             ,  REPLACE(REPLACE(${WORD_NM},'"','\"'), '''', '\''')
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )
+ ]]></query>
+
+</SQLResource>
+

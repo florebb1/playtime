@@ -1,0 +1,494 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+  
+   <!-- 점포 마스터  조회  -->
+   <query name='SEARCH_STORE'><![CDATA[
+      SELECT  STOR_CD         AS CODE_CD
+            , STOR_NM         AS CODE_NM 
+        FROM (   
+               SELECT  S.STOR_CD                   AS STOR_CD         
+                     , NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM  
+                 FROM STORE       S,
+                      ( SELECT  STOR_CD
+                              , STOR_NM
+                          FROM LANG_STORE
+                         WHERE BRAND_CD = ${BRAND_CD}
+                           AND LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                           AND USE_YN      = 'Y'   
+                      )          L
+                WHERE S.STOR_CD  = L.STOR_CD(+)     
+                  AND S.BRAND_CD = ${BRAND_CD}              
+                  AND S.USE_YN   = 'Y'
+             ) S
+       WHERE (   S.STOR_CD  LIKE ${CODE_CD} || '%'
+              OR S.STOR_NM  LIKE '%' || ${CODE_CD} || '%'   )   
+   ]]></query>
+   
+    <!-- 상품 마스터  조회  -->
+   <query name='SEARCH_ITEM'><![CDATA[
+   
+         SELECT   ITEM_CD        AS CODE_CD
+               ,  ITEM_NM        AS CODE_NM 
+               ,  SALE_PRC       AS VAL_N1
+               ,  L_CLASS_NM     AS VAL_N2
+               ,  M_CLASS_NM     AS VAL_N3
+               ,  S_CLASS_NM     AS VAL_N4
+           FROM   (                          
+                     SELECT   ILC.L_CLASS_NM
+                           ,  IMC.M_CLASS_NM
+                           ,  ISC.S_CLASS_NM 
+                           ,  I.ITEM_CD
+                           ,  NVL(LI.ITEM_NM, I.ITEM_NM) AS ITEM_NM    
+                           ,  I.SALE_PRC
+                       FROM   (SELECT  * 
+                                 FROM  ITEM_CHAIN
+                                WHERE  BRAND_CD = ${BRAND_CD} 
+                                  AND  STOR_TP  IN (SELECT  STOR_TP 
+                                                      FROM  STORE 
+                                                     WHERE  BRAND_CD  = ${BRAND_CD} 
+                                                       AND  STOR_CD   = ${STOR_CD}
+                                                       AND  USE_YN    = 'Y'
+                                                     GROUP BY STOR_TP
+                                                   )
+                              ) I                                                   
+                           ,  (
+                              SELECT  ITEM_CD   
+                                   ,  ITEM_NM   
+                                FROM  LANG_ITEM
+                               WHERE  LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                 AND  USE_YN      = 'Y'
+                              ) LI        
+                           ,  ( SELECT  L_CLASS_CD                                        AS L_CLASS_CD
+                                     ,  DECODE( L.LANG_NM, NULL, C.L_CLASS_NM, L.LANG_NM) AS L_CLASS_NM
+                                  FROM  ITEM_L_CLASS  C,
+                                        ( SELECT   PK_COL, LANG_NM
+                                            FROM   LANG_TABLE
+                                           WHERE   TABLE_NM    = 'ITEM_L_CLASS'
+                                             AND   LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                             AND   COL_NM      = 'L_CLASS_NM'
+                                             AND   USE_YN      = 'Y'
+                                        ) L
+                                 WHERE  C.ORG_CLASS_CD || C.L_CLASS_CD = L.PK_COL(+)                                    
+                              ) ILC
+                           ,  ( SELECT  L_CLASS_CD                                         AS L_CLASS_CD
+                                     ,  M_CLASS_CD                                         AS M_CLASS_CD
+                                     ,  DECODE( L.LANG_NM, NULL, C.M_CLASS_NM, L.LANG_NM)  AS M_CLASS_NM
+                                  FROM  ITEM_M_CLASS  C,
+                                        ( SELECT   PK_COL, LANG_NM
+                                            FROM   LANG_TABLE
+                                           WHERE   TABLE_NM    = 'ITEM_M_CLASS'
+                                             AND   LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                             AND   COL_NM      = 'M_CLASS_NM'
+                                             AND   USE_YN      = 'Y'
+                                        ) L
+                                 WHERE C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD = L.PK_COL(+)                               
+                              ) IMC
+                           ,  ( SELECT  L_CLASS_CD                                         AS L_CLASS_CD
+                                     ,  M_CLASS_CD                                         AS M_CLASS_CD
+                                     ,  S_CLASS_CD                                         AS S_CLASS_CD
+                                     ,  DECODE( L.LANG_NM, NULL, C.S_CLASS_NM, L.LANG_NM)  AS S_CLASS_NM
+                                  FROM  ITEM_S_CLASS  C,
+                                        ( SELECT   PK_COL, LANG_NM
+                                            FROM   LANG_TABLE
+                                           WHERE   TABLE_NM    = 'ITEM_S_CLASS'
+                                             AND   LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                             AND   COL_NM      = 'S_CLASS_NM'
+                                             AND   USE_YN      = 'Y'
+                                        ) L
+                                 WHERE C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD || C.S_CLASS_CD = L.PK_COL(+)                                   
+                              ) ISC                        
+                       WHERE  I.ITEM_CD      = LI.ITEM_CD(+)     
+                         AND  I.L_CLASS_CD   = ILC.L_CLASS_CD(+)
+                         AND  I.L_CLASS_CD   = IMC.L_CLASS_CD(+)
+                         AND  I.M_CLASS_CD   = IMC.M_CLASS_CD(+)
+                         AND  I.L_CLASS_CD   = ISC.L_CLASS_CD(+)  
+                         AND  I.M_CLASS_CD   = ISC.M_CLASS_CD(+)
+                         AND  I.S_CLASS_CD   = ISC.S_CLASS_CD(+)  
+                         AND  I.USE_YN       = 'Y' 
+                  )  I   
+       WHERE (   I.ITEM_CD  LIKE ${CODE_CD} || '%'
+              OR I.ITEM_NM  LIKE '%' || ${CODE_CD} || '%'   ) 
+       GROUP BY ITEM_CD, ITEM_NM, SALE_PRC, L_CLASS_NM, M_CLASS_NM, S_CLASS_NM
+       ORDER BY L_CLASS_NM, M_CLASS_NM, S_CLASS_NM, CODE_NM
+         
+   ]]></query>
+   
+   
+   <!-- 기업상품마스터  조회  -->
+   <query name='SEARCH_COMP_ITEM'><![CDATA[ 
+      SELECT  ITEM_CD                  AS CODE_CD
+            , ITEM_NM                  AS CODE_NM
+            , COST                     AS VAL_N1
+            , ${BRAND_CD}              AS BRAND_CD
+            , IN_UNIT                  AS VAL_N3
+            , IN_UNIT_QTY              AS VAL_N2
+            , COST_VAT_YN              AS VAL_C1
+            , COST_VAT_RULE            AS VAL_C2
+            , NVL(COST_VAT_RATE, 0)    AS VAL_N4  
+        FROM (   
+               SELECT  C.ITEM_CD                   AS ITEM_CD         
+                     , NVL(L.LANG_NM, C.ITEM_NM)   AS ITEM_NM   
+                     , C.COST                      AS COST
+                     , C.COST_VAT_YN               AS VAT_YN
+                     , C.COST_VAT_RULE             AS VAT_RULE
+                     , C.COST_VAT_RATE             AS VAT_RATE
+                     , C.IN_UNIT                   AS IN_UNIT
+                     , C.IN_UNIT_QTY               AS IN_UNIT_QTY
+                     , C.COST_VAT_YN               AS COST_VAT_YN
+                     , C.COST_VAT_RULE             AS COST_VAT_RULE
+                     , C.COST_VAT_RATE             AS COST_VAT_RATE  
+                 FROM COMPANY_ITEM C,
+                      ( SELECT  PK_COL
+                              , LANG_NM
+                          FROM LANG_TABLE
+                         WHERE TABLE_NM    = 'COMPANY_ITEM'
+                           AND LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                           AND USE_YN      = 'Y'   
+                      )            L
+                WHERE C.COMP_CD || C.ITEM_CD  = L.PK_COL(+)
+                  AND C.COMP_CD  = ${COMP_CD}
+                  AND C.USE_YN   = 'Y' 
+             ) I 
+       WHERE (   I.ITEM_CD  LIKE ${CODE_CD} || '%'
+              OR I.ITEM_NM  LIKE '%' || ${CODE_CD} || '%'   )   
+   ]]></query>
+   
+   <query name='SEARCH_COMP_ITEM_DETL'><![CDATA[
+      SELECT   ITEM_CD         AS CODE_CD
+            ,  ITEM_NM         AS CODE_NM
+            ,  STOCK_UNIT      AS VAL_N1
+            ,  COST            AS VAL_N2
+            ,  IN_UNIT         AS VAL_N3
+            ,  IN_UNIT_QTY     AS VAL_N4
+            ,  ${BRAND_CD}     AS BRAND_CD
+        FROM   (           
+               SELECT   CI.ITEM_CD
+                     ,  NVL(L.LANG_NM, CI.ITEM_NM) AS ITEM_NM
+                     ,  C1.CODE_NM STOCK_UNIT
+                     ,  NVL(CI.COST, 0) COST
+                     ,  C2.CODE_NM IN_UNIT
+                     ,  NVL(CI.IN_UNIT_QTY, 0) IN_UNIT_QTY
+                 FROM   COMPANY_ITEM CI
+                     ,  (
+                         SELECT  PK_COL
+                               , LANG_NM
+                           FROM  LANG_TABLE
+                          WHERE  TABLE_NM    = 'COMPANY_ITEM'
+                            AND  LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )     
+                            AND  USE_YN      = 'Y'  
+                        ) L 
+                     ,  (  
+                         SELECT  C.CODE_CD                         AS CODE_CD
+                              ,  NVL(L.CODE_NM, C.CODE_NM)         AS CODE_NM
+                           FROM  COMMON C,
+                                 ( 
+                                 SELECT  CODE_CD, CODE_NM
+                                   FROM  LANG_COMMON
+                                  WHERE  CODE_TP     = '00860'
+                                    AND  LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                    AND  USE_YN      = 'Y'
+                                 ) L -- 재고관리단위
+                          WHERE  C.CODE_TP   = '00860'
+                            AND  C.CODE_CD   = L.CODE_CD(+)
+                            AND  C.USE_YN    = 'Y'
+                        ) C1                       
+                     ,  (  
+                         SELECT  C.CODE_CD                         AS CODE_CD
+                              ,  NVL(L.CODE_NM, C.CODE_NM)         AS CODE_NM
+                           FROM  COMMON C,
+                                 ( 
+                                 SELECT  CODE_CD, CODE_NM
+                                   FROM  LANG_COMMON
+                                  WHERE  CODE_TP     = '00095'
+                                    AND  LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                    AND  USE_YN      = 'Y'
+                                 ) L
+                          WHERE  C.CODE_TP   = '00095'
+                            AND  C.CODE_CD   = L.CODE_CD(+)
+                            AND  C.USE_YN    = 'Y'
+                        ) C2     
+                WHERE   CI.COMP_CD                 = ${COMP_CD}
+                  AND   CI.COMP_CD || CI.ITEM_CD   = L.PK_COL(+)
+                  AND   TRIM(CI.STOCK_UNIT)        = C1.CODE_CD(+)
+                  AND   TRIM(CI.IN_UNIT)           = C2.CODE_CD(+) 
+                  AND   CI.RECIPE_DIV              IN ('2', '3')    
+                  AND   CI.USE_YN                  = 'Y'
+                  )I
+       WHERE (   I.ITEM_CD  LIKE ${CODE_CD} || '%'
+              OR I.ITEM_NM  LIKE '%' || ${CODE_CD} || '%'   )                
+       ORDER BY ITEM_CD
+         
+   ]]></query>
+   
+   
+   
+   <!-- 센터상품마스터  및 현재고 조회  -->
+   <query name='SEARCH_CENTER_ITEM'><![CDATA[
+      WITH ST AS
+                ( SELECT  ITEM_CD
+                        , END_QTY
+                    FROM CENTER_MSTOCK
+                   WHERE COMP_CD   = ${COMP_CD}
+                     AND PRC_YM    = SUBSTR(${PROC_DT}, 1, 6) 
+                     AND CENTER_CD = ${CENTER_CD}
+                )
+      SELECT  A.ITEM_CD                   AS CODE_CD
+            , A.ITEM_NM                   AS CODE_NM
+            , A.BRAND_CD                  AS BRAND_CD
+            , A.VAL_N3                    AS VAL_N3
+            , A.VAL_N2                    AS VAL_N2
+            , A.VAL_C1                    AS VAL_C1
+            , A.VAL_C2                    AS VAL_C2
+            , A.VAL_N4                    AS VAL_N4
+            , S.END_QTY                   AS VAL_N1
+        FROM ( SELECT  ITEM_CD                  AS ITEM_CD
+                     , ITEM_NM                  AS ITEM_NM
+                     , COST                     AS VAL_N1
+                     , ${BRAND_CD}              AS BRAND_CD
+                     , IN_UNIT                  AS VAL_N3
+                     , IN_UNIT_QTY              AS VAL_N2
+                     , COST_VAT_YN              AS VAL_C1
+                     , COST_VAT_RULE            AS VAL_C2
+                     , NVL(COST_VAT_RATE, 0)    AS VAL_N4  
+                 FROM (   
+                        SELECT  C.ITEM_CD                   AS ITEM_CD         
+                              , NVL(L.LANG_NM, C.ITEM_NM)   AS ITEM_NM   
+                              , C.COST                      AS COST
+                              , C.COST_VAT_YN               AS VAT_YN
+                              , C.COST_VAT_RULE             AS VAT_RULE
+                              , C.COST_VAT_RATE             AS VAT_RATE
+                              , C.IN_UNIT                   AS IN_UNIT
+                              , C.IN_UNIT_QTY               AS IN_UNIT_QTY
+                              , C.COST_VAT_YN               AS COST_VAT_YN
+                              , C.COST_VAT_RULE             AS COST_VAT_RULE
+                              , C.COST_VAT_RATE             AS COST_VAT_RATE  
+                          FROM COMPANY_ITEM C,
+                               ( SELECT  PK_COL
+                                       , LANG_NM
+                                   FROM LANG_TABLE
+                                  WHERE TABLE_NM    = 'COMPANY_ITEM'
+                                    AND LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                    AND USE_YN      = 'Y'   
+                               )            L
+                         WHERE C.COMP_CD || C.ITEM_CD  = L.PK_COL(+)
+                           AND C.COMP_CD  = ${COMP_CD}
+                           AND C.USE_YN   = 'Y' 
+                      ) I 
+                WHERE (   I.ITEM_CD  LIKE ${CODE_CD} || '%'
+                       OR I.ITEM_NM  LIKE '%' || ${CODE_CD} || '%'   )
+             )  A,
+             ST S
+       WHERE A.ITEM_CD = S.ITEM_CD(+)  
+   ]]></query>
+
+   <!-- 점포  조회  -->
+   <query name='SEARCH_STORE_Q'><![CDATA[
+      SELECT  STOR_CD         AS CODE_CD
+            , STOR_NM         AS CODE_NM 
+        FROM (   
+               SELECT  S.STOR_CD                   AS STOR_CD         
+                     , NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM    
+                 FROM STORE       S,
+                      ( SELECT  STOR_CD
+                              , STOR_NM
+                          FROM LANG_STORE
+                         WHERE LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                           AND USE_YN      = 'Y'   
+                      )          L
+                WHERE S.STOR_CD  = L.STOR_CD(+)     
+                  AND S.BRAND_CD = ${BRAND_CD}              
+                  AND S.USE_YN   = 'Y'
+             ) S
+       WHERE (   S.STOR_CD  LIKE ${CODE_CD} || '%'
+              OR S.STOR_NM  LIKE '%' || ${CODE_CD} || '%'   )   
+   ]]></query>  
+   
+   
+   <!-- 원재료 상품마스터  및 현재고 조회  material-->
+   <query name='SEARCH_MATERIAL_ITEM'><![CDATA[
+   WITH MS AS
+             ( SELECT  ITEM_CD
+                     , END_QTY
+                 FROM MSTOCK
+                WHERE PRC_YM    = SUBSTR(${PROC_DT}, 1, 6) 
+                  AND BRAND_CD  = ${BRAND_CD}
+                  AND STOR_CD   = ${STOR_CD}
+             ),
+        ST AS
+             ( SELECT STOR_TP 
+                 FROM STORE 
+                WHERE BRAND_CD = ${BRAND_CD} AND STOR_CD = ${STOR_CD} 
+             ),
+        CM AS
+            ( SELECT  C.CODE_TP                   AS CODE_TP
+                    , C.CODE_CD                   AS CODE_CD
+                    , NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                FROM COMMON C,
+                     ( SELECT CODE_TP, CODE_CD, CODE_NM
+                         FROM LANG_COMMON
+                        WHERE CODE_TP      = '00095'
+                          AND LANGUAGE_TP  = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                          AND USE_YN       = 'Y'
+                     )   L
+               WHERE C.CODE_TP  = L.CODE_TP(+)
+                 AND C.CODE_CD  = L.CODE_CD(+)
+                 AND C.CODE_TP  = '00095'
+                 AND C.USE_YN   = 'Y'
+            )     
+   SELECT  A.ITEM_CD                                                             AS CODE_CD
+         , A.ITEM_NM                                                             AS CODE_NM
+         , A.COST                                                                AS COST
+         , NVL(C.CODE_NM, A.ORD_UNIT)                                            AS ORD_UNIT
+         , A.ORD_UNIT_QTY                                                        AS ORD_UNIT_QTY
+         , TRUNC(S.END_QTY / A.ORD_UNIT_QTY)                                     AS ORD_INV_QTY
+         , A.ORD_UNIT_QTY - (TRUNC(S.END_QTY / A.ORD_UNIT_QTY) * A.ORD_UNIT_QTY) AS EA_INV_QTY
+         , NVL(S.END_QTY, 0)                                                     AS INVENTORY_QTY 
+     FROM ( SELECT  ITEM_CD                  AS ITEM_CD
+                  , ITEM_NM                  AS ITEM_NM
+                  , COST                     AS COST
+                  , ORD_UNIT                 AS ORD_UNIT
+                  , ORD_UNIT_QTY             AS ORD_UNIT_QTY
+                  , STOCK_UNIT               AS STOCK_UNIT 
+              FROM (   
+                     SELECT  C.ITEM_CD                                     AS ITEM_CD         
+                           , NVL(L.LANG_NM, C.ITEM_NM)                     AS ITEM_NM   
+                           , C.COST                                        AS COST
+                           , C.ORD_UNIT                                    AS ORD_UNIT
+                           , DECODE(C.ORD_UNIT_QTY, 0, 1, C.ORD_UNIT_QTY)  AS ORD_UNIT_QTY
+                           , C.STOCK_UNIT                                  AS STOCK_UNIT 
+                       FROM ( SELECT  C.ITEM_CD
+                                    , C.COST
+                                    , C.ORD_UNIT
+                                    , C.ORD_UNIT_QTY
+                                    , C.STOCK_UNIT
+                                    , C.STOR_TP
+                                    , C.BRAND_CD
+                                    , C.ITEM_NM
+                                FROM  ITEM_CHAIN  C
+                                    , STORE_PROD_ITEM M
+                               WHERE C.ITEM_CD        = M.ITEM_CD
+                                 AND M.MNG_DIV        = '2'
+                                 AND M.USE_YN         = 'Y'
+                                 AND M.BRAND_CD       = ${BRAND_CD}
+                                 AND M.STOR_CD        = ${STOR_CD}
+                                 AND C.BRAND_CD       = ${BRAND_CD}
+                                 AND C.STOR_TP        = (SELECT STOR_TP FROM ST )
+                                 AND C.USE_YN         = 'Y'
+                                 AND C.ITEM_CD NOT IN (
+                                                         SELECT   ITEM_CD
+                                                           FROM   SURV_STOCK_DT
+                                                          WHERE   SURV_DT  = ${PROC_DT}
+                                                            AND   BRAND_CD = ${BRAND_CD}
+                                                            AND   STOR_CD  = ${STOR_CD}
+                                                            AND   SURV_GRP = '02'
+                                                      )
+                            )             C,
+                            ( SELECT  PK_COL
+                                    , LANG_NM
+                                FROM LANG_TABLE
+                               WHERE TABLE_NM    = 'ITEM_CHAIN'
+                                 AND LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                 AND USE_YN      = 'Y'   
+                            )            L
+                      WHERE C.BRAND_CD || C.STOR_TP || C.ITEM_CD  = L.PK_COL(+)
+                   ) I
+             WHERE (   I.ITEM_CD  LIKE ${CODE_CD} || '%'
+                    OR I.ITEM_NM  LIKE '%' || ${CODE_CD} || '%'   )
+          )    A,
+          MS   S,
+          CM   C
+    WHERE A.ITEM_CD = S.ITEM_CD(+)
+    AND A.ORD_UNIT = C.CODE_CD(+)
+   ]]></query>
+   
+   
+   <!-- 재고실사 상품마스터 및 현재고 조회 -->
+   <query name='SEARCH_SURV_ITEM'><![CDATA[
+   WITH MS AS
+             ( SELECT  ITEM_CD
+                     , END_QTY
+                 FROM MSTOCK
+                WHERE PRC_YM    = SUBSTR(${PROC_DT}, 1, 6) 
+                  AND BRAND_CD  = ${BRAND_CD}
+                  AND STOR_CD   = ${STOR_CD}
+             ),
+        ST AS
+             ( SELECT STOR_TP 
+                 FROM STORE 
+                WHERE BRAND_CD = ${BRAND_CD} AND STOR_CD = ${STOR_CD} 
+             ),
+        CM AS
+            ( SELECT  C.CODE_TP                   AS CODE_TP
+                    , C.CODE_CD                   AS CODE_CD
+                    , NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                FROM COMMON C,
+                     ( SELECT CODE_TP, CODE_CD, CODE_NM
+                         FROM LANG_COMMON
+                        WHERE CODE_TP      = '00095'
+                          AND LANGUAGE_TP  = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                          AND USE_YN       = 'Y'
+                     )   L
+               WHERE C.CODE_TP  = L.CODE_TP(+)
+                 AND C.CODE_CD  = L.CODE_CD(+)
+                 AND C.CODE_TP  = '00095'
+                 AND C.USE_YN   = 'Y'
+            )     
+      SELECT  A.ITEM_CD                                                              AS CODE_CD
+            , A.ITEM_NM                                                              AS CODE_NM
+            , NVL(C.CODE_NM, A.ORD_UNIT)                                             AS VAL_C1
+            , A.ORD_UNIT_QTY                                                         AS VAL_N1
+            , TRUNC(S.END_QTY / A.ORD_UNIT_QTY)                                      AS VAL_N2
+            , A.ORD_UNIT_QTY - (TRUNC(S.END_QTY / A.ORD_UNIT_QTY) * A.ORD_UNIT_QTY)  AS VAL_N3
+            , S.END_QTY                                                              AS VAL_N4 
+        FROM ( SELECT  ITEM_CD                  AS ITEM_CD
+                     , ITEM_NM                  AS ITEM_NM
+                     , COST                     AS COST
+                     , ORD_UNIT                 AS ORD_UNIT
+                     , ORD_UNIT_QTY             AS ORD_UNIT_QTY
+                     , STOCK_UNIT               AS STOCK_UNIT 
+                 FROM (   
+                        SELECT  C.ITEM_CD                                    AS ITEM_CD         
+                              , NVL(L.LANG_NM, C.ITEM_NM)                    AS ITEM_NM   
+                              , C.COST                                       AS COST
+                              , C.ORD_UNIT                                   AS ORD_UNIT
+                              , DECODE(C.ORD_UNIT_QTY, 0, 1, C.ORD_UNIT_QTY) AS ORD_UNIT_QTY
+                              , C.STOCK_UNIT                                 AS STOCK_UNIT 
+                          FROM ( SELECT  C.ITEM_CD
+                                       , C.COST
+                                       , C.ORD_UNIT
+                                       , C.ORD_UNIT_QTY
+                                       , C.STOCK_UNIT
+                                       , C.STOR_TP
+                                       , C.BRAND_CD
+                                       , C.ITEM_NM
+                                   FROM  ITEM_CHAIN  C
+                                       , STORE_PROD_ITEM M
+                                  WHERE C.ITEM_CD        = M.ITEM_CD
+                                    AND M.BRAND_CD       = ${BRAND_CD}
+                                    AND M.STOR_CD        = ${STOR_CD}
+                                    AND M.MNG_DIV        = '2'
+                                    AND M.USE_YN         = 'Y'
+                                    AND C.BRAND_CD       = ${BRAND_CD}
+                                    AND C.STOR_TP        = (SELECT STOR_TP FROM ST )
+                                    AND C.USE_YN         = 'Y'
+                               )             C,
+                               ( SELECT  PK_COL
+                                       , LANG_NM
+                                   FROM LANG_TABLE
+                                  WHERE TABLE_NM    = 'ITEM_CHAIN'
+                                    AND LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                                    AND USE_YN      = 'Y'   
+                               )            L
+                         WHERE C.BRAND_CD || C.STOR_TP || C.ITEM_CD  = L.PK_COL(+)
+                      ) I
+                WHERE (   I.ITEM_CD  LIKE ${CODE_CD} || '%'
+                       OR I.ITEM_NM  LIKE '%' || ${CODE_CD} || '%'   )
+             )    A,
+             MS   S,
+             CM   C
+       WHERE A.ITEM_CD  = S.ITEM_CD(+)  
+         AND A.ORD_UNIT = C.CODE_CD(+)
+   ]]></query>   
+                            
+</SQLResource>
+

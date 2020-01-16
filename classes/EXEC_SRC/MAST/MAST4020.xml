@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- 공통코드 => 테이블관리 -->
+<query name='COMMON_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  NVL(L.CODE_NM, C.CODE_NM)       AS TABLE_NM
+         ,  C.VAL_C1                        AS TABLE_ID
+      FROM  COMMON      C
+         ,  (
+                SELECT  COMP_CD, CODE_TP, CODE_CD, CODE_NM
+                  FROM  LANG_COMMON
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  CODE_TP     = ${SCH_CODE_TP}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  C.COMP_CD   = L.COMP_CD(+)
+       AND  C.CODE_TP   = L.CODE_TP(+)
+       AND  C.CODE_CD   = L.CODE_CD(+)
+       AND  C.COMP_CD   = ${SCH_COMP_CD}
+       AND  C.CODE_TP   = ${SCH_CODE_TP}
+       AND  C.VAL_C2    = ${SCH_MST_MNG_DIV} 
+       AND  (${SCH_USE_YN} IS NULL OR C.USE_YN = ${SCH_USE_YN})
+     ORDER  BY C.VAL_C1
+]]></query>
+
+<!-- 신규마스터 항목 설정 조회 -->
+<query name='MASTER_MNG_Q'><![CDATA[   
+    SELECT  M.COMP_CD
+         ,  M.MST_MNG_DIV                        AS MST_MNG_DIV
+         ,  M.TABLE_ID                           AS TABLE_ID
+         ,  T.TABLE_NM                           AS TABLE_NM
+         ,  M.COLUMN_ID                          AS COLUMN_ID
+         ,  M.COLUMN_NM                          AS COLUMN_NM
+         ,  M.USE_YN                             AS USE_YN
+      FROM  MASTER_MNG      M
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.VAL_C1                    AS TABLE_ID
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS TABLE_NM
+                  FROM  COMMON      C
+                     ,  (
+                            SELECT  COMP_CD, CODE_TP, CODE_CD, CODE_NM
+                              FROM  LANG_COMMON
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  CODE_TP     = ${SCH_CODE_TP}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'   
+                        )   L
+                 WHERE  C.COMP_CD   = L.COMP_CD(+)
+                   AND  C.CODE_TP   = L.CODE_TP(+)
+                   AND  C.CODE_CD   = L.CODE_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = ${SCH_CODE_TP}
+                   AND  C.USE_YN    = 'Y'
+            )   T
+     WHERE  M.COMP_CD      = T.COMP_CD
+       AND  M.TABLE_ID     = T.TABLE_ID
+       AND  M.COMP_CD      = ${SCH_COMP_CD}
+       AND  M.MST_MNG_DIV  = ${SCH_MST_MNG_DIV} 
+       AND  M.TABLE_ID     = ${SCH_TABLE_ID} 
+       AND  (${SCH_USE_YN} IS NULL OR M.USE_YN = ${SCH_USE_YN})
+     ORDER  BY M.TABLE_ID, M.COLUMN_ID
+]]></query>
+
+<!-- 신규마스터항목설정 수정 -->
+<query name='MASTER_MNG_U'><![CDATA[
+    MERGE INTO MASTER_MNG
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+            AND MST_MNG_DIV     = ${MST_MNG_DIV}
+            AND TABLE_ID        = ${TABLE_ID}
+            AND COLUMN_ID       = ${COLUMN_ID}
+       ) 
+    WHEN MATCHED  THEN
+        UPDATE      
+           SET  COLUMN_NM       = ${COLUMN_NM}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  MST_MNG_DIV
+             ,  TABLE_ID
+             ,  COLUMN_ID
+             ,  COLUMN_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${MST_MNG_DIV}
+             ,  ${TABLE_ID}
+             ,  ${COLUMN_ID}
+             ,  ${COLUMN_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query> 
+
+</SQLResource>

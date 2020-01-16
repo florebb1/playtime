@@ -1,0 +1,539 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<properties>
+
+   <property>
+      <name>properties.name</name>
+      <value>properties.xml</value>
+   </property>
+   
+   <property>
+      <name>conn.pool.drive</name>
+      <value>oracle.jdbc.driver.OracleDriver</value>
+   </property>
+
+   <property>
+      <name>conn.pool.type</name>
+      <value>javax.sql.DataSource</value>
+   </property>
+   
+   <property>
+      <name>conn.pool.source</name>
+      <value>oracle.jdbc.pool.OracleDataSource</value>
+   </property>
+   
+   <!-- 플레이타임 CRM 개발 -->
+   <!--
+   <property>
+      <name>conn.pool.url</name>
+      <value>jdbc:oracle:thin:@168.126.28.47:1521:posdb</value>
+   </property>
+   
+    <property>
+      <name>conn.pool.id</name>
+      <value>ptime_crm</value>
+   </property>
+
+   <property>
+      <name>conn.pool.pw</name>
+      <value>ptime_crm</value>
+   </property>
+   -->
+   
+   <!-- 플레이타임 CRM 운영 -->
+   
+   <property>
+      <name>conn.pool.url</name>
+      <value>jdbc:oracle:thin:@211.233.6.241:1521:PTIMECRM</value>
+   </property>
+   
+    <property>
+      <name>conn.pool.id</name>
+      <value>ptime_crm</value>
+   </property>
+
+   <property>
+      <name>conn.pool.pw</name>
+      <value>ptime_crm2019</value>
+   </property>
+   
+   <!-- 플레이타임 POS개발 -->
+   <property>
+      <name>pos.conn.pool.url</name>
+      <value>jdbc:oracle:thin:@211.233.6.241:1521:PTIMECRM</value>
+   </property>
+   
+    <property>
+      <name>pos.conn.pool.id</name>
+      <value>ptime</value>
+   </property>
+
+   <property>
+      <name>pos.conn.pool.pw</name>
+      <value>ptime1234</value>
+   </property>
+   
+   <property>
+      <name>conn.pool.maxpool</name>
+      <value>2</value>
+   </property>
+
+   <property>
+      <name>conn.pool.validator</name>
+      <value>snaq.db.AutoCommitValidator</value>
+   </property>
+
+   <property>
+      <name>common.sql</name>
+      <value>COMM/COMM1000.xml</value>
+   </property>
+
+   <property>
+      <name>dbms.name</name>
+      <value></value>
+   </property>
+
+   <property>
+      <name>conn.pool.expiry</name>
+      <value>180000</value>
+   </property>
+
+   <property>
+      <name>conn.jndi.initial.context.factory</name>
+      <value>weblogic.jndi.WLInitialContextFactory</value>
+   </property>
+
+   <property>
+      <name>conn.jndi.datasource</name>
+      <value>jdbc/ptime</value>
+   </property>
+
+   <property>
+      <name>conn.jndi.provider.url</name>
+      <value></value>
+   </property>
+
+   <property>
+      <name>conn.jndi.name</name>
+      <value>crm_web</value>
+   </property>
+
+   <property>
+      <name>conn.jndi.name.weblogic</name>
+      <value></value>
+   </property>
+   
+   <property>
+      <name>conn.jndi.name.jeus</name>
+      <value>crm_web</value>
+   </property>
+   
+   <property>
+      <name>pos.conn.jndi.name.jeus</name>
+      <value>pos_web</value>
+   </property>
+   
+   <property>
+      <name>dbms.sqlfile.cache</name>
+      <value>false</value>
+   </property>
+
+   <property>
+      <name>conn.pool.init</name>
+      <value>2</value>
+   </property>
+
+   <property>
+      <name>conn.pool.timeout</name>
+      <value>2000</value>
+   </property>
+
+   <property>
+      <name>conn.pool.maxconn</name>
+      <value>5</value>
+   </property>
+
+   <property>
+      <name>conn.pool.maxactive</name>
+      <value>500</value>
+   </property>
+      <property>
+      <name>conn.pool.maxwait</name>
+      <value>3000</value>
+   </property>
+      <property>
+      <name>conn.pool.maxidle</name>
+      <value>100</value>
+   </property>
+
+      <property>
+      <name>conn.pool.name</name>
+      <value>POS</value>
+   </property>
+
+   <!-- ==========================================
+     -.
+    =============================================-->
+   <property>
+      <name>encoding.response</name>
+      <value>utf-8</value>
+   </property>
+
+
+   <property>
+        <name>encoding.request</name>
+        <value>utf-8</value>
+    </property>
+
+
+   <property>
+      <name>dbms.sqlfile.encoding</name>
+      <value/>
+   </property>
+
+   <property>
+      <name>dbms.logfile.encoding</name>
+      <value/>
+   </property>
+
+   <property>
+      <name>encoding.file.download</name>
+      <value/>
+   </property>
+
+   <property>
+      <name>encoding.file.save</name>
+      <value/>
+   </property>
+
+   <property>
+      <name>encoding.file.open</name>
+      <value/>
+   </property>
+
+
+   <!-- ==========================================
+    -. 각 URL 설정
+    =============================================-->
+   <property>
+      <name>login.url</name>
+      <value>/EXEC_CRM/FRME/FRME1000C0.jsp</value>
+   </property>
+
+   <property>
+      <name>logout.url</name>
+      <value>/EXEC_CRM/FRME/FRME1000C1.jsp</value>
+   </property>
+
+   <property>
+       <name>certify.url</name>
+       <value>/EXEC_CRM/FRME/FRME1000C0.jsp</value>
+   </property>
+
+   <property>
+      <name>admn.main.url</name>
+      <value>/EXEC_CRM/ADMN/ADMN1000M0.jsp</value>
+   </property>
+
+   <property>
+      <name>web.main.url</name>
+      <value>/EXEC_CRM/MAIN/MAIN4100M0.jsp</value>
+   </property>
+
+   <property>
+       <name>pos.main.url</name>
+       <value>/EXEC_CRM/MAIN/MAIN4200M0.jsp</value>
+   </property>
+
+   <property>
+       <name>main.url</name>
+       <value/>
+   </property>
+
+   <property>
+       <name>pda.main.url</name>
+       <value>/mobl.jsp</value>
+   </property>
+
+   <property>
+      <name>admin.id</name>
+      <value>admin</value>
+   </property>
+
+   <property>
+      <name>admin.pw</name>
+      <value>admin</value>
+   </property>
+
+   <property>
+      <name>csms.url</name>
+      <value></value>
+   </property>
+
+   <!-- ==========================================
+     -. LOG 환경설정
+    =============================================-->
+   <property>
+      <name>log.usr.write</name>
+      <value>true</value>
+   </property>
+
+   <property>
+        <name>log.sys.write</name>
+        <value>false</value>
+    </property>
+
+   <property>
+      <name>log.path</name>
+      <value>/../log/</value>
+   </property>
+   <property>
+      <name>log.type</name>
+      <value>DBF</value>
+   </property>
+
+     <property>
+      <name>log.jsp.write</name>
+      <value>true</value>
+   </property>
+
+    <property>
+        <name>log.sql.write</name>
+        <value>true</value>
+    </property>
+
+   <!-- ==========================================
+     -.  환경설정
+    =============================================-->
+   <property>
+       <name>item.image.size</name>
+       <value>10</value>
+   </property>
+
+   <!-- 상품 정보 이미지-->
+   <property>
+       <name>item.image.path</name>
+       <value>/files/item/</value>
+   </property>
+
+   <!-- 날씨 HTML ServerIP -->
+   <property>
+       <name>weather.html.server</name>
+       <value></value>
+   </property>
+
+   <!-- 날씨 HTML -->
+   <property>
+       <name>weather.html.path</name>
+       <value>files/weather/windows/</value>
+   </property>
+
+   <property>
+       <name>dbms.sqlfile.path</name>
+       <value>/EXEC_CRM/</value>
+   </property>
+
+   <property>
+       <name>web.root.path</name>
+       <value>/home/jeus/webapps/crm_web/</value>
+   </property>
+
+   <property>
+      <name>help.image.path</name>
+      <value>/files/help/</value>
+   </property>
+
+   <property>
+      <name>dbms.logfile.path</name>
+      <value>D:/</value>
+   </property>
+
+   <property>
+       <name>help.use</name>
+       <value>false</value>
+   </property>
+
+   <property>
+       <name>help.image.size</name>
+       <value>10</value>
+   </property>
+
+   <property>
+       <name>excel.file.path</name>
+       <value>files/doc/</value>
+   </property>
+   
+   <property>
+       <name>temp.file.path</name>
+       <value>files/temp/</value>
+   </property>
+   
+   <!-- 웹DB Export 경로 -->
+   <property>
+       <name>db.export.path</name>
+       <value>/files/export/</value>
+   </property>
+   
+   <!-- 쿠폰이미지 경로 -->
+   <property>
+       <name>coupon.file.path</name>
+       <value>files/coupon/</value>
+   </property>
+   
+   <!-- ==========================================
+     -. 파일업로드 관련 환경설정
+    =============================================-->
+   <property>
+       <name>sms.image.path</name>
+       <value>/files/sms/</value>
+   </property>
+   
+   <property>
+       <name>board.image.path</name>
+       <value>/files/board/images/</value>
+   </property>
+
+   <property>
+      <name>board.file.url</name>
+      <value>/files/board/images/</value>
+   </property>
+
+   <property>
+      <name>board.file.path</name>
+      <value>/files/board/files/</value>
+   </property>
+
+   <property>
+       <name>board.list.size</name>
+       <value>50</value>
+   </property>
+
+   <property>
+      <name>board.file.size</name>
+      <value>10</value>
+   </property>
+
+   <property>
+      <name>ma.image.path</name>
+      <value>/files/ma/</value>
+   </property>
+   
+   <property>
+      <name>interface.file.path</name>
+      <value>/files/interface/</value>
+   </property>
+   
+   <property>
+      <name>card.image.path</name>
+      <value>/files/card/</value>
+   </property>
+   
+   <property>
+       <name>coc.image.path</name>
+       <value>/files/coc/</value>
+   </property>
+   
+   <property>
+       <name>prmt.image.path</name>
+       <value>/files/prmt/</value>
+   </property>
+   
+   <property>
+       <name>as.file.path</name>
+       <value>/files/as/</value>
+   </property>
+   
+   <property>
+       <name>claim.file.path</name>
+       <value>/files/claim/</value>
+   </property>
+   
+   <!-- ==========================================
+     -. 공통 환경설정
+    =============================================-->
+   <property>
+      <name>content.title</name>
+      <value>EnZIN WEB POS System</value>
+   </property>
+
+   <property>
+      <name>content.type.html</name>
+      <value>text/html; charset=UTF-8</value>
+   </property>
+
+   <property>
+      <name>websocket.content.type</name>
+      <value>text/html; charset=UTF-8</value>
+   </property>
+
+   <property>
+      <name>conn.type</name>
+      <value>JEUS</value>
+   </property>
+
+   <property>
+      <name>app.type</name>
+      <value>WPOS</value>
+   </property>
+
+   <property>
+      <name>site.no</name>
+      <value>90</value>
+   </property>
+
+   <property>
+      <name>comp.cd</name>
+      <value>HQ</value>
+   </property>
+
+   <property>
+      <name>server.type</name>
+      <value>JEUS</value>
+   </property>
+
+
+   <property>
+      <name>language.country</name>
+      <value>kor</value>
+   </property>
+
+   <property>
+       <name>time.zone</name>
+       <value>SEOUL</value>
+   </property>
+
+
+   <!-- ==========================================
+     -. 공통 환경설정
+    =============================================-->
+
+   <property>
+      <name>format.currency.pos</name>
+      <value>.0</value>
+   </property>
+
+   <property>
+       <name>data.month.wpos</name>
+       <value>999</value>
+   </property>
+
+   <property>
+       <name>data.month.pos10</name>
+       <value>999</value>
+   </property>
+
+   <property>
+       <name>data.month.pos20</name>
+       <value>999</value>
+   </property>
+
+   <property>
+       <name>auth.manager</name>
+       <value>10</value>
+   </property>
+
+   <property>
+       <name>auth.store</name>
+       <value>90</value>
+   </property>
+
+</properties>

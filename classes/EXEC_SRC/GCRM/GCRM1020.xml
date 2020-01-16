@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='CS_MEMBERSHIP_SALE_U'><![CDATA[
+    UPDATE  CS_MEMBERSHIP_SALE
+       SET  REFUND_APPR_DT  = DECODE(${REFUND_APPR_YN}, 'Y', TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), 'N', NULL)
+         ,  REFUND_USER     = DECODE(${REFUND_APPR_YN}, 'Y', ${UPD_USER}, 'N', NULL)
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  PROGRAM_ID      = ${PROGRAM_ID}
+       AND  MBS_NO          = ${MBS_NO}
+       AND  CERT_NO         = ${CERT_NO}
+]]></query>
+
+</SQLResource>
+

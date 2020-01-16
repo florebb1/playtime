@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='PL_ACC_MST_Q'><![CDATA[
+    SELECT  '[ ' || ACC_CD || ' ]' || ' ' || ACC_NM       AS ACC_TXT
+         ,  COMP_CD
+         ,  ACC_CD
+         ,  ACC_LVL
+         ,  ACC_DIV
+         ,  ACC_SEQ
+         ,  USE_YN
+      FROM  (
+                SELECT  PAM.COMP_CD
+                     ,  PAM.ACC_CD
+                     ,  NVL(L.LANG_NM, PAM.ACC_NM)  AS ACC_NM
+                     ,  PAM.ACC_LVL
+                     ,  PAM.REF_ACC_CD
+                     ,  PAM.ACC_DIV
+                     ,  PAM.ACC_SEQ
+                     ,  PAM.USE_YN
+                  FROM  PL_ACC_MST  PAM
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'PL_ACC_MST'
+                               AND  COL_NM      = 'ACC_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.COMP_CD(+)= PAM.COMP_CD
+                   AND  L.PK_COL(+) = LPAD(PAM.ACC_CD, 10, ' ')
+                   AND  PAM.COMP_CD = ${SCH_COMP_CD}
+                   AND  PAM.ACC_DIV IN ('4', '5', '6')
+                   AND  (${SCH_USE_YN}   IS NULL OR PAM.USE_YN   = ${SCH_USE_YN})
+            )   A
+   CONNECT  BY    A.REF_ACC_CD  = PRIOR A.ACC_CD
+     START  WITH  A.REF_ACC_CD  = '0'
+     ORDER  SIBLINGS BY A.ACC_SEQ
+]]></query>
+
+<query name='PL_ACC_MST_CLS_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  ACC_CD
+         ,  ORG_CLASS_CD
+         ,  L_CLASS_CD
+         ,  M_CLASS_CD
+         ,  USE_YN
+      FROM  PL_ACC_MST_CLS
+     WHERE  COMP_CD = ${SCH_COMP_CD}
+       AND  ACC_CD  = ${SCH_ACC_CD}
+       AND  (${SCH_USE_YN} IS NULL OR USE_YN = ${SCH_USE_YN})
+]]></query>
+
+<query name='PL_ACC_MST_CLS_U'><![CDATA[
+    MERGE INTO PL_ACC_MST_CLS
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+            AND ACC_CD          = ${ACC_CD}
+            AND ORG_CLASS_CD    = ${ORG_CLASS_CD}
+            AND L_CLASS_CD      = ${L_CLASS_CD}
+            AND M_CLASS_CD      = ${M_CLASS_CD}
+      )
+    WHEN MATCHED THEN
+        UPDATE      
+           SET  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+            ,   ACC_CD
+            ,   ORG_CLASS_CD
+            ,   L_CLASS_CD
+            ,   M_CLASS_CD
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER
+            ,   UPD_DT
+            ,   UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+            ,   ${ACC_CD}
+            ,   ${ORG_CLASS_CD}
+            ,   ${L_CLASS_CD}
+            ,   ${M_CLASS_CD}
+            ,   ${USE_YN}
+            ,   SYSDATE 
+            ,   ${USER_ID} 
+            ,   SYSDATE 
+            ,   ${USER_ID}
+        )
+]]></query>
+
+</SQLResource>

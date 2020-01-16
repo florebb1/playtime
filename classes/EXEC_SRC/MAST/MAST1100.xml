@@ -1,0 +1,775 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='L_CONTINENT_Q'><![CDATA[
+    SELECT  LC.CONTINENT_CD
+         ,  LC.CONTINENT_NM
+         ,  L.LANG_NM
+         ,  LC.SORT_ORDER
+         ,  LC.USE_YN
+      FROM  L_CONTINENT     LC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_CONTINENT'
+                   AND  COL_NM      = 'CONTINENT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+)     = LPAD(LC.CONTINENT_CD, 2, ' ')
+       AND  (${SCH_CONTINENT_TXT} IS NULL OR (LC.CONTINENT_CD LIKE '%'||${SCH_CONTINENT_TXT}||'%' OR LC.CONTINENT_NM LIKE '%'||${SCH_CONTINENT_TXT}||'%'))
+       AND  (${SCH_USE_YN}   IS NULL OR LC.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LC.SORT_ORDER, LC.CONTINENT_CD
+]]></query>
+
+<query name='L_CONTINENT_DUP_Q'><![CDATA[
+    SELECT  DECODE(CONTINENT_CD, NULL, 'N', 'Y')    AS DUP_YN
+      FROM  L_CONTINENT
+     WHERE  CONTINENT_CD    = ${SCH_CONTINENT_CD}
+       AND  USE_YN          = 'Y'
+]]></query>
+
+<query name='L_CONTINENT_U'><![CDATA[ 
+    MERGE INTO L_CONTINENT
+    USING DUAL
+       ON (
+            CONTINENT_CD = ${CONTINENT_CD}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  CONTINENT_NM    = ${CONTINENT_NM}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                CONTINENT_CD
+            ,   CONTINENT_NM
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                (
+                    SELECT  NVL(MAX(TO_NUMBER(CONTINENT_CD)),0) + 1   AS CONTINENT_CD
+                      FROM  L_CONTINENT
+                     WHERE  USE_YN      = 'Y'
+                )
+            ,   ${CONTINENT_NM}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_CURRENCY_Q'><![CDATA[
+    SELECT  LC.CURRENCY_CD
+         ,  LC.CURRENCY_NM
+         ,  L1.LANG_NM
+         ,  LC.CURRENCY_FNM
+         ,  L2.LANG_NM          AS LANG_FNM
+         ,  LC.CURRENCY_NO
+         ,  LC.EXCHANGE_VAL
+         ,  LC.SORT_ORDER
+         ,  LC.USE_YN
+      FROM  L_CURRENCY      LC
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_CURRENCY'
+                   AND  COL_NM      = 'CURRENCY_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L1
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_CURRENCY'
+                   AND  COL_NM      = 'CURRENCY_FNM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L2
+     WHERE  L1.PK_COL(+)     = LPAD(LC.CURRENCY_CD, 3, ' ')
+       AND  L2.PK_COL(+)     = LPAD(LC.CURRENCY_CD, 3, ' ')
+       AND  (${SCH_CURRENCY_TXT} IS NULL OR (LC.CURRENCY_CD LIKE '%'||${SCH_CURRENCY_TXT}||'%' OR LC.CURRENCY_NM LIKE '%'||${SCH_CURRENCY_TXT}||'%'))
+       AND  (${SCH_USE_YN}   IS NULL OR LC.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LC.SORT_ORDER, LC.CURRENCY_CD
+]]></query>
+
+<query name='L_CURRENCY_DUP_Q'><![CDATA[
+    SELECT  DECODE(CURRENCY_CD, NULL, 'N', 'Y')     AS DUP_YN
+      FROM  L_CURRENCY
+     WHERE  CURRENCY_CD     = ${SCH_CURRENCY_CD}
+       AND  USE_YN          = 'Y'
+]]></query>
+
+<query name='L_CURRENCY_U'><![CDATA[ 
+    MERGE INTO L_CURRENCY
+    USING DUAL
+       ON (
+            CURRENCY_CD         = ${CURRENCY_CD}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  CURRENCY_NM     = ${CURRENCY_NM}
+             ,  CURRENCY_FNM    = ${CURRENCY_FNM}
+             ,  CURRENCY_NO     = ${CURRENCY_NO}
+             ,  EXCHANGE_VAL    = ${EXCHANGE_VAL}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                CURRENCY_CD
+            ,   CURRENCY_NM
+            ,   CURRENCY_FNM
+            ,   CURRENCY_NO
+            ,   EXCHANGE_VAL
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${CURRENCY_CD}
+            ,   ${CURRENCY_NM}
+            ,   ${CURRENCY_FNM}
+            ,   ${CURRENCY_NO}
+            ,   ${EXCHANGE_VAL}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_CURRENCY_UNIT_Q'><![CDATA[
+    SELECT  LCU.CURRENCY_CD
+         ,  LCU.UNIT_SEQ
+         ,  LCU.UNIT_NM
+         ,  L.LANG_NM
+         ,  LCU.UNIT_NO
+         ,  LCU.UNIT_VAL
+         ,  LCU.SORT_ORDER
+         ,  LCU.USE_YN
+      FROM  L_CURRENCY_UNIT LCU
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_CURRENCY_UNIT'
+                   AND  COL_NM      = 'UNIT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+)     = LPAD(LCU.CURRENCY_CD, 3, ' ')||LPAD(LCU.UNIT_SEQ, 2, ' ')
+       AND  LCU.CURRENCY_CD = ${SCH_CURRENCY_CD}
+       AND  (${SCH_USE_YN}  IS NULL OR LCU.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LCU.SORT_ORDER, LCU.UNIT_SEQ
+]]></query>
+
+<query name='UNIT_SEQ_Q'><![CDATA[
+    SELECT  NVL(MAX(TO_NUMBER(UNIT_SEQ)),0) + 1     AS UNIT_SEQ
+      FROM  L_CURRENCY_UNIT
+     WHERE  CURRENCY_CD = ${SCH_CURRENCY_CD}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='L_CURRENCY_UNIT_U'><![CDATA[ 
+    MERGE INTO L_CURRENCY_UNIT
+    USING DUAL
+       ON (
+                CURRENCY_CD     = ${CURRENCY_CD}
+            AND UNIT_SEQ        = ${UNIT_SEQ}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  UNIT_NM         = ${UNIT_NM}
+             ,  UNIT_NO         = ${UNIT_NO}
+             ,  UNIT_VAL        = ${UNIT_VAL}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                CURRENCY_CD
+            ,   UNIT_SEQ
+            ,   UNIT_NM
+            ,   UNIT_NO
+            ,   UNIT_VAL
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${CURRENCY_CD}
+            ,   ${UNIT_SEQ}
+            ,   ${UNIT_NM}
+            ,   ${UNIT_NO}
+            ,   ${UNIT_VAL}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_CURRENCY_TYPE_Q'><![CDATA[
+    SELECT  LCT.CURRENCY_CD
+         ,  LCT.UNIT_SEQ
+         ,  LCT.TYPE_DIV
+         ,  LCT.TYPE_SEQ
+         ,  LCT.TYPE_NM
+         ,  L.LANG_NM
+         ,  LCT.TYPE_VAL
+         ,  LCT.SORT_ORDER
+         ,  LCT.USE_YN
+      FROM  L_CURRENCY_TYPE LCT
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_CURRENCY_TYPE'
+                   AND  COL_NM      = 'TYPE_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+)     = LPAD(LCT.CURRENCY_CD, 3, ' ')||LPAD(LCT.UNIT_SEQ, 2, ' ')||LPAD(LCT.TYPE_DIV, 1, ' ')||LPAD(LCT.TYPE_SEQ, 2, ' ')
+       AND  LCT.CURRENCY_CD = ${SCH_CURRENCY_CD}
+       AND  LCT.UNIT_SEQ    = ${SCH_UNIT_SEQ}
+       AND  (${SCH_USE_YN}  IS NULL OR LCT.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LCT.SORT_ORDER, LCT.TYPE_DIV, LCT.TYPE_SEQ
+]]></query>
+
+<query name='TYPE_SEQ_Q'><![CDATA[
+    SELECT  NVL(MAX(TO_NUMBER(TYPE_SEQ)),0) + 1     AS TYPE_SEQ
+      FROM  L_CURRENCY_TYPE
+     WHERE  CURRENCY_CD = ${SCH_CURRENCY_CD}
+       AND  UNIT_SEQ    = ${SCH_UNIT_SEQ}
+       AND  TYPE_DIV    = ${SCH_TYPE_DIV}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='L_CURRENCY_TYPE_U'><![CDATA[ 
+    MERGE INTO L_CURRENCY_TYPE
+    USING DUAL
+       ON (
+                CURRENCY_CD     = ${CURRENCY_CD}
+            AND UNIT_SEQ        = ${UNIT_SEQ}
+            AND TYPE_DIV        = ${TYPE_DIV}
+            AND TYPE_SEQ        = ${TYPE_SEQ}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  TYPE_NM         = ${TYPE_NM}
+             ,  TYPE_VAL        = ${TYPE_VAL}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                CURRENCY_CD
+            ,   UNIT_SEQ
+            ,   TYPE_DIV
+            ,   TYPE_SEQ
+            ,   TYPE_NM
+            ,   TYPE_VAL
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${CURRENCY_CD}
+            ,   ${UNIT_SEQ}
+            ,   ${TYPE_DIV}
+            ,   ${TYPE_SEQ}
+            ,   ${TYPE_NM}
+            ,   ${TYPE_VAL}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_UTC_Q'><![CDATA[
+    SELECT  LU.UTC_CD
+         ,  LU.UTC_SIGN
+         ,  LU.UTC_VAL
+         ,  LU.SORT_ORDER
+         ,  LU.USE_YN
+      FROM  L_UTC       LU
+     WHERE  (${SCH_UTC_TXT} IS NULL OR LU.UTC_CD LIKE '%'||${SCH_UTC_TXT}||'%')
+       AND  (${SCH_USE_YN}  IS NULL OR LU.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LU.SORT_ORDER, LU.UTC_SIGN, LU.UTC_VAL
+]]></query>
+
+<query name='L_UTC_DUP_Q'><![CDATA[
+    SELECT  DECODE(UTC_CD, NULL, 'N', 'Y')    AS DUP_YN
+      FROM  L_UTC
+     WHERE  UTC_CD      = ${SCH_UTC_CD}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='L_UTC_U'><![CDATA[ 
+    MERGE INTO L_UTC
+    USING DUAL
+       ON (
+                UTC_CD          = ${UTC_CD}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  UTC_SIGN        = ${UTC_SIGN}
+             ,  UTC_VAL         = ${UTC_VAL}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                UTC_CD
+            ,   UTC_SIGN
+            ,   UTC_VAL
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${UTC_CD}
+            ,   ${UTC_SIGN}
+            ,   ${UTC_VAL}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_SMT_Q'><![CDATA[
+    SELECT  LS.SMT_NO
+         ,  LS.SMT_TM
+         ,  LS.SMT_FR_DT
+         ,  LS.SMT_TO_DT
+         ,  LS.SORT_ORDER
+         ,  LS.USE_YN
+      FROM  L_SMT       LS
+     WHERE  (${SCH_USE_YN}  IS NULL OR LS.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LS.SORT_ORDER, LS.SMT_FR_DT, LS.SMT_TO_DT, LS.SMT_TM
+]]></query>
+
+<query name='L_SMT_U'><![CDATA[ 
+    MERGE INTO L_SMT
+    USING DUAL
+       ON (
+                SMT_NO          = ${SMT_NO}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  SMT_FR_DT       = ${SMT_FR_DT}
+             ,  SMT_TO_DT       = ${SMT_TO_DT}
+             ,  SMT_TM          = ${SMT_TM}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                SMT_NO
+            ,   SMT_TM
+            ,   SMT_FR_DT
+            ,   SMT_TO_DT
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                (
+                    SELECT  NVL(MAX(TO_NUMBER(SMT_NO)),0) + 1   AS SMT_NO
+                      FROM  L_SMT
+                     WHERE  USE_YN      = 'Y'
+                )
+            ,   ${SMT_TM}
+            ,   ${SMT_FR_DT}
+            ,   ${SMT_TO_DT}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_LANGUAGE_Q'><![CDATA[
+    SELECT  LL.LANGUAGE_CD
+         ,  LL.LANGUAGE_NM
+         ,  L.LANG_NM
+         ,  LL.SORT_ORDER
+         ,  LL.USE_YN
+      FROM  L_LANGUAGE      LL
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_LANGUAGE'
+                   AND  COL_NM      = 'LANGUAGE_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+)     = LPAD(LL.LANGUAGE_CD, 3, ' ')
+       AND  (${SCH_LANGUAGE_TXT} IS NULL OR (LL.LANGUAGE_CD LIKE '%'||${SCH_LANGUAGE_TXT}||'%' OR LL.LANGUAGE_NM LIKE '%'||${SCH_LANGUAGE_TXT}||'%'))
+       AND  (${SCH_USE_YN}  IS NULL OR LL.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LL.SORT_ORDER, LL.LANGUAGE_CD
+]]></query>
+
+<query name='L_LANGUAGE_DUP_Q'><![CDATA[
+    SELECT  DECODE(LANGUAGE_CD, NULL, 'N', 'Y')    AS DUP_YN
+      FROM  L_LANGUAGE
+     WHERE  LANGUAGE_CD = ${SCH_LANGUAGE_CD}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='L_LANGUAGE_U'><![CDATA[ 
+    MERGE INTO L_LANGUAGE
+    USING DUAL
+       ON (
+                LANGUAGE_CD     = ${LANGUAGE_CD}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  LANGUAGE_NM     = ${LANGUAGE_NM}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                LANGUAGE_CD
+            ,   LANGUAGE_NM
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${LANGUAGE_CD}
+            ,   ${LANGUAGE_NM}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_NATION_Q'><![CDATA[
+    SELECT  LN.NATION_CD
+         ,  LN.NATION_NM
+         ,  L.LANG_NM
+         ,  LN.NATION_NO
+         ,  LN.CONTINENT_CD
+         ,  LN.CURRENCY_CD
+         ,  LN.UTC_CD
+         ,  LN.SMT_NO
+         ,  LN.SORT_ORDER
+         ,  LN.USE_YN
+      FROM  L_NATION    LN
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_NATION'
+                   AND  COL_NM      = 'NATION_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+)     = LPAD(LN.NATION_CD, 3, ' ')
+       AND  (${SCH_NATION_TXT} IS NULL OR (LN.NATION_CD LIKE '%'||${SCH_NATION_TXT}||'%' OR LN.NATION_NM LIKE '%'||${SCH_NATION_TXT}||'%'))
+       AND  (${SCH_USE_YN}  IS NULL OR LN.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LN.SORT_ORDER, LN.NATION_CD
+]]></query>
+
+<query name='L_NATION_DUP_Q'><![CDATA[
+    SELECT  DECODE(NATION_CD, NULL, 'N', 'Y')    AS DUP_YN
+      FROM  L_NATION
+     WHERE  NATION_CD   = ${SCH_NATION_CD}
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='L_NATION_U'><![CDATA[ 
+    MERGE INTO L_NATION
+    USING DUAL
+       ON (
+                NATION_CD       = ${NATION_CD}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  NATION_NM       = ${NATION_NM}
+             ,  NATION_NO       = ${NATION_NO}
+             ,  CONTINENT_CD    = ${CONTINENT_CD}
+             ,  CURRENCY_CD     = ${CURRENCY_CD}
+             ,  UTC_CD          = ${UTC_CD}
+             ,  SMT_NO          = ${SMT_NO}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                NATION_CD
+            ,   NATION_NM
+            ,   NATION_NO
+            ,   CONTINENT_CD
+            ,   CURRENCY_CD
+            ,   UTC_CD
+            ,   SMT_NO
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${NATION_CD}
+            ,   ${NATION_NM}
+            ,   ${NATION_NO}
+            ,   ${CONTINENT_CD}
+            ,   ${CURRENCY_CD}
+            ,   ${UTC_CD}
+            ,   ${SMT_NO}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_NATION_LANG_Q'><![CDATA[
+    SELECT  LNL.NATION_CD
+         ,  LNL.LANGUAGE_CD
+         ,  LNL.LANGUAGE_DIV
+         ,  LNL.SORT_ORDER
+         ,  LNL.USE_YN
+      FROM  L_NATION_LANG   LNL
+     WHERE  LNL.NATION_CD   = ${SCH_NATION_CD}
+       AND  (${SCH_USE_YN}  IS NULL OR LNL.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LNL.SORT_ORDER, LNL.LANGUAGE_DIV, LNL.LANGUAGE_CD
+]]></query>
+
+<query name='L_NATION_LANG_U'><![CDATA[ 
+    MERGE INTO L_NATION_LANG
+    USING DUAL
+       ON (
+                NATION_CD       = ${NATION_CD}
+            AND LANGUAGE_CD     = ${LANGUAGE_CD}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  LANGUAGE_DIV    = ${LANGUAGE_DIV}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                NATION_CD
+            ,   LANGUAGE_CD
+            ,   LANGUAGE_DIV
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${NATION_CD}
+            ,   ${LANGUAGE_CD}
+            ,   ${LANGUAGE_DIV}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='L_REGION_Q'><![CDATA[
+    SELECT  LR.NATION_CD
+         ,  LR.REGION_NO
+         ,  LR.REGION_NM
+         ,  L.LANG_NM
+         ,  LR.UTC_CD
+         ,  LR.SMT_NO
+         ,  LR.SORT_ORDER
+         ,  LR.USE_YN
+      FROM  L_REGION    LR
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = 'ZZZ'
+                   AND  TABLE_NM    = 'L_REGION'
+                   AND  COL_NM      = 'REGION_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.PK_COL(+)     = LPAD(LR.NATION_CD, 3, ' ')||LPAD(LR.REGION_NO, 3, ' ')
+       AND  LR.NATION_CD    = ${SCH_NATION_CD}
+       AND  (${SCH_USE_YN}  IS NULL OR LR.USE_YN = ${SCH_USE_YN})
+     ORDER  BY LR.SORT_ORDER, LR.REGION_NO
+]]></query>
+
+<query name='L_REGION_U'><![CDATA[ 
+    MERGE INTO L_REGION
+    USING DUAL
+       ON (
+                NATION_CD       = ${NATION_CD}
+            AND REGION_NO       = ${REGION_NO}
+          )
+     WHEN MATCHED THEN
+        UPDATE  
+           SET  REGION_NM       = ${REGION_NM}
+             ,  UTC_CD          = ${UTC_CD}
+             ,  SMT_NO          = ${SMT_NO}
+             ,  SORT_ORDER      = ${SORT_ORDER}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                NATION_CD
+            ,   REGION_NO
+            ,   REGION_NM
+            ,   UTC_CD
+            ,   SMT_NO
+            ,   SORT_ORDER
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER  
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${NATION_CD}
+            ,   (
+                    SELECT  NVL(MAX(TO_NUMBER(REGION_NO)),0) + 1   AS REGION_NO
+                      FROM  L_REGION
+                     WHERE  NATION_CD   = ${NATION_CD}
+                       AND  USE_YN      = 'Y'
+                )
+            ,   ${REGION_NM}
+            ,   ${UTC_CD}
+            ,   ${SMT_NO}
+            ,   ${SORT_ORDER}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+    )
+]]></query>
+
+<query name='LANG_TABLE_U'><![CDATA[
+    MERGE INTO LANG_TABLE
+    USING DUAL
+    ON (
+                COMP_CD     = 'ZZZ'
+           AND  TABLE_NM    = ${TABLE_NM}
+           AND  COL_NM      = ${COL_NM}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+           AND  PK_COL      = ${PK_COL}
+       )
+    WHEN MATCHED  THEN
+        UPDATE      
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER    
+        ) VALUES (
+                'ZZZ'
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER} 
+        )
+]]></query>
+
+</SQLResource>

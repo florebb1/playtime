@@ -1,0 +1,243 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!-- 회원 조회 -->
+<query name='CRM_Q'><![CDATA[ 
+    SELECT  CU.CUST_ID
+         ,  DECRYPT(CU.CUST_NM)                                                     AS CUST_NM
+         ,  FN_GET_FORMAT_HP_NO(DECRYPT(CU.MOBILE))                                 AS MOBILE
+         ,  CU.EMAIL
+         ,  CU.ADDR1 || ' ' || CU.ADDR2                                             AS ADDR
+         ,  C1.CODE_NM                                                              AS SEX_DIV
+         ,  C2.CODE_NM                                                              AS LUNAR_DIV_NM
+         ,  CU.BIRTH_DT
+         ,  CL.LVL_NM
+         ,  CU.SAV_MLG - CU.LOS_MLG                                                 AS SAV_MLG
+         ,  CU.SAV_PT - CU.USE_PT - CU.LOS_PT                                       AS SAV_PT
+         ,  CU.SAV_CASH - CU.USE_CASH                                               AS SAV_CASH
+         ,  C3.CODE_NM                                                              AS CUST_STAT_NM
+         ,  CU.JOIN_DT
+         ,  CU.SMS_RCV_YN
+         ,  CU.EMAIL_RCV_YN
+         ,  CU.USE_YN
+         ,  DECRYPT(CA.CARD_ID)                                                     AS REP_CARD_ID
+         ,  CA.ISSUE_STOR_CD
+         ,  CA.ISSUE_STOR_NM
+         ,  S.BUY_CNT
+         ,  S.BUY_AMT
+         ,  S.LATE_BUY_DT
+      FROM  C_CUST      CU
+         ,  (
+                SELECT  CL.COMP_CD
+                     ,  CL.LVL_CD
+                     ,  NVL(L.LANG_NM, CL.LVL_NM)   AS LVL_NM
+                  FROM  C_CUST_LVL  CL
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'C_CUST_LVL'
+                               AND  COL_NM      = 'LVL_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )           L
+                 WHERE  L.COMP_CD(+)    = CL.COMP_CD 
+                   AND  L.PK_COL(+)     = LPAD(CL.LVL_CD, 10, ' ')
+                   AND  CL.COMP_CD      = ${SCH_COMP_CD}
+                   AND  CL.USE_YN       = 'Y'
+            )           CL
+         ,  (
+                SELECT  CA.COMP_CD
+                     ,  CA.CARD_ID
+                     ,  CA.CUST_ID
+                     ,  CA.ISSUE_BRAND_CD
+                     ,  CA.ISSUE_STOR_CD
+                     ,  S.STOR_NM           AS ISSUE_STOR_NM
+                  FROM  C_CARD      CA
+                     ,  (
+                            SELECT  S.COMP_CD
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_CD
+                                 ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                              FROM  STORE       S
+                                 ,  LANG_STORE  L
+                             WHERE  S.COMP_CD       = L.COMP_CD(+)
+                               AND  S.BRAND_CD      = L.BRAND_CD(+)
+                               AND  S.STOR_CD       = L.STOR_CD(+)
+                               AND  S.COMP_CD       = ${SCH_COMP_CD}
+                               AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                               AND  L.USE_YN(+)     = 'Y'
+                        )           S
+                 WHERE  CA.COMP_CD          = S.COMP_CD(+)
+                   AND  CA.ISSUE_BRAND_CD   = S.BRAND_CD(+)
+                   AND  CA.ISSUE_STOR_CD    = S.STOR_CD(+)
+                   AND  CA.COMP_CD          = ${SCH_COMP_CD}
+                   AND  CA.REP_CARD_YN      = 'Y'
+                   AND  CA.USE_YN           = 'Y'
+                   AND  CA.CUST_ID  IS NOT NULL
+            )           CA
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON      C
+                     ,  LANG_COMMON L
+                 WHERE  C.COMP_CD       = L.COMP_CD(+)
+                   AND  C.CODE_TP       = L.CODE_TP(+)
+                   AND  C.CODE_CD       = L.CODE_CD(+)
+                   AND  C.COMP_CD       = ${SCH_COMP_CD}
+                   AND  C.CODE_TP       = '00315'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )           C1
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON      C
+                     ,  LANG_COMMON L
+                 WHERE  C.COMP_CD       = L.COMP_CD(+)
+                   AND  C.CODE_TP       = L.CODE_TP(+)
+                   AND  C.CODE_CD       = L.CODE_CD(+)
+                   AND  C.COMP_CD       = ${SCH_COMP_CD}
+                   AND  C.CODE_TP       = '01730'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )           C2
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CODE_CD
+                     ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                  FROM  COMMON      C
+                     ,  LANG_COMMON L
+                 WHERE  C.COMP_CD       = L.COMP_CD(+)
+                   AND  C.CODE_TP       = L.CODE_TP(+)
+                   AND  C.CODE_CD       = L.CODE_CD(+)
+                   AND  C.COMP_CD       = ${SCH_COMP_CD}
+                   AND  C.CODE_TP       = '01720'
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )           C3
+         ,  (
+                SELECT  CD.COMP_CD
+                     ,  CD.CUST_ID
+                     ,  SUM(CD.BILL_CNT)    AS BUY_CNT
+                     ,  SUM(CD.SALE_AMT)    AS BUY_AMT
+                     ,  MAX(CD.SALE_DT)     AS LATE_BUY_DT
+                  FROM  C_CUST_DSS  CD
+                 WHERE  CD.COMP_CD  = ${SCH_COMP_CD}
+                   AND  CD.SALE_DT >= NVL((
+                                            SELECT  JOIN_DT
+                                              FROM  C_CUST
+                                             WHERE  COMP_CD     = CD.COMP_CD
+                                               AND  CUST_ID     = CD.CUST_ID
+                                          ), TO_CHAR(SYSDATE, 'YYYYMMDD'))
+                   AND  ( ${SCH_BRAND_CD} IS NULL OR CD.BRAND_CD = ${SCH_BRAND_CD} )
+                   AND  ( ${SCH_CUST_ID}  IS NULL OR CD.CUST_ID  = ${SCH_CUST_ID}  )
+                 GROUP  BY CD.COMP_CD
+                     ,  CD.CUST_ID
+            )           S
+     WHERE  CU.COMP_CD      = CL.COMP_CD(+)
+       AND  CU.LVL_CD       = CL.LVL_CD(+)
+       AND  CU.COMP_CD      = CA.COMP_CD(+)
+       AND  CU.CUST_ID      = CA.CUST_ID(+)
+       AND  CU.COMP_CD      = C1.COMP_CD(+)
+       AND  CU.SEX_DIV      = C1.CODE_CD(+)
+       AND  CU.COMP_CD      = C2.COMP_CD(+)
+       AND  CU.LUNAR_DIV    = C2.CODE_CD(+)
+       AND  CU.COMP_CD      = C3.COMP_CD(+)
+       AND  CU.CUST_STAT    = C3.CODE_CD(+)
+       AND  CU.COMP_CD      = S.COMP_CD(+)
+       AND  CU.CUST_ID      = S.CUST_ID(+)
+       AND  CU.COMP_CD      =  ${SCH_COMP_CD}
+       AND  ( ${SCH_BRAND_CD}       IS NULL OR CU.BRAND_CD = ${SCH_BRAND_CD} )
+       AND  ( ${SCH_ISSUE_STOR_CD}  IS NULL OR CA.ISSUE_STOR_CD  = ${SCH_ISSUE_STOR_CD} )
+       AND  ( ${SCH_LVL_CD}         IS NULL OR CU.LVL_CD   = ${SCH_LVL_CD} )
+       AND  ( ${SCH_CUST_ID}        IS NULL OR CU.CUST_ID  = ${SCH_CUST_ID} )
+       AND  ( ${SCH_CUST_NM}        IS NULL OR DECRYPT(CU.CUST_NM) = ${SCH_CUST_NM} )
+       AND  ( ${SCH_CARD_ID}        IS NULL OR CU.CUST_ID IN (
+                                                                    SELECT  CUST_ID
+                                                                      FROM  C_CARD
+                                                                     WHERE  COMP_CD = ${SCH_COMP_CD}
+                                                                       AND  DECRYPT(CARD_ID) LIKE '%'||${SCH_CARD_ID}||'%'
+                                                             ))
+       AND  ( ${SCH_MOBILE}         IS NULL OR REPLACE(DECRYPT(CU.MOBILE), '-') LIKE '%'||REPLACE(${SCH_MOBILE}, '-', '')||'%' )
+       AND  ( ${SCH_SMS_RCV_YN}     IS NULL OR CU.SMS_RCV_YN = ${SCH_SMS_RCV_YN} )
+       AND  ( ${SCH_SEX_DIV}        IS NULL OR CU.SEX_DIV = ${SCH_SEX_DIV} )
+       AND  ( ${SCH_EMAIL}          IS NULL OR CU.EMAIL = ${SCH_EMAIL} )
+       AND  ( ${SCH_EMAIL_RCV_YN}   IS NULL OR CU.EMAIL_RCV_YN = ${SCH_EMAIL_RCV_YN} )
+       AND  ( ${SCH_JOIN_DT_FR}     IS NULL OR CU.JOIN_DT BETWEEN ${SCH_JOIN_DT_FR} AND ${SCH_JOIN_DT_TO} )
+       AND  ( ${SCH_BIRTH_DT_FR}    IS NULL OR SUBSTR(CU.BIRTH_DT, 5, 4) BETWEEN ${SCH_BIRTH_DT_FR} AND ${SCH_BIRTH_DT_TO} )
+       AND  ( ${SCH_AGE_GROUP}      IS NULL OR GET_AGE_GROUP(${SCH_COMP_CD}, GET_CHG_BIRTH_TO_AGE(${SCH_COMP_CD}, CU.CUST_ID)) = ${SCH_AGE_GROUP} )
+       AND  ( ${SCH_CUST_STAT}      IS NULL OR CU.CUST_STAT = ${SCH_CUST_STAT} )
+       AND  ( ${SCH_POINT_FR}       IS NULL OR (CU.SAV_PT - CU.USE_PT - CU.LOS_PT) BETWEEN REPLACE(${SCH_POINT_FR}, ',', '') AND REPLACE(${SCH_POINT_TO}, ',', '') )
+       AND  ( ${SCH_USE_YN}         IS NULL OR CU.USE_YN = ${SCH_USE_YN} )
+       AND  ( ${SCH_SALE_DT_FR}     IS NULL OR CU.CUST_ID IN (
+                                                                    SELECT  CUST_ID
+                                                                      FROM  C_CUST_DSS
+                                                                     WHERE  COMP_CD = ${SCH_COMP_CD}
+                                                                       AND  SALE_DT BETWEEN ${SCH_SALE_DT_FR} AND ${SCH_SALE_DT_TO}
+                                                             ))
+       AND  ( ${SCH_BILL_CNT_FR}    IS NULL OR S.BUY_CNT BETWEEN REPLACE(${SCH_BILL_CNT_FR}, ',', '') AND REPLACE(${SCH_BILL_CNT_TO}, ',', '') )
+       AND  ( ${SCH_ITEM_CD}        IS NULL OR CU.CUST_ID IN (
+                                                                    SELECT  CUST_ID
+                                                                      FROM  C_CUST_DMS
+                                                                     WHERE  COMP_CD = ${SCH_COMP_CD}
+                                                                       AND  ITEM_CD = ${SCH_ITEM_CD}
+                                                             ))
+       AND  ( ${SCH_SALE_AMT_FR}    IS NULL OR S.BUY_AMT BETWEEN REPLACE(${SCH_SALE_AMT_FR}, ',', '') AND REPLACE(${SCH_SALE_AMT_TO}, ',', '') )
+     ORDER  BY CU.CUST_ID
+]]></query>
+
+<query name='MEMBER_LIST_Q'><![CDATA[ 
+    SELECT  CUST_ID
+         ,  DECRYPT(CUST_NM)    AS CUST_NM
+      FROM  C_CUST 
+     WHERE  COMP_CD     =  ${SCH_COMP_CD}
+       AND  BRAND_CD    =  ${SCH_BRAND_CD}
+       AND  USE_YN      = 'Y'
+       AND  ( ${SCH_CUST_ID} IS NULL OR CUST_ID LIKE '%'||${SCH_CUST_ID}||'%' )
+       AND  ( ${SCH_CUST_NM} IS NULL OR DECRYPT(CUST_NM) LIKE '%'||${SCH_CUST_NM}||'%' )
+     ORDER  BY CUST_ID
+]]></query>
+
+<query name='ITEM_Q'><![CDATA[
+    SELECT  ITEM_CD
+         ,  ITEM_NM
+         ,  COST
+         ,  SALE_PRC
+      FROM  (
+                SELECT  I.ITEM_CD
+                     ,  NVL(LI.ITEM_NM, I.ITEM_NM)  AS ITEM_NM
+                     ,  I.COST
+                     ,  I.SALE_PRC
+                  FROM  ITEM  I
+                     ,  ITEM_CLASS  IC
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        ) LI
+                 WHERE  I.COMP_CD   = IC.COMP_CD(+)
+                   AND  I.ITEM_CD   = IC.ITEM_CD(+)
+                   AND  I.COMP_CD   = LI.COMP_CD(+)
+                   AND  I.ITEM_CD   = LI.ITEM_CD(+)
+                   AND  I.COMP_CD   = ${SCH_COMP_CD}
+                   AND  I.USE_YN    = 'Y'
+                   AND  I.ORD_SALE_DIV IN ('2','3')
+                   AND  IC.ORG_CLASS_CD = ${SCH_ORG_CLASS_CD}
+                   AND  (${SCH_L_CLASS_CD}  IS NULL OR NVL(IC.L_CLASS_CD, I.L_CLASS_CD) = ${SCH_L_CLASS_CD})
+                   AND  (${SCH_M_CLASS_CD}  IS NULL OR NVL(IC.M_CLASS_CD, I.M_CLASS_CD) = ${SCH_M_CLASS_CD})
+                   AND  (${SCH_S_CLASS_CD}  IS NULL OR NVL(IC.S_CLASS_CD, I.S_CLASS_CD) = ${SCH_S_CLASS_CD})
+            ) I
+     WHERE  ( ${SCH_ITEM_TXT} IS NULL OR (ITEM_NM LIKE '%' || ${SCH_ITEM_TXT} || '%' OR ITEM_CD LIKE '%' || ${SCH_ITEM_TXT} || '%') )
+     ORDER  BY ITEM_CD
+]]></query>
+ 
+</SQLResource>

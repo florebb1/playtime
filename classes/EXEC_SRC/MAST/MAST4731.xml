@@ -1,0 +1,463 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='GIFT_SALE_HD_Q'><![CDATA[
+    SELECT  GSH.COMP_CD
+         ,  GSH.SALE_DT
+         ,  GSH.SALE_SEQ
+         ,  GSH.SALE_TP
+         ,  GSH.BRAND_CD
+         ,  GSH.STOR_CD
+         ,  S.STOR_NM
+         ,  GSH.SALE_AMT
+         ,  GSH.DC_RATE
+         ,  GSH.DC_AMT
+         ,  GSH.GRD_AMT
+         ,  GSH.REMARK
+         ,  GSH.CUSTOMER
+         ,  GSH.CONFIRM_YN
+      FROM  GIFT_SALE_HD    GSH
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(LS.STOR_NM, S.STOR_NM)  AS STOR_NM
+                  FROM  STORE   S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   LS
+                 WHERE  S.COMP_CD   = LS.COMP_CD (+)
+                   AND  S.BRAND_CD  = LS.BRAND_CD(+)
+                   AND  S.STOR_CD   = LS.STOR_CD (+)
+                   AND  S.COMP_CD   = ${SCH_COMP_CD}
+            )   S
+     WHERE  GSH.COMP_CD     = S.COMP_CD   (+)
+       AND  GSH.BRAND_CD    = S.BRAND_CD  (+)
+       AND  GSH.STOR_CD     = S.STOR_CD   (+)
+       AND  GSH.COMP_CD     = ${SCH_COMP_CD}
+       AND  GSH.SALE_DT     BETWEEN ${SCH_GFR_DATE} AND ${SCH_GTO_DATE}
+       AND  (${SCH_SALE_TP}    IS NULL OR GSH.SALE_TP    = ${SCH_SALE_TP})
+       AND  (${SCH_CONFIRM_YN} IS NULL OR GSH.CONFIRM_YN = ${SCH_CONFIRM_YN})
+       AND  (${SCH_BRAND_CD}   IS NULL OR GSH.BRAND_CD   = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_CD}    IS NULL OR GSH.STOR_CD    = ${SCH_STOR_CD})
+       AND  (
+                (${SCH_USER_DIV} = 'H' AND GSH.SALE_TP IN ('11', '20')) 
+                OR
+                (${SCH_USER_DIV} = 'S' AND GSH.SALE_TP = '30')
+            )
+     ORDER  BY GSH.SALE_DT DESC, GSH.SALE_SEQ DESC
+]]></query>
+
+<query name='COMMON_Q'><![CDATA[
+    SELECT  ASC_DIV
+         ,  ASC_POSI
+      FROM  (
+                SELECT  VAL_C1 AS ASC_DIV
+                  FROM  COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '01200'
+                   AND  CODE_CD = '1'
+             ) AD
+         ,  (
+                SELECT  VAL_C1 AS ASC_POSI
+                  FROM  COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '01200'
+                   AND  CODE_CD = '2'
+             ) AP
+]]></query>
+
+<query name='GIFT_SALE_HD_U'><![CDATA[
+    MERGE INTO GIFT_SALE_HD
+    USING DUAL
+        ON 
+        (
+                COMP_CD     = ${COMP_CD}
+            AND SALE_DT     = ${SALE_DT}
+            AND SALE_SEQ    = ${SALE_SEQ}
+        )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  SALE_TP     = ${SALE_TP}
+             ,  BRAND_CD    = ${BRAND_CD}
+             ,  STOR_CD     = ${STOR_CD}
+             ,  SALE_AMT    = ${SALE_AMT}
+             ,  DC_RATE     = ${DC_RATE}
+             ,  DC_AMT      = ${DC_AMT}
+             ,  GRD_AMT     = ${GRD_AMT}
+             ,  REMARK      = ${REMARK}
+             ,  CUSTOMER    = ${CUSTOMER}
+             ,  CONFIRM_YN  = ${CONFIRM_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+            ,   SALE_DT
+            ,   SALE_SEQ
+            ,   SALE_TP
+            ,   BRAND_CD
+            ,   STOR_CD
+            ,   SALE_AMT
+            ,   DC_RATE
+            ,   DC_AMT
+            ,   GRD_AMT
+            ,   REMARK
+            ,   CUSTOMER
+            ,   CONFIRM_YN
+            ,   INST_DT
+            ,   INST_USER
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${COMP_CD}
+            ,   ${SALE_DT}
+            ,   (
+                    SELECT  NVL(MAX(TO_NUMBER(SALE_SEQ)), 0) + 1 AS SALE_SEQ
+                      FROM  GIFT_SALE_HD
+                     WHERE  COMP_CD     = ${COMP_CD}
+                       AND  SALE_DT     = ${SALE_DT}
+                )
+            ,   ${SALE_TP}
+            ,   ${BRAND_CD}
+            ,   ${STOR_CD}
+            ,   ${SALE_AMT}
+            ,   ${DC_RATE}
+            ,   ${DC_AMT}
+            ,   ${GRD_AMT}
+            ,   ${REMARK}
+            ,   ${CUSTOMER}
+            ,   ${CONFIRM_YN}
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+    )
+]]></query>
+
+<query name='GIFT_SALE_HD_D'><![CDATA[
+    DELETE  GIFT_SALE_HD
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  SALE_DT     = ${SALE_DT}
+       AND  SALE_SEQ    = ${SALE_SEQ}
+]]></query>
+
+<query name='GIFT_SALE_HD_C'><![CDATA[
+    UPDATE  GIFT_SALE_HD
+       SET  CONFIRM_YN  = ${CONFIRM_YN}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  SALE_DT     = ${SALE_DT}
+       AND  SALE_SEQ    = ${SALE_SEQ}
+]]></query>
+
+<query name='GIFT_MST_C'><![CDATA[
+    MERGE INTO  GIFT_MST    TT
+    USING ( 
+            SELECT  GSH.COMP_CD
+                 ,  GSD.GIFT_NO
+                 ,  GSH.SALE_TP                                     AS GIFT_STAT_CD
+                 ,  DECODE(GSH.SALE_TP, '11', GSH.SALE_DT, '')      AS HS_SALE_DT
+                 ,  DECODE(GSH.SALE_TP, '11', GSH.SALE_SEQ, '')     AS HS_SALE_SEQ
+                 ,  DECODE(GSH.SALE_TP, '20', GSH.SALE_DT, '')      AS HC_SALE_DT
+                 ,  DECODE(GSH.SALE_TP, '20', GSH.SALE_SEQ, '')     AS HC_SALE_SEQ
+                 ,  DECODE(GSH.SALE_TP, '30', GSH.SALE_DT, '')      AS SC_SALE_DT
+                 ,  DECODE(GSH.SALE_TP, '30', GSH.SALE_SEQ, '')     AS SC_SALE_SEQ
+                 ,  DECODE(GSH.SALE_TP, '11', GSH.BRAND_CD, '')     AS BRAND_CD
+                 ,  DECODE(GSH.SALE_TP, '11', GSH.STOR_CD, '')      AS STOR_CD
+              FROM  GIFT_SALE_HD    GSH
+                 ,  GIFT_SALE_DT    GSD
+             WHERE  GSH.COMP_CD     = GSD.COMP_CD
+               AND  GSH.SALE_DT     = GSD.SALE_DT
+               AND  GSH.SALE_SEQ    = GSD.SALE_SEQ
+               AND  GSH.COMP_CD     = ${COMP_CD}
+               AND  GSH.SALE_DT     = ${SALE_DT}
+               AND  GSH.SALE_SEQ    = ${SALE_SEQ}
+          ) ST
+       ON (
+                TT.COMP_CD      = ST.COMP_CD
+            AND TT.GIFT_NO      = ST.GIFT_NO
+          )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  TT.GIFT_STAT_CD = ST.GIFT_STAT_CD
+             ,  TT.HS_SALE_DT   = DECODE(ST.GIFT_STAT_CD, '11', ST.HS_SALE_DT, TT.HS_SALE_DT)
+             ,  TT.HS_SALE_SEQ  = DECODE(ST.GIFT_STAT_CD, '11', ST.HS_SALE_SEQ, TT.HS_SALE_SEQ)
+             ,  TT.HS_RTN_DT    = ''
+             ,  TT.HC_SALE_DT   = DECODE(ST.GIFT_STAT_CD, '20', ST.HC_SALE_DT, TT.HC_SALE_DT)
+             ,  TT.HC_SALE_SEQ  = DECODE(ST.GIFT_STAT_CD, '20', ST.HC_SALE_SEQ, TT.HC_SALE_SEQ)
+             ,  TT.HC_RTN_DT    = ''
+             ,  TT.SC_SALE_DT   = DECODE(ST.GIFT_STAT_CD, '30', ST.SC_SALE_DT, TT.SC_SALE_DT)
+             ,  TT.SC_SALE_SEQ  = DECODE(ST.GIFT_STAT_CD, '30', ST.SC_SALE_SEQ, TT.SC_SALE_SEQ)
+             ,  TT.SC_RTN_DT    = ''
+             ,  TT.BRAND_CD     = NVL(ST.BRAND_CD, TT.BRAND_CD)
+             ,  TT.STOR_CD      = NVL(ST.STOR_CD , TT.STOR_CD)
+             ,  TT.UPD_DT       = SYSDATE
+             ,  TT.UPD_USER     = ${USER_ID}
+]]></query>
+
+<query name='GIFT_SALE_DT_Q'><![CDATA[
+    SELECT  GSD.COMP_CD
+         ,  GSD.SALE_DT
+         ,  GSD.SALE_SEQ
+         ,  GSD.GIFT_NO
+         ,  GSD.GIFT_CD
+         ,  NVL(L.LANG_NM, GCM.GIFT_NM)     AS GIFT_NM
+         ,  GCM.PRICE
+      FROM  GIFT_SALE_DT    GSD
+         ,  GIFT_CODE_MST   GCM
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'GIFT_CODE_MST'
+                   AND  COL_NM      = 'GIFT_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  GSD.COMP_CD     = GCM.COMP_CD
+       AND  GSD.GIFT_CD     = GCM.GIFT_CD
+       AND  L.COMP_CD(+)    = GCM.COMP_CD
+       AND  L.PK_COL (+)    = LPAD(GCM.GIFT_CD, 2, ' ')
+       AND  GSD.COMP_CD     = ${SCH_COMP_CD}
+       AND  GSD.SALE_DT     = ${SCH_SALE_DT}
+       AND  GSD.SALE_SEQ    = ${SCH_SALE_SEQ}
+     ORDER  BY GSD.GIFT_NO
+]]></query>
+
+<query name='GIFT_SALE_DT_U'><![CDATA[
+    MERGE INTO GIFT_SALE_DT
+    USING DUAL
+        ON 
+        (
+                COMP_CD     = ${COMP_CD}
+            AND SALE_DT     = ${SALE_DT}
+            AND SALE_SEQ    = ${SALE_SEQ}
+            AND GIFT_NO     = ${GIFT_NO}
+        )
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+            ,   SALE_DT
+            ,   SALE_SEQ
+            ,   GIFT_NO
+            ,   GIFT_CD
+            ,   INST_DT
+            ,   INST_USER
+            ,   UPD_DT
+            ,   UPD_USER 
+        ) VALUES (    
+                ${COMP_CD}
+            ,   ${SALE_DT}
+            ,   ${SALE_SEQ}
+            ,   ${GIFT_NO}
+            ,   ${GIFT_CD}
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+    )
+]]></query>
+
+<query name='GIFT_SALE_DT_D'><![CDATA[
+    DELETE  GIFT_SALE_DT
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  SALE_DT     = ${SALE_DT}
+       AND  SALE_SEQ    = ${SALE_SEQ}
+       AND  (${GIFT_NO} IS NULL OR GIFT_NO = ${GIFT_NO})
+]]></query>
+
+<query name='GIFT_SALE_ST_Q'><![CDATA[
+    SELECT  GSS.COMP_CD
+         ,  GSS.SALE_DT
+         ,  GSS.SALE_SEQ
+         ,  GSS.SEQ
+         ,  GSS.PAY_DIV
+         ,  GSS.PAY_AMT
+         ,  GSS.APPR_MAEIP_CD
+         ,  NVL(C.CARD_NM, GSS.APPR_MAEIP_NM)   AS APPR_MAEIP_NM
+         ,  GSS.CARD_NO
+         ,  GSS.ALLOT_LMT
+         ,  GSS.REMARK
+      FROM  GIFT_SALE_ST    GSS
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.CARD_CD
+                     ,  NVL(L.LANG_NM, C.CARD_NM)   AS CARD_NM
+                  FROM  CARD    C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'CARD'
+                               AND  COL_NM      = 'CARD_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )       L
+                 WHERE  L.COMP_CD(+)    = C.COMP_CD
+                   AND  L.PK_COL (+)    = C.BRAND_CD||C.CARD_DIV||C.CARD_CD
+                   AND  C.COMP_CD       = ${SCH_COMP_CD}
+            )       C
+     WHERE  GSS.COMP_CD         = C.COMP_CD(+)
+       AND  GSS.APPR_MAEIP_CD   = C.CARD_CD(+)
+       AND  GSS.COMP_CD     = ${SCH_COMP_CD}
+       AND  GSS.SALE_DT     = ${SCH_SALE_DT}
+       AND  GSS.SALE_SEQ    = ${SCH_SALE_SEQ}
+     ORDER  BY GSS.SEQ
+]]></query>
+
+<query name='GIFT_SALE_ST_U'><![CDATA[
+    MERGE INTO GIFT_SALE_ST
+    USING DUAL
+        ON 
+        (
+                COMP_CD         = ${COMP_CD}
+            AND SALE_DT         = ${SALE_DT}
+            AND SALE_SEQ        = ${SALE_SEQ}
+            AND SEQ             = ${SEQ}
+        )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  PAY_DIV         = ${PAY_DIV}
+             ,  PAY_AMT         = ${PAY_AMT}
+             ,  APPR_MAEIP_CD   = ${APPR_MAEIP_CD}
+             ,  APPR_MAEIP_NM   = ${APPR_MAEIP_NM}
+             ,  CARD_NO         = CASE WHEN ${CARD_NO} IS NOT NULL THEN SUBSTR(REPLACE(${CARD_NO}, '-', ''), 1, 4) ||'-'||
+                                                                        SUBSTR(REPLACE(${CARD_NO}, '-', ''), 5, 4) ||'-'||
+                                                                        '****'                                     ||'-'||
+                                                                        SUBSTR(REPLACE(${CARD_NO}, '-', ''), 13, 4)
+                                       ELSE NULL
+                                  END
+             ,  ALLOT_LMT       = ${ALLOT_LMT}
+             ,  REMARK          = ${REMARK}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+            ,   SALE_DT
+            ,   SALE_SEQ
+            ,   SEQ
+            ,   PAY_DIV
+            ,   PAY_AMT
+            ,   APPR_MAEIP_CD
+            ,   APPR_MAEIP_NM
+            ,   CARD_NO
+            ,   ALLOT_LMT
+            ,   REMARK
+            ,   INST_DT
+            ,   INST_USER
+            ,   UPD_DT
+            ,   UPD_USER
+        ) VALUES (    
+                ${COMP_CD}
+            ,   ${SALE_DT}
+            ,   ${SALE_SEQ}
+            ,   (
+                    SELECT  NVL(MAX(TO_NUMBER(SEQ)), 0) + 1 AS SEQ
+                      FROM  GIFT_SALE_ST
+                     WHERE  COMP_CD     = ${COMP_CD}
+                       AND  SALE_DT     = ${SALE_DT}
+                       AND  SALE_SEQ    = ${SALE_SEQ}
+                )
+            ,   ${PAY_DIV}
+            ,   ${PAY_AMT}
+            ,   ${APPR_MAEIP_CD}
+            ,   ${APPR_MAEIP_NM}
+            ,   CASE WHEN ${CARD_NO} IS NOT NULL THEN SUBSTR(REPLACE(${CARD_NO}, '-', ''), 1, 4) ||'-'||
+                                                      SUBSTR(REPLACE(${CARD_NO}, '-', ''), 5, 4) ||'-'||
+                                                      '****'                                     ||'-'||
+                                                      SUBSTR(REPLACE(${CARD_NO}, '-', ''), 13, 4)
+                     ELSE NULL
+                END
+            ,   ${ALLOT_LMT}
+            ,   ${REMARK}
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+    )
+]]></query>
+
+<query name='GIFT_SALE_ST_D'><![CDATA[
+    DELETE  GIFT_SALE_ST
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  SALE_DT     = ${SALE_DT}
+       AND  SALE_SEQ    = ${SALE_SEQ}
+       AND  (${SEQ} IS NULL OR SEQ = ${SEQ})
+]]></query>
+
+<query name='GIFT_INFO_Q'><![CDATA[
+    SELECT  GM.COMP_CD
+         ,  GM.GIFT_CD
+         ,  GM.GIFT_NO
+         ,  GM.PRICE
+         ,  GM.GIFT_STAT_CD
+      FROM  GIFT_MST    GM
+     WHERE  GM.COMP_CD      = ${SCH_COMP_CD}
+       AND  GM.GIFT_CD      = ${SCH_GIFT_CD}
+       AND  (${SCH_GIFT_NO} IS NULL OR GM.GIFT_NO LIKE ${SCH_GIFT_NO}||'%')
+       AND  (
+                (
+                    (${SCH_SALE_TP} = '11' OR ${SCH_SALE_TP} = '20')
+                    AND
+                    GM.GIFT_STAT_CD IN ('10', '12', '21')
+                    AND
+                    GM.STOCK_DIV = '1'
+                )
+                OR
+                (
+                    ${SCH_SALE_TP} = '30'
+                    AND
+                    GM.GIFT_STAT_CD IN ('11', '31')
+                    AND
+                    GM.STOCK_DIV = '2'
+                    AND
+                    GM.BRAND_CD = ${SCH_BRAND_CD}
+                    AND
+                    GM.STOR_CD  = ${SCH_STOR_CD}
+                )
+            )
+     ORDER  BY GM.GIFT_NO
+]]></query>
+
+<query name='CARD_INFO_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  C.CARD_DIV
+         ,  C.CARD_CD
+         ,  NVL(L.LANG_NM, C.CARD_NM)   AS CARD_NM
+      FROM  CARD    C
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'CARD'
+                   AND  COL_NM      = 'CARD_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )       L
+     WHERE  L.COMP_CD(+)    = C.COMP_CD
+       AND  L.PK_COL (+)    = C.BRAND_CD||C.CARD_DIV||C.CARD_CD
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.USE_YN        = 'Y'
+       AND  (${SCH_CARD_DIV} IS NULL OR C.CARD_DIV = ${SCH_CARD_DIV})
+     ORDER  BY C.CARD_DIV, C.CARD_CD
+]]></query>
+
+</SQLResource>

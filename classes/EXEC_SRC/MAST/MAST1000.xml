@@ -1,0 +1,172 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='ITEM_SET_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  C.CODE_CD                           AS ITEM_DIV
+         ,  I.L_CLASS_CD
+         ,  I.M_CLASS_CD
+         ,  I.S_CLASS_CD
+         ,  NVL(I.ORD_SALE_DIV      , 2)        AS ORD_SALE_DIV
+         ,  NVL(I.SET_DIV           , 0)        AS SET_DIV
+         ,  NVL(I.STOCK_DIV         , 'A')      AS STOCK_DIV
+         ,  NVL(I.RECIPE_DIV        , '1')      AS RECIPE_DIV
+         ,  NVL(I.EXT_YN            , 'N')      AS EXT_YN
+         ,  NVL(I.AUTO_POPUP_YN     , 'N')      AS AUTO_POPUP_YN
+         ,  NVL(I.SALE_PRC_CTRL     , 'H')      AS SALE_PRC_CTRL
+         ,  NVL(I.SALE_UNIT         , 'EA')     AS SALE_UNIT
+         ,  NVL(I.SALE_VAT_YN       , 'Y')      AS SALE_VAT_YN
+         ,  NVL(I.SALE_VAT_RULE     , '1')      AS SALE_VAT_RULE
+         ,  NVL(I.SALE_VAT_IN_RATE  , 0.1)*100  AS SALE_VAT_IN_RATE
+         ,  NVL(I.SALE_VAT_OUT_RATE , 0.1)*100  AS SALE_VAT_OUT_RATE
+         ,  NVL(I.POINT_YN          , 'Y')      AS POINT_YN
+         ,  NVL(I.SAV_MLG_YN        , 'Y')      AS SAV_MLG_YN
+         ,  NVL(I.DC_YN             , 'N')      AS DC_YN
+         ,  NVL(I.OPEN_ITEM_YN      , 'N')      AS OPEN_ITEM_YN
+         ,  NVL(I.ORD_MNG_DIV       , '0')      AS ORD_MNG_DIV
+         ,  NVL(I.ORD_UNIT          , 'EA')     AS ORD_UNIT
+         ,  NVL(I.COST_VAT_YN       , 'Y')      AS COST_VAT_YN
+         ,  NVL(I.COST_VAT_RULE     , '1')      AS COST_VAT_RULE
+         ,  NVL(I.COST_VAT_RATE     , 0.1)*100  AS COST_VAT_RATE
+         ,  NVL(I.RJT_YN            , 'Y')      AS RJT_YN
+         ,  I.VENDOR_CD
+         ,  V.STOR_NM                           AS VENDOR_NM
+         ,  NVL(I.LEAD_TIME         , '0')      AS LEAD_TIME
+         ,  NVL(I.STOCK_UNIT        , 'EA')     AS STOCK_UNIT
+         ,  NVL(I.DO_UNIT           , 'EA')     AS DO_UNIT
+         ,  NVL(I.USE_YN            , 'N')      AS USE_YN
+      FROM  COMMON      C
+         ,  ITEM_SET    I
+         ,  STORE       V
+     WHERE  C.COMP_CD   = I.COMP_CD(+)
+       AND  C.CODE_CD   = I.ITEM_DIV(+)
+       AND  I.COMP_CD   = V.COMP_CD(+)
+       AND  I.VENDOR_CD = V.STOR_CD(+)
+       AND  C.COMP_CD   = ${SCH_COMP_CD}
+       AND  C.CODE_TP   = '00005'
+       AND  C.USE_YN    = 'Y'
+       AND  (${SCH_ITEM_DIV} IS NULL OR C.CODE_CD = ${SCH_ITEM_DIV})
+     ORDER  BY C.SORT_SEQ, C.CODE_CD
+]]></query>
+
+<query name='ITEM_SET_U'><![CDATA[
+    MERGE   INTO ITEM_SET
+    USING   DUAL
+    ON  (
+                COMP_CD             = ${COMP_CD}
+            AND ITEM_DIV            = ${ITEM_DIV}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  L_CLASS_CD          = ${L_CLASS_CD}
+             ,  M_CLASS_CD          = ${M_CLASS_CD}
+             ,  S_CLASS_CD          = ${S_CLASS_CD}
+             ,  ORD_SALE_DIV        = ${ORD_SALE_DIV} 
+             ,  SET_DIV             = ${SET_DIV}
+             ,  STOCK_DIV           = ${STOCK_DIV}
+             ,  RECIPE_DIV          = ${RECIPE_DIV}
+             ,  EXT_YN              = ${EXT_YN}
+             ,  AUTO_POPUP_YN       = ${AUTO_POPUP_YN}
+             ,  SALE_PRC_CTRL       = ${SALE_PRC_CTRL}
+             ,  SALE_UNIT           = ${SALE_UNIT}
+             ,  SALE_VAT_YN         = ${SALE_VAT_YN}
+             ,  SALE_VAT_RULE       = ${SALE_VAT_RULE}
+             ,  SALE_VAT_IN_RATE    = ${SALE_VAT_IN_RATE}/100
+             ,  SALE_VAT_OUT_RATE   = ${SALE_VAT_OUT_RATE}/100
+             ,  POINT_YN            = ${POINT_YN}
+             ,  SAV_MLG_YN          = ${SAV_MLG_YN}
+             ,  DC_YN               = ${DC_YN}
+             ,  OPEN_ITEM_YN        = ${OPEN_ITEM_YN}
+             ,  ORD_MNG_DIV         = ${ORD_MNG_DIV}
+             ,  ORD_UNIT            = ${ORD_UNIT}
+             ,  COST_VAT_YN         = ${COST_VAT_YN}
+             ,  COST_VAT_RULE       = ${COST_VAT_RULE}
+             ,  COST_VAT_RATE       = ${COST_VAT_RATE}/100
+             ,  RJT_YN              = ${RJT_YN}
+             ,  VENDOR_CD           = ${VENDOR_CD}
+             ,  LEAD_TIME           = ${LEAD_TIME}
+             ,  STOCK_UNIT          = ${STOCK_UNIT}
+             ,  DO_UNIT             = ${DO_UNIT}
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${USER_ID}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+            ,   ITEM_DIV
+            ,   L_CLASS_CD
+            ,   M_CLASS_CD
+            ,   S_CLASS_CD
+            ,   ORD_SALE_DIV
+            ,   SET_DIV
+            ,   STOCK_DIV
+            ,   RECIPE_DIV
+            ,   EXT_YN
+            ,   AUTO_POPUP_YN
+            ,   SALE_PRC_CTRL
+            ,   SALE_UNIT
+            ,   SALE_VAT_YN
+            ,   SALE_VAT_RULE
+            ,   SALE_VAT_IN_RATE
+            ,   SALE_VAT_OUT_RATE
+            ,   POINT_YN
+            ,   SAV_MLG_YN
+            ,   DC_YN
+            ,   OPEN_ITEM_YN
+            ,   ORD_MNG_DIV
+            ,   ORD_UNIT
+            ,   COST_VAT_YN
+            ,   COST_VAT_RULE
+            ,   COST_VAT_RATE
+            ,   RJT_YN
+            ,   VENDOR_CD
+            ,   LEAD_TIME
+            ,   STOCK_UNIT
+            ,   DO_UNIT
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER
+            ,   UPD_DT
+            ,   UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+            ,   ${ITEM_DIV}
+            ,   ${L_CLASS_CD}
+            ,   ${M_CLASS_CD}
+            ,   ${S_CLASS_CD}
+            ,   ${ORD_SALE_DIV}
+            ,   ${SET_DIV}
+            ,   ${STOCK_DIV}
+            ,   ${RECIPE_DIV}
+            ,   ${EXT_YN}
+            ,   ${AUTO_POPUP_YN}
+            ,   ${SALE_PRC_CTRL}
+            ,   ${SALE_UNIT}
+            ,   ${SALE_VAT_YN}
+            ,   ${SALE_VAT_RULE}
+            ,   ${SALE_VAT_IN_RATE}/100
+            ,   ${SALE_VAT_OUT_RATE}/100
+            ,   ${POINT_YN}
+            ,   ${SAV_MLG_YN}
+            ,   ${DC_YN}
+            ,   ${OPEN_ITEM_YN}
+            ,   ${ORD_MNG_DIV}
+            ,   ${ORD_UNIT}
+            ,   ${COST_VAT_YN}
+            ,   ${COST_VAT_RULE}
+            ,   ${COST_VAT_RATE}/100
+            ,   ${RJT_YN}
+            ,   ${VENDOR_CD}
+            ,   ${LEAD_TIME}
+            ,   ${STOCK_UNIT}
+            ,   ${DO_UNIT}
+            ,   ${USE_YN}
+            ,   SYSDATE
+            ,   ${USER_ID}
+            ,   SYSDATE
+            ,   ${USER_ID}
+        )  
+]]></query>
+
+</SQLResource>

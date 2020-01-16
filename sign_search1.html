@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<!-- Bootstrap -->
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+<style> 
+  body {
+    margin: 0;
+  }
+    
+  .find  { 
+    width: 100%;
+    height: 45px;
+    font-size: 13px;
+    border-radius: 10px;
+    border:1px solid #ddd;
+    padding: 12px 20px;
+  }
+  .content  {
+    line-height: 30px;
+    padding-top: 25px;
+    color: #000;
+  }
+
+  .button {
+    height: 45px;
+    background-color: #808080;
+    border-color: #fff;
+    border-radius:10px;
+    color: #fff;
+  }
+  .footer {
+    position:relative;
+    bottom:0;
+    height:90px;
+    width: 100%;
+    text-align: center;
+    background-color: #FFCA02;
+    border:none;
+    color: #fff;
+    font-size: 15px;
+  }
+
+  a:link { color: #808080; text-decoration: none;}
+</style>
+</head>
+<body style="height:1000px">
+  <div style="margin:0 8%; text-align:right; padding-top:40px; font-size:20px;"><i class="fas fa-times" id="back"></i></div>
+  <div style="text-align:center; padding-top:25px;">
+    <a href="/login.html"><img src="/images/logo.png" style="width:160px; text-align:center;"></a>
+  </div>
+
+  <div style="text-align:center; height: 160.62px;">
+    <div class="content nsrB" style="font-size:22px; padding-top:50px;"><p>기존 플레이타임<br>회원이신가요?</p></div>
+  </div>
+  <form id="seachID-frm" method="POST" style="margin:0 8%">
+    <input type="hidden" name="USER_ID" value="MOBILE">
+    <div style="height:45px;">
+      <input class="find" type="text" name="CUST_NM" placeholder="성함을 입력해주세요.">
+    </div>
+    <div style="height:45px; margin-top:20px;">
+      <input class="find" type="number" name="MOBILE" placeholder="휴대전화번호를 입력해 주세요.">
+    </div>
+    
+    <!-- <div style="text-align:center; font-family:NanumSquare; padding-top:60px;">
+      <button id="login-btn" class="nsR" type="button" style="border:none;">이름과 연락처로 찾기</button>
+    </div>
+    <div style="text-align:center; font-family:NanumSquare; padding-top:15px;">
+      <button id="login-btn" class="nsR" type="button" style="border:none;">다회원 인증번호와 연락처로 찾기</button>
+    </div> -->
+    <div style="text-align:center; font-family:NanumSquare; padding-top:100px;">
+      <button id="login-btn" class="nsR" type="button" style="border:none;">정보 찾기</button>
+    </div>
+          
+    <!-- <div style="text-align:center; font-family: NanumSquare; font-weight:400; font-size:15px; color:#808080; padding-top: 30px;">
+      <p>처음 방문하셨나요?<a href="/find_pw.html" style="color:#000; font-weight: 700; padding-top: 15px;">&emsp; 회원가입 하기</a></p>
+    </div> -->
+  </form>
+
+<script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script src="/js/sweetalert.min.js"></script>
+<script type="text/javascript">
+  function setCookie(name, value, days) {
+    var d = new Date;
+    d.setTime(d.getTime() + 24*60*60*1000*days);
+    document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+  }
+
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+  }
+  $(document).ready(function(){
+    setCookie('BRAND_CD',null,-1);
+    setCookie('BRAND_NM',null,-1);
+    setCookie('CUST_ID',null,-1);
+    setCookie('CUST_WEB_ID',null,-1);
+    setCookie('STOR_CD',null,-1);
+    setCookie('STOR_NM',null,-1);
+    $("#login-btn").click(function(){
+      var url = "/api/mbl_0100.jsp";
+      var datas = $("#seachID-frm").serialize();
+      $.ajax({
+        url : url,
+        type : 'POST',
+        dataType : 'JSON',
+        data : datas,
+          success:function(response){
+            console.log(response);
+            if(response.RET_CD == "0001") {
+              if(response.RESULT[0].MEMB_YN =="Y") {
+                swal({
+                    button: "확인",
+                    title: "안내",
+                    closeOnClickOutside: false,
+                    text: "이미 가입된 회원입니다.",
+                  }).then(function() {
+                    window.location = "/login.html";
+                });
+              }else {
+                swal({
+                    button: "확인",
+                    title: "안내",
+                    closeOnClickOutside: false,
+                    text: "검색하신 회원정보로 회원가입을 진행합니다.",
+                  }).then(function() {
+                    setCookie('BRAND_CD', response.RESULT[0].BRAND_CD, 999);
+                    setCookie('BRAND_NM', response.RESULT[0].BRAND_NM, 999);
+                    setCookie('CUST_ID', response.RESULT[0].CUST_ID, 999);
+					setCookie('STOR_CD', response.RESULT[0].STOR_CD, 999);
+					setCookie('STOR_NM', response.RESULT[0].STOR_NM, 999);
+                    window.location = "/sign_chk.html";
+                });
+              }
+            }else {
+              swal({
+                button: "확인",
+                title: "안내",
+                // text: '오류코드: '+response.RET_CD+'\n'+response.RET_MSG,
+                text: response.RET_MSG,
+                closeOnClickOutside: false
+              });
+            }
+          }
+      });
+      return false;
+    })
+
+    $('#back').click(function(){
+      document.location.href="/sign_search.html";
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+   <!-- 
+      [ORDR4230M0]정기반품통제마스터등록  START ======================================================================//
+   -->   
+   <!-- 점포선택 팝업 창  ( 데이터 조회) -->   
+   <query name='STORE_ORDR4230'><![CDATA[
+   
+      SELECT   S.STOR_CD
+            ,  NVL(LS.STOR_NM, S.STOR_NM) AS STOR_NM
+        FROM   (SELECT  * 
+                  FROM  STORE 
+                 WHERE  BRAND_CD  = ${BRAND_CD}
+                   AND  USE_YN    = 'Y'
+                   @SEARCH_STOR_TP@   
+               ) S
+            ,  (
+               SELECT  STOR_CD
+                    ,  STOR_NM
+                 FROM  LANG_STORE
+                WHERE  LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                  AND  BRAND_CD    = ${BRAND_CD}
+                  AND  USE_YN      = 'Y'
+               ) LS
+       WHERE   S.BRAND_CD   = ${BRAND_CD}
+         AND   S.STOR_CD    = LS.STOR_CD(+) 
+         AND   S.USE_YN     = 'Y'
+         AND   (NVL(LENGTH(${SCH_STOR_TXT} ),0)=0 OR (NVL(LENGTH(${SCH_STOR_TXT} ),0)>0
+                AND (S.STOR_NM LIKE ('%'|| ${SCH_STOR_TXT} || '%') OR S.STOR_CD LIKE ('%'|| ${SCH_STOR_TXT} || '%')) ))
+    GROUP BY   S.STOR_CD, LS.STOR_NM, S.STOR_NM
+    ORDER BY   STOR_CD
+
+   ]]></query>
+   
+  <!-- 
+      [ORDR4230M0]정기반품통제마스터등록  END ======================================================================//
+   -->  
+                
+</SQLResource>
+

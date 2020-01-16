@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='HISTORY_MAIN_Q'><![CDATA[
+    SELECT  A.COMP_CD                           AS COMP_CD
+         ,  A.BRAND_CD                          AS BRAND_CD
+         ,  A.STOR_CD                           AS STOR_CD
+         ,  A.STOR_NM                           AS STOR_NM
+         ,  A.STOR_TP                           AS STOR_TP
+         ,  C.USER_NM                           AS SV_USER_ID
+         ,  A.STOR_TG                           AS STOR_TG
+         ,  A.APP_DIV                           AS APP_DIV
+         ,  A.REGION_CD                         AS REGION_CD
+         ,  A.TRAD_AREA                         AS TRAD_AREA
+         ,  A.STOR_FORM                         AS STOR_FORM
+         ,  A.SPACE                             AS SPACE
+         ,  B.CONTRACT_DT                       AS CONTRACT_DT
+         ,  B.EXPIRATION_DT                     AS EXPIRATION_DT
+         ,  CEIL(TO_DATE(B.EXPIRATION_DT,'YYYYMMDD') - SYSDATE) AS BALANCE
+         ,  B.RECONTRACT_DT                     AS RECONTRACT_DT
+         ,  A.REP_STOR_CD                       AS REP_STOR_CD
+      FROM  STORE          A
+         ,  HQ_USER        C
+         , (
+            SELECT  COMP_CD
+                  , BRAND_CD
+                  , STOR_CD
+                  , CONTRACT_DT
+                  , EXPIRATION_DT
+                  , RECONTRACT_DT
+                  , ROW_NUMBER() OVER(PARTITION BY COMP_CD, BRAND_CD, REP_STOR_CD ORDER BY SEQ_NO DESC) R_NUM
+            FROM    STORE_CONTRACT
+            WHERE   COMP_CD    = ${SCH_COMP_CD}
+            AND     BRAND_CD   = ${SCH_BRAND_CD}
+           ) B
+     WHERE  A.COMP_CD    = B.COMP_CD (+)
+       AND  A.BRAND_CD   = B.BRAND_CD(+)
+       AND  A.STOR_CD    = B.STOR_CD (+)
+       AND  1            = B.R_NUM   (+)
+       AND  A.COMP_CD    = C.COMP_CD (+)
+       AND  A.SV_USER_ID = C.USER_ID (+)
+       AND  A.COMP_CD    = ${SCH_COMP_CD}
+       AND  A.BRAND_CD   = ${SCH_BRAND_CD}
+       AND  (${SCH_STOR_CD} IS NULL OR A.STOR_CD = ${SCH_STOR_CD})
+       AND  (${SCH_STOR_TP} IS NULL OR A.STOR_TP = ${SCH_STOR_TP})
+       AND  (${SCH_SV_USER_ID} IS NULL OR A.SV_USER_ID = ${SCH_SV_USER_ID})
+       AND  (${SCH_APPLY_DIV} IS NULL OR A.APP_DIV = ${SCH_APPLY_DIV})
+       AND  (${SCH_STOR_FORM} IS NULL OR A.STOR_FORM = ${SCH_STOR_FORM})
+       AND  (${SCH_SIDO} IS NULL OR A.REGION_CD = ${SCH_SIDO})
+       AND  (${SCH_TRAD_AREA} IS NULL OR A.TRAD_AREA = ${SCH_TRAD_AREA}) 
+       AND  (${SCH_PYEONG_FROM} IS NULL OR (A.SPACE BETWEEN ${SCH_PYEONG_FROM} AND ${SCH_PYEONG_TO}))
+       AND  (${SCH_CONTRACT_DT_FROM} IS NULL OR (B.CONTRACT_DT BETWEEN ${SCH_CONTRACT_DT_FROM} AND ${SCH_CONTRACT_DT_TO}))
+       AND  (${SCH_EXPIRATION_DT_FROM} IS NULL OR (B.EXPIRATION_DT BETWEEN ${SCH_EXPIRATION_DT_FROM} AND ${SCH_EXPIRATION_DT_TO}))
+     ORDER  BY 
+            A.COMP_CD
+         ,  A.BRAND_CD
+         ,  A.STOR_CD
+]]></query>
+
+<query name='HISTORY_TAB01_Q'><![CDATA[
+    SELECT  A.STOR_CD                           AS STOR_CD
+         ,  A.STOR_NM                           AS STOR_NM
+         ,  A.BUSI_NO                           AS BUSI_NO
+         ,  A.TEL_NO                            AS TEL_NO
+         ,  A.ADDR1||' '||A.ADDR2               AS ADDR
+         ,  A.OPEN_DT                           AS OPEN_DT
+         ,  C.USER_NM                           AS DV_USER_ID
+         ,  D.USER_NM                           AS SV_USER_ID
+         ,  A.CONTRACT_NM                       AS CONTRACT_NM
+         ,  A.EXECUTE_NM                        AS EXECUTE_NM
+         ,  A.SPACE                             AS SPACE
+         ,  A.SEAT                              AS SEAT
+         ,  GET_COMMON_CODE_NM(A.COMP_CD, '02160', A.STOR_FORM, ${SCH_LANG_TP})     AS STOR_FORM
+         ,  GET_COMMON_CODE_NM(A.COMP_CD, '00595', A.TRAD_AREA, ${SCH_LANG_TP})     AS TRAD_AREA
+         ,  A.OFFER_TM                          AS OFFER_TM
+         ,  GET_COMMON_CODE_NM(A.COMP_CD, '02140', B.REST_ROOM_TP, ${SCH_LANG_TP})  AS REST_ROOM_TP
+         ,  GET_COMMON_CODE_NM(A.COMP_CD, '01060', B.SMOK_ROOM_YN, ${SCH_LANG_TP})  AS SMOK_ROOM_YN
+         ,  GET_COMMON_CODE_NM(A.COMP_CD, '01060', B.TERS_EXIST_YN, ${SCH_LANG_TP}) AS TERS_EXIST_YN
+         ,  GET_COMMON_CODE_NM(A.COMP_CD, '02330', B.STOR_CONCEPT, ${SCH_LANG_TP})  AS STOR_CONCEPT
+         ,  B.FACI_VENDOR                       AS FACI_VENDOR
+         ,  B.FACI_USER_NM                      AS FACI_USER_NM
+      FROM  STORE          A
+         ,  STORE_OPTION   B
+         ,  HQ_USER        C
+         ,  HQ_USER        D
+     WHERE  A.COMP_CD    = B.COMP_CD(+)
+       AND  A.BRAND_CD   = B.BRAND_CD(+)
+       AND  A.STOR_CD    = B.STOR_CD(+)
+       AND  A.COMP_CD    = C.COMP_CD(+)
+       AND  A.DV_USER_ID = C.USER_ID(+)
+       AND  A.COMP_CD    = D.COMP_CD(+)
+       AND  A.SV_USER_ID = D.USER_ID(+)
+       AND  A.COMP_CD    = ${SCH_COMP_CD}
+       AND  A.BRAND_CD   = ${SCH_BRAND_CD}
+       AND  (${SCH_STOR_CD} IS NULL OR A.STOR_CD = ${SCH_STOR_CD})
+     ORDER  BY A.STOR_CD
+]]></query>
+
+<query name='HISTORY_TAB02_Q'><![CDATA[
+    SELECT  ROWNUM            AS SEQ
+         ,  A.BRAND_CD        AS BRAND_CD
+         ,  A.STOR_CD         AS STOR_CD
+         ,  GET_COMMON_CODE_NM(A.COMP_CD, '02345', B.STOR_STAT, ${SCH_LANG_TP})  AS STOR_STAT
+         ,  A.STOR_NM         AS STOR_NM
+         ,  A.BUSI_NM         AS BUSI_NM
+         ,  A.BUSI_NO         AS BUSI_NO
+         ,  B.CONTRACT_DT     AS CONTRACT_DT
+         ,  B.EXPIRATION_DT   AS EXPIRATION_DT
+         ,  B.RECONTRACT_DT   AS RECONTRACT_DT
+         ,  B.OPEN_DT         AS OPEN_DT
+         ,  B.INSURE_YN       AS INSURE_YN
+         ,  B.REASON          AS REASON
+         ,  A.REP_STOR_CD     AS REP_STOR_CD
+         ,  TO_CHAR(B.INST_DT, 'YYYYMMDD')  AS INST_DT
+         ,  B.INST_USER       AS INST_USER
+         ,  B.STOR_REMARK
+      FROM  STORE            A
+         ,  STORE_CONTRACT   B
+     WHERE  A.COMP_CD     = B.COMP_CD(+)
+       AND  A.BRAND_CD    = B.BRAND_CD(+)
+       AND  A.REP_STOR_CD = B.REP_STOR_CD(+)
+       AND  A.COMP_CD     = ${SCH_COMP_CD}
+       AND  A.BRAND_CD    = ${SCH_BRAND_CD}
+       AND  A.REP_STOR_CD = ${SCH_REP_STOR_CD}
+     ORDER  BY ROWNUM
+]]></query>
+
+</SQLResource>

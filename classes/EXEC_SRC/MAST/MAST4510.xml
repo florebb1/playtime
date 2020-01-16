@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='USER_Q'><![CDATA[
+    SELECT  HU.COMP_CD
+         ,  ''              AS BRAND_CD
+         ,  ''              AS STOR_CD
+         ,  HU.USER_ID
+         ,  HU.USER_NM
+         ,  HU.PWD
+         ,  'HQ_USER'       AS TGT_TABLE
+      FROM  HQ_USER     HU
+     WHERE  HU.COMP_CD  = ${SCH_COMP_CD}
+       AND  HU.USER_ID  = ${SCH_USER_ID}
+    UNION ALL 
+    SELECT  SU.COMP_CD
+         ,  SU.BRAND_CD
+         ,  SU.STOR_CD
+         ,  SU.USER_ID
+         ,  SU.USER_NM
+         ,  SU.WEB_PWD
+         ,  'STORE_USER'    AS TGT_TABLE
+      FROM  STORE_USER  SU
+     WHERE  SU.COMP_CD  = ${SCH_COMP_CD}
+       AND  SU.BRAND_CD = ${SCH_BRAND_CD}
+       AND  SU.STOR_CD  = ${SCH_STOR_CD}
+       AND  SU.USER_ID  = ${SCH_USER_ID}
+]]></query>
+
+<query name='PWD_CHG_H_U'><![CDATA[
+    UPDATE  HQ_USER
+       SET  PWD         = DECODE(${PWD}, NULL, PWD, ${PWD})
+         ,  PWD_CHG_DT  = SYSDATE
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${USER_ID}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  USER_ID     = ${USER_ID}
+ ]]></query> 
+ 
+<query name='PWD_CHG_S_U'><![CDATA[
+    UPDATE  STORE_USER
+       SET  WEB_PWD         = DECODE(${PWD}, NULL, WEB_PWD, ${PWD})
+         ,  POS_PWD         = DECODE(${PWD}, NULL, POS_PWD, ${PWD})
+         ,  WEB_PWD_CHG_DT  = SYSDATE
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${USER_ID}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  BRAND_CD        = ${BRAND_CD}
+       AND  STOR_CD         = ${STOR_CD}
+       AND  USER_ID         = ${USER_ID}
+ ]]></query>
+</SQLResource>
+

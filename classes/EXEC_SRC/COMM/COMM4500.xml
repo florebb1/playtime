@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+  
+<!-- 프로그램 테스트  조회  -->
+<query name='PGM_TEST_Q'><![CDATA[
+   SELECT  PGM_ID             AS PGM_ID
+         , TEST_DT            AS TEST_DT
+         , TEST_USER          AS TEST_USER
+         , SEQ                AS SEQ
+         , CONTENTS           AS CONTENTS
+         , PROC_YN            AS PROC_YN
+         , PROC_DESC          AS PROC_DESC
+         , PROC_DT            AS PROC_DT
+         , REMARKS            AS REMARKS
+     FROM PGM_TEST
+    WHERE PGM_ID     = ${PGM_ID}
+      AND PROC_YN LIKE ${PROC_YN}
+]]></query>
+
+
+<!-- 프로그램 테스트  등록 -->
+<query name='PGM_TEST_I'><![CDATA[
+    INSERT INTO PGM_TEST
+              ( PGM_ID
+              , TEST_DT
+              , TEST_USER
+              , SEQ
+              , CONTENTS
+              , PROC_YN
+              , PROC_DESC
+              , PROC_DT
+              , REMARKS                      
+               )
+            VALUES
+            (   ${PGM_ID}
+              , TO_CHAR(SYSDATE, 'YYYYMMDD')
+              , ${TEST_USER}
+              , ${SEQ}
+              , ${CONTENTS}
+              , ${PROC_YN}
+              , ${PROC_DESC}
+              , ${PROC_DT} 
+              , ${REMARKS}   
+            ) 
+                           
+ ]]></query>                           
+                  
+
+<!-- 프로그램 테스트  수정 -->
+<query name='PGM_TEST_U'><![CDATA[
+    UPDATE PGM_TEST 
+       SET  TEST_USER    = ${TEST_USER}
+          , CONTENTS    = ${CONTENTS}
+          , PROC_YN     = ${PROC_YN}
+          , PROC_DT     = ${PROC_DT}
+          , PROC_DESC   = ${PROC_DESC}
+          , REMARKS     = ${REMARKS}
+     WHERE PGM_ID  = ${PGM_ID}
+       AND SEQ     = ${SEQ}
+                           
+ ]]></query>   
+
+<!-- 프로그램 테스트  삭제 -->
+<query name='PGM_TEST_D'><![CDATA[
+    DELETE FROM PGM_TEST 
+     WHERE PGM_ID  = ${PGM_ID}
+       AND SEQ     = ${SEQ}
+                           
+ ]]></query>   
+
+</SQLResource>
+

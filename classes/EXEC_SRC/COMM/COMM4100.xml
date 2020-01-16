@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='COC_CHECK_LOG_Q'><![CDATA[
+    SELECT  C.CONTENT
+         ,  C.SUBJECT
+         ,  CL.COMP_CD
+         ,  CL.NOTICE_TP
+         ,  CL.CHARGE_YM
+         ,  CL.CHARGE_SEQ
+         ,  CL.NOTICE_DT
+         ,  CL.BRAND_CD
+         ,  CL.STOR_CD
+         ,  S.STOR_NM
+         ,  S.BUSI_NM
+         ,  TO_CHAR(TO_DATE(CL.COC_DT, 'YYYYMMDD'), 'YYYY"년" MM"월" DD"일"')    AS COC_DT_NM  
+         ,  CL.COC_AMT
+         ,  TO_CHAR(TO_DATE(CL.DOS_DT, 'YYYYMMDD'), 'YYYY"년" MM"월" DD"일"')    AS DOS_DT_NM  
+         ,  CL.DOS_AMT
+         ,  TO_CHAR(TO_DATE(CL.DEPO_DT, 'YYYYMMDD'), 'YYYY"년" MM"월" DD"일"')   AS DEPO_DT_NM 
+         ,  CL.BOND_AMT
+         ,  SB.ACCT_NO
+         ,  SB.BANK_NM
+         ,  SB.ACCT_NM
+         ,  CL.AGREE_YN
+         ,  ${SCH_CHANNEL}                                                      AS CHANNEL
+      FROM  COC_CHECK_LOG   CL
+         ,  COC_CONTENT     C
+         ,  STORE           S
+         ,  (
+                SELECT  SB.COMP_CD
+                     ,  SB.BRAND_CD
+                     ,  SB.STOR_CD
+                     ,  SB.ACCT_NO
+                     ,  SB.BANK_CD
+                     ,  C.CODE_NM   AS BANK_NM
+                     ,  SB.ACCT_NM
+                  FROM  STORE_BANKACCT  SB
+                     ,  COMMON          C
+                 WHERE  SB.COMP_CD  = C.COMP_CD
+                   AND  SB.BANK_CD  = C.CODE_CD
+                   AND  SB.COMP_CD  = ${SCH_COMP_CD}
+                   AND  SB.BRAND_CD = ${SCH_BRAND_CD}
+                   AND  SB.STOR_CD  = ${SCH_STOR_CD}
+                   AND  C.CODE_TP   = '00615'
+                   AND  C.USE_YN    = 'Y'
+            )   SB
+     WHERE  CL.COMP_CD      = C.COMP_CD
+       AND  CL.NOTICE_TP    = C.CONTENT_DIV
+       AND  CL.COMP_CD      = S.COMP_CD
+       AND  CL.BRAND_CD     = S.BRAND_CD
+       AND  CL.STOR_CD      = S.STOR_CD
+       AND  S.COMP_CD       = SB.COMP_CD(+)
+       AND  S.BRAND_CD      = SB.BRAND_CD(+)
+       AND  S.STOR_CD       = SB.STOR_CD(+)
+       AND  CL.COMP_CD      = ${SCH_COMP_CD}
+       AND  CL.NOTICE_TP    = ${SCH_NOTICE_TP}
+       AND  CL.CHARGE_YM    = ${SCH_CHARGE_YM}
+       AND  CL.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  CL.STOR_CD      = ${SCH_STOR_CD}
+       AND  CL.CHARGE_SEQ   = ${SCH_CHARGE_SEQ}
+       AND  CL.NOTICE_DT    = ${SCH_NOTICE_DT}
+       AND  C.USE_YN        = 'Y'
+]]></query>
+
+<query name='COC_CHECK_LOG_U'><![CDATA[
+    UPDATE  COC_CHECK_LOG
+       SET  POS_NOTICE_HM   = CASE WHEN POS_NOTICE_HM IS NULL AND ${CHANNEL} = '1' THEN TO_CHAR(SYSDATE, 'HH24MI') ELSE POS_NOTICE_HM END
+         ,  WEB_NOTICE_HM   = CASE WHEN WEB_NOTICE_HM IS NULL AND ${CHANNEL} = '2' THEN TO_CHAR(SYSDATE, 'HH24MI') ELSE WEB_NOTICE_HM END
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  NOTICE_TP       = ${NOTICE_TP}
+       AND  CHARGE_YM       = ${CHARGE_YM}
+       AND  BRAND_CD        = ${BRAND_CD}
+       AND  STOR_CD         = ${STOR_CD}
+       AND  CHARGE_SEQ      = ${CHARGE_SEQ}
+       AND  NOTICE_DT       = ${NOTICE_DT}
+]]></query>
+
+<query name='COC_CHECK_LOG_AGREE_U'><![CDATA[
+    UPDATE  COC_CHECK_LOG
+       SET  AGREE_YN        = 'Y'
+         ,  AGREE_HM        = TO_CHAR(SYSDATE, 'HH24MI')
+         ,  AGREE_USER      = ${UPD_USER}
+         ,  CHANNEL         = ${CHANNEL}
+         ,  UPD_DT          = SYSDATE
+         ,  UPD_USER        = ${UPD_USER}
+     WHERE  COMP_CD         = ${COMP_CD}
+       AND  NOTICE_TP       = ${NOTICE_TP}
+       AND  CHARGE_YM       = ${CHARGE_YM}
+       AND  BRAND_CD        = ${BRAND_CD}
+       AND  STOR_CD         = ${STOR_CD}
+       AND  CHARGE_SEQ      = ${CHARGE_SEQ}
+       AND  NOTICE_DT       = ${NOTICE_DT}
+]]></query>
+
+</SQLResource>
+

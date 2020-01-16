@@ -1,0 +1,390 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!-- 본사사용자용 매장 조회 -->
+<query name='STOR_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  BRAND_CLASS
+         ,  BRAND_CD
+         ,  STOR_CD
+         ,  STOR_NM
+         ,  STOR_TP
+         ,  DSTN_COMP
+         ,  BUSI_NM
+         ,  TEL_NO
+         ,  SIDO_CD
+         ,  REGION_CD
+         ,  TRAD_AREA
+         ,  SV_USER_ID
+         ,  SV_USER_NM
+         ,  APP_DIV
+      FROM  (
+                SELECT  B.COMP_CD
+                     ,  B.BRAND_CLASS
+                     ,  B.BRAND_CD                   AS BRAND_CD
+                     ,  B.STOR_CD                    AS STOR_CD
+                     ,  NVL(LS.STOR_NM, B.STOR_NM)   AS STOR_NM
+                     ,  B.STOR_TP                    AS STOR_TP
+                     ,  B.DSTN_COMP
+                     ,  B.BUSI_NM                    AS BUSI_NM
+                     ,  B.TEL_NO                     AS TEL_NO
+                     ,  B.SIDO_CD                    AS SIDO_CD
+                     ,  B.REGION_CD                  AS REGION_CD
+                     ,  B.TRAD_AREA                  AS TRAD_AREA
+                     ,  B.SV_USER_ID                 AS SV_USER_ID
+                     ,  D.USER_NM                    AS SV_USER_NM
+                     ,  B.APP_DIV                    AS APP_DIV
+                  FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+                     ,  (
+                            SELECT  S.COMP_CD
+                                 ,  B.BRAND_CLASS
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_CD
+                                 ,  S.STOR_NM
+                                 ,  S.STOR_TP
+                                 ,  S.DSTN_COMP
+                                 ,  S.BUSI_NM
+                                 ,  S.TEL_NO
+                                 ,  S.SIDO_CD
+                                 ,  S.REGION_CD
+                                 ,  S.TRAD_AREA
+                                 ,  S.SV_USER_ID
+                                 ,  S.APP_DIV
+                              FROM  STORE   S
+                                 ,  BRAND   B
+                             WHERE  S.COMP_CD   = B.COMP_CD(+)
+                               AND  S.BRAND_CD  = B.BRAND_CD(+)
+                               AND  S.COMP_CD = ${SCH_COMP_CD}
+                               AND  (${SCH_BRAND_CLASS} IS NULL OR B.BRAND_CLASS = ${SCH_BRAND_CLASS})
+                               AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+                               AND  (${SCH_STOR_TP} IS NULL OR S.STOR_TP = ${SCH_STOR_TP})
+                               AND  (${SCH_DSTN_COMP} IS NULL OR S.DSTN_COMP = ${SCH_DSTN_COMP})
+                               AND  (${SCH_DEPT_CD} IS NULL OR S.DEPT_CD = ${SCH_DEPT_CD})
+                               AND  (${SCH_TEAM_CD} IS NULL OR S.TEAM_CD = ${SCH_TEAM_CD})
+                               AND  (${SCH_SV_USER_ID} IS NULL OR S.SV_USER_ID = ${SCH_SV_USER_ID})
+                               AND  (${SCH_SIDO_CD} IS NULL OR S.SIDO_CD = ${SCH_SIDO_CD})
+                               AND  (${SCH_REGION_CD} IS NULL OR S.REGION_CD = ${SCH_REGION_CD})
+                               AND  (${SCH_APP_DIV} IS NULL OR S.APP_DIV = ${SCH_APP_DIV})
+                               AND  (${SCH_USE_YN} IS NULL OR S.USE_YN = ${SCH_USE_YN})
+                               AND  B.USE_YN    = 'Y'
+                        )   B
+                     ,  (
+                            SELECT  C.COMP_CD
+                                 ,  C.CODE_CD
+                                 ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                                 ,  VAL_C1
+                              FROM  COMMON C
+                                 ,  (
+                                        SELECT  CODE_TP, CODE_CD, CODE_NM
+                                          FROM  LANG_COMMON
+                                         WHERE  COMP_CD      = ${SCH_COMP_CD}
+                                           AND  CODE_TP      = '00565'
+                                           AND  LANGUAGE_TP  = ${SCH_LANGUAGE}
+                                           AND  USE_YN       = 'Y'
+                                    )   L
+                             WHERE  C.CODE_TP  = L.CODE_TP(+)
+                               AND  C.CODE_CD  = L.CODE_CD(+)
+                               AND  C.COMP_CD  = ${SCH_COMP_CD}
+                               AND  C.CODE_TP  = '00565'
+                               AND  C.USE_YN   = 'Y'
+                        )   C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                               AND  USE_YN      = 'Y'
+                        )   LS
+                     ,  (
+                            SELECT  U.COMP_CD
+                                 ,  U.USER_ID
+                                 ,  NVL(L.LANG_NM, U.USER_NM)   AS USER_NM
+                              FROM  HQ_USER     U
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  PK_COL
+                                             ,  LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  TABLE_NM    = 'HQ_USER'
+                                           AND  COL_NM      = 'USER_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                                           AND  USE_YN      = 'Y'
+                                    )           L
+                             WHERE  L.COMP_CD(+)    = U.COMP_CD
+                               AND  L.PK_COL(+)     = LPAD(U.USER_ID, 10 , ' ')
+                               AND  U.COMP_CD       = ${SCH_COMP_CD}
+                        )   D
+                 WHERE  A.COMP_CD    = B.COMP_CD
+                   AND  A.BRAND_CD   = B.BRAND_CD
+                   AND  A.STOR_CD    = B.STOR_CD
+                   AND  B.COMP_CD    = C.COMP_CD
+                   AND  B.STOR_TP    = C.CODE_CD
+                   AND  B.COMP_CD    = LS.COMP_CD(+)
+                   AND  B.BRAND_CD   = LS.BRAND_CD(+)
+                   AND  B.STOR_CD    = LS.STOR_CD(+)
+                   AND  B.COMP_CD    = D.COMP_CD(+)
+                   AND  B.SV_USER_ID = D.USER_ID(+)
+                   AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+            ) A
+     WHERE  (${SCH_STOR_TXT} IS NULL OR (UPPER(STOR_NM) LIKE '%'|| UPPER(${SCH_STOR_TXT}) || '%' OR STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+     ORDER BY STOR_CD
+]]></query>
+
+
+<!-- 본사사용자용 점포조회(단일점포조회) -->
+<query name='SINGLE_STOR_Q'><![CDATA[
+    SELECT  BRAND_CLASS
+         ,  BRAND_CD
+         ,  DSTN_COMP
+         ,  STOR_TP
+         ,  SIDO_CD
+         ,  REGION_CD
+         ,  STOR_CD
+         ,  STOR_NM
+      FROM  (
+                SELECT  B.COMP_CD
+                     ,  B.BRAND_CLASS
+                     ,  B.BRAND_CD
+                     ,  B.DSTN_COMP
+                     ,  B.STOR_TP
+                     ,  B.SIDO_CD
+                     ,  B.REGION_CD
+                     ,  B.STOR_CD                    AS STOR_CD
+                     ,  NVL(LS.STOR_NM, B.STOR_NM)   AS STOR_NM
+                  FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL ) A
+                     ,  (
+                            SELECT  S.COMP_CD
+                                 ,  B.BRAND_CLASS
+                                 ,  S.BRAND_CD
+                                 ,  S.DSTN_COMP
+                                 ,  S.STOR_TP
+                                 ,  S.SIDO_CD
+                                 ,  S.REGION_CD
+                                 ,  S.STOR_CD
+                                 ,  S.STOR_NM
+                                 ,  S.SV_USER_ID
+                                 ,  S.APP_DIV
+                              FROM  STORE   S
+                                 ,  BRAND   B
+                             WHERE  S.COMP_CD   = B.COMP_CD
+                               AND  S.BRAND_CD  = B.BRAND_CD
+                               AND  S.COMP_CD      = ${SCH_COMP_CD}
+                               AND  S.USE_YN       = 'Y'
+                               AND  (${SCH_BRAND_CLASS} IS NULL OR B.BRAND_CLASS = ${SCH_BRAND_CLASS})
+                               AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+                               AND  (${SCH_DSTN_COMP} IS NULL OR S.DSTN_COMP = ${SCH_DSTN_COMP})
+                               AND  (${SCH_STOR_TP} IS NULL OR S.STOR_TP = ${SCH_STOR_TP})
+                               AND  B.USE_YN    = 'Y'
+                        )   B
+                     ,  (
+                            SELECT  C.COMP_CD
+                                 ,  C.CODE_CD
+                                 ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                                 ,  VAL_C1
+                              FROM  COMMON C
+                                 ,  (
+                                        SELECT  CODE_TP, CODE_CD, CODE_NM
+                                          FROM  LANG_COMMON
+                                         WHERE  COMP_CD      = ${SCH_COMP_CD}
+                                           AND  CODE_TP      = '00565'
+                                           AND  LANGUAGE_TP  = ${SCH_LANGUAGE}
+                                           AND  USE_YN       = 'Y'
+                                    )   L
+                             WHERE  C.CODE_TP  = L.CODE_TP(+)
+                               AND  C.CODE_CD  = L.CODE_CD(+)
+                               AND  C.COMP_CD  = ${SCH_COMP_CD}
+                               AND  C.CODE_TP  = '00565'
+                               AND  C.USE_YN   = 'Y'
+                        )   C
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE S
+                             WHERE  S.COMP_CD   = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               @SCH_BRAND_CD_LIST@
+                               AND  USE_YN      = 'Y'
+                        ) LS
+                 WHERE  A.COMP_CD    = B.COMP_CD
+                   AND  A.STOR_CD    = B.STOR_CD
+                   AND  A.COMP_CD    = C.COMP_CD
+                   AND  A.STOR_TP    = C.CODE_CD
+                   AND  B.BRAND_CD   = LS.BRAND_CD(+)
+                   AND  B.STOR_CD    = LS.STOR_CD(+)
+                   AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+            ) A
+     WHERE  (${SCH_STOR_TXT} IS NULL OR (UPPER(STOR_NM) LIKE '%'|| UPPER(${SCH_STOR_TXT}) || '%' OR STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+     ORDER BY STOR_CD
+]]></query>
+
+<!-- 점포사용자용 매장 조회 -->
+<query name='STOR_ST_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  BRAND_CLASS
+         ,  BRAND_CD
+         ,  STOR_CD
+         ,  STOR_NM
+         ,  STOR_TP
+         ,  DSTN_COMP
+         ,  BUSI_NM
+         ,  TEL_NO
+         ,  SIDO_CD
+         ,  REGION_CD
+         ,  (
+                SELECT  REGION_NM
+                  FROM  REGION
+                 WHERE  COMP_CD   = ${SCH_COMP_CD}
+                   AND  NATION_CD = ${SCH_LANGUAGE}
+                   AND  CITY_CD   = A.SIDO_CD
+                   AND  REGION_CD = A.REGION_CD
+            )       AS REGION_CD_NM
+         ,  TRAD_AREA
+         ,  SV_USER_ID
+         ,  SV_USER_NM
+         ,  APP_DIV
+      FROM  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CLASS
+                     ,  S.BRAND_CD                   AS BRAND_CD
+                     ,  S.STOR_CD                    AS STOR_CD
+                     ,  NVL(LS.STOR_NM, S.STOR_NM)   AS STOR_NM
+                     ,  S.STOR_TP                    AS STOR_TP
+                     ,  S.DSTN_COMP
+                     ,  S.BUSI_NM                    AS BUSI_NM
+                     ,  S.TEL_NO                     AS TEL_NO
+                     ,  S.SIDO_CD                    AS SIDO_CD
+                     ,  S.REGION_CD                  AS REGION_CD
+                     ,  S.TRAD_AREA                  AS TRAD_AREA
+                     ,  S.SV_USER_ID                 AS SV_USER_ID
+                     ,  U.USER_NM                    AS SV_USER_NM
+                     ,  S.APP_DIV                    AS APP_DIV
+                  FROM  (
+                            SELECT  S.COMP_CD
+                                 ,  B.BRAND_CLASS
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_CD
+                                 ,  S.STOR_NM
+                                 ,  S.STOR_TP
+                                 ,  S.DSTN_COMP
+                                 ,  S.BUSI_NM
+                                 ,  S.TEL_NO
+                                 ,  S.SIDO_CD
+                                 ,  S.REGION_CD
+                                 ,  S.TRAD_AREA
+                                 ,  S.SV_USER_ID
+                                 ,  S.APP_DIV
+                              FROM  STORE   S
+                                 ,  BRAND   B
+                                 ,  COMMON  C
+                             WHERE  S.COMP_CD   = B.COMP_CD(+)
+                               AND  S.BRAND_CD  = B.BRAND_CD(+)
+                               AND  S.COMP_CD   = C.COMP_CD
+                               AND  S.STOR_TP   = C.CODE_CD
+                               AND  S.COMP_CD   = ${SCH_COMP_CD}
+                               AND  C.CODE_TP   = '00565'
+                               AND  (${SCH_BRAND_CLASS} IS NULL OR B.BRAND_CLASS = ${SCH_BRAND_CLASS})
+                               AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+                               AND  (${SCH_DEPT_CD} IS NULL OR S.DEPT_CD = ${SCH_DEPT_CD})
+                               AND  (${SCH_TEAM_CD} IS NULL OR S.TEAM_CD = ${SCH_TEAM_CD})
+                               AND  (${SCH_SV_USER_ID} IS NULL OR S.SV_USER_ID = ${SCH_SV_USER_ID})
+                               AND  (${SCH_SIDO_CD} IS NULL OR S.SIDO_CD = ${SCH_SIDO_CD})
+                               AND  (${SCH_REGION_CD} IS NULL OR S.REGION_CD = ${SCH_REGION_CD})
+                               AND  (${SCH_APP_DIV} IS NULL OR S.APP_DIV = ${SCH_APP_DIV})
+                               AND  (${SCH_USE_YN} IS NULL OR S.USE_YN = ${SCH_USE_YN})
+                               AND  (${SCH_STOR_TP} IS NULL OR S.STOR_TP = ${SCH_STOR_TP})
+                               AND  (${SCH_DSTN_COMP} IS NULL OR S.DSTN_COMP = ${SCH_DSTN_COMP})
+                               AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+                               AND  B.USE_YN    = 'Y'
+                        ) S
+                     ,  (
+                            SELECT  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                               AND  USE_YN      = 'Y'
+                        ) LS
+                     ,  HQ_USER U
+                 WHERE  S.COMP_CD    = U.COMP_CD(+)
+                   AND  S.SV_USER_ID = U.USER_ID(+)
+                   AND  S.BRAND_CD   = LS.BRAND_CD(+)
+                   AND  S.STOR_CD    = LS.STOR_CD(+)
+            ) A
+     WHERE  (${SCH_STOR_TXT} IS NULL OR (UPPER(STOR_NM) LIKE '%'|| UPPER(${SCH_STOR_TXT}) || '%' OR STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+     ORDER BY STOR_CD
+]]></query>
+
+<!-- 점포사용자용 점포조회(단일점포조회) -->
+<query name='SINGLE_STOR_ST_Q'><![CDATA[
+    SELECT  BRAND_CD
+         ,  (
+                SELECT  BRAND_NM
+                  FROM  BRAND
+                 WHERE  COMP_CD  = A.COMP_CD
+                   AND  BRAND_CD = A.BRAND_CD
+            ) AS BRAND_NM
+         ,  STOR_CD
+         ,  STOR_NM
+         ,  STOR_TP
+         ,  STOR_TG
+      FROM  (         
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD                   AS BRAND_CD
+                     ,  S.STOR_CD                    AS STOR_CD
+                     ,  NVL(LS.STOR_NM, S.STOR_NM)   AS STOR_NM
+                     ,  S.STOR_TP                    AS STOR_TP
+                     ,  S.STOR_TG
+                  FROM  (
+                            SELECT  S.COMP_CD
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_CD
+                                 ,  S.STOR_NM
+                                 ,  S.STOR_TP
+                                 ,  S.STOR_TG
+                                 ,  S.SV_USER_ID
+                                 ,  S.APP_DIV
+                              FROM  STORE   S
+                                 ,  COMMON  C
+                                 ,  BRAND   B
+                             WHERE  S.COMP_CD = C.COMP_CD
+                               AND  S.STOR_TP = C.CODE_CD
+                               AND  S.COMP_CD = B.COMP_CD
+                               AND  S.BRAND_CD= B.BRAND_CD
+                               AND  S.COMP_CD = ${SCH_COMP_CD}
+                               AND  S.USE_YN  = 'Y'
+                               AND  C.CODE_TP = '00565'
+                               AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+                               @SCH_BRAND_CD_LIST@
+                               AND  B.USE_YN    = 'Y'
+                        ) S
+                     ,  (
+                            SELECT  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE S
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               @SCH_BRAND_CD_LIST@
+                               AND  USE_YN      = 'Y'
+                        ) LS
+                     ,  HQ_USER U
+                 WHERE  S.COMP_CD    = U.COMP_CD(+)
+                   AND  S.SV_USER_ID = U.USER_ID(+)
+                   AND  S.BRAND_CD   = LS.BRAND_CD(+)
+                   AND  S.STOR_CD    = LS.STOR_CD(+)
+            ) A
+     WHERE  (${SCH_STOR_TXT} IS NULL OR (UPPER(STOR_NM) LIKE '%'|| UPPER(${SCH_STOR_TXT}) || '%' OR STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+     ORDER BY STOR_CD
+]]></query>
+
+</SQLResource>
+

@@ -1,0 +1,271 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='CUST_SINGLE_Q'><![CDATA[
+    SELECT  MEMBER_NO
+         ,  DECRYPT(MEMBER_NM)      AS MEMBER_NM
+      FROM  CS_MEMBER
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  MEMBER_DIV  = '1'
+       AND  (MEMBER_NO   = ${SCH_MEMBER_TXT} OR MEMBER_NM   = ENCRYPT(${SCH_MEMBER_TXT}))
+       AND  (${SCH_CUST_YN} IS NULL OR CUST_YN = ${SCH_CUST_YN})
+       AND  USE_YN      = 'Y'
+]]></query>
+
+<query name='CUST_LIST_Q'><![CDATA[
+    WITH MEMBER AS
+    (
+        SELECT  /*+ INDEX(M IDX01_CS_MEMBER) */  
+                M.COMP_CD
+             ,  M.MEMBER_NO
+             ,  M.MEMBER_NM
+             ,  M.MOBILE
+             ,  M.ADDR1
+             ,  M.ADDR2
+             ,  M.JOIN_DT
+             ,  M.BRAND_CD
+             ,  M.STOR_CD
+             ,  M.CUST_YN
+             ,  C.CUST_WEB_ID
+             ,  C.CUST_STAT
+             ,  C.LVL_CD
+             ,  C.EMAIL
+             ,  NVL(C.SMS_RCV_YN, E.SMS_RCV_YN)     AS SMS_RCV_YN
+             ,  C.EMAIL_RCV_YN
+             ,  C.PUSH_RCV_YN
+             ,  C.SAV_PT
+             ,  C.USE_PT
+             ,  C.LOS_PT
+             ,  C.SAV_MLG
+             ,  C.USE_MLG
+             ,  C.LOS_MLG
+          FROM  CS_MEMBER       M
+             ,  CS_MEMBER_EXT   E
+             ,  C_CUST          C
+         WHERE  M.COMP_CD   = E.COMP_CD(+)
+           AND  M.MEMBER_NO = E.MEMBER_NO(+)
+           AND  M.COMP_CD   = C.COMP_CD(+)
+           AND  M.MEMBER_NO = C.CUST_ID(+)
+           AND  M.COMP_CD   = ${SCH_COMP_CD}  
+           AND  M.MEMBER_NM = ENCRYPT(${SCH_SEARCH_VAL})    -- 회원명
+           AND  M.MEMBER_DIV= '1'                   -- 개인고객
+           AND  M.USE_YN    = 'Y'                   -- 사용여부[Y:사용, N:사용안함]
+        UNION
+        SELECT  M.COMP_CD
+             ,  M.MEMBER_NO
+             ,  M.MEMBER_NM
+             ,  M.MOBILE
+             ,  M.ADDR1
+             ,  M.ADDR2
+             ,  M.JOIN_DT
+             ,  M.BRAND_CD
+             ,  M.STOR_CD
+             ,  M.CUST_YN
+             ,  C.CUST_WEB_ID
+             ,  C.CUST_STAT
+             ,  C.LVL_CD
+             ,  C.EMAIL
+             ,  NVL(C.SMS_RCV_YN, E.SMS_RCV_YN)     AS SMS_RCV_YN
+             ,  C.EMAIL_RCV_YN
+             ,  C.PUSH_RCV_YN
+             ,  C.SAV_PT
+             ,  C.USE_PT
+             ,  C.LOS_PT
+             ,  C.SAV_MLG
+             ,  C.USE_MLG
+             ,  C.LOS_MLG
+          FROM  CS_MEMBER       M
+             ,  CS_MEMBER_EXT   E
+             ,  C_CUST          C
+         WHERE  M.COMP_CD   = E.COMP_CD(+)
+           AND  M.MEMBER_NO = E.MEMBER_NO(+)
+           AND  M.COMP_CD   = C.COMP_CD(+)
+           AND  M.MEMBER_NO = C.CUST_ID(+)
+           AND  M.COMP_CD   = ${SCH_COMP_CD}
+           AND  M.MEMBER_NO = ${SCH_SEARCH_VAL}     -- 고객번호
+           AND  M.MEMBER_DIV= '1'                   -- 개인고객
+           AND  M.USE_YN    = 'Y' 
+        UNION
+        SELECT  /*+ INDEX(M IDX02_CS_MEMBER) */  
+                M.COMP_CD
+             ,  M.MEMBER_NO
+             ,  M.MEMBER_NM
+             ,  M.MOBILE
+             ,  M.ADDR1
+             ,  M.ADDR2
+             ,  M.JOIN_DT
+             ,  M.BRAND_CD
+             ,  M.STOR_CD
+             ,  M.CUST_YN
+             ,  C.CUST_WEB_ID
+             ,  C.CUST_STAT
+             ,  C.LVL_CD
+             ,  C.EMAIL
+             ,  NVL(C.SMS_RCV_YN, E.SMS_RCV_YN)     AS SMS_RCV_YN
+             ,  C.EMAIL_RCV_YN
+             ,  C.PUSH_RCV_YN
+             ,  C.SAV_PT
+             ,  C.USE_PT
+             ,  C.LOS_PT
+             ,  C.SAV_MLG
+             ,  C.USE_MLG
+             ,  C.LOS_MLG
+          FROM  CS_MEMBER       M
+             ,  CS_MEMBER_EXT   E
+             ,  C_CUST          C
+         WHERE  M.COMP_CD   = E.COMP_CD(+)
+           AND  M.MEMBER_NO = E.MEMBER_NO(+)
+           AND  M.COMP_CD   = C.COMP_CD(+)
+           AND  M.MEMBER_NO = C.CUST_ID(+)
+           AND  M.COMP_CD   = ${SCH_COMP_CD}
+           AND  M.MOBILE_N3 = ${SCH_SEARCH_VAL}     -- 연락처(뒤4자리)
+           AND  M.MEMBER_DIV= '1'                   -- 개인고객
+           AND  M.USE_YN    = 'Y'                   -- 사용여부[Y:사용, N:사용안함]
+        UNION
+        SELECT  /*+ INDEX(M IDX05_CS_MEMBER) */  
+                M.COMP_CD
+             ,  M.MEMBER_NO
+             ,  M.MEMBER_NM
+             ,  M.MOBILE
+             ,  M.ADDR1
+             ,  M.ADDR2
+             ,  M.JOIN_DT
+             ,  M.BRAND_CD
+             ,  M.STOR_CD
+             ,  M.CUST_YN
+             ,  C.CUST_WEB_ID
+             ,  C.CUST_STAT
+             ,  C.LVL_CD
+             ,  C.EMAIL
+             ,  NVL(C.SMS_RCV_YN, E.SMS_RCV_YN)     AS SMS_RCV_YN
+             ,  C.EMAIL_RCV_YN
+             ,  C.PUSH_RCV_YN
+             ,  C.SAV_PT
+             ,  C.USE_PT
+             ,  C.LOS_PT
+             ,  C.SAV_MLG
+             ,  C.USE_MLG
+             ,  C.LOS_MLG
+          FROM  CS_MEMBER       M
+             ,  CS_MEMBER_EXT   E
+             ,  C_CUST          C
+         WHERE  M.COMP_CD   = E.COMP_CD(+)
+           AND  M.MEMBER_NO = E.MEMBER_NO(+)
+           AND  M.COMP_CD   = C.COMP_CD(+)
+           AND  M.MEMBER_NO = C.CUST_ID(+)
+           AND  M.COMP_CD   = ${SCH_COMP_CD}
+           AND  (
+                    M.MOBILE    = ENCRYPT(${SCH_SEARCH_VAL})    -- 연락처 FULL
+                    OR
+                    M.MOBILE    = DECODE(LENGTH(${SCH_SEARCH_VAL}), 7, ENCRYPT('010'||${SCH_SEARCH_VAL}), 8, ENCRYPT('010'||${SCH_SEARCH_VAL}), ENCRYPT(${SCH_SEARCH_VAL}))      -- 연락처 FULL
+                )
+           AND  M.MEMBER_DIV= '1'                   -- 개인고객
+           AND  M.USE_YN    = 'Y'                   -- 사용여부[Y:사용, N:사용안함]
+        UNION
+        SELECT  C.COMP_CD
+             ,  C.CUST_ID
+             ,  C.CUST_NM
+             ,  C.MOBILE
+             ,  C.ADDR1
+             ,  C.ADDR2
+             ,  C.JOIN_DT
+             ,  C.BRAND_CD
+             ,  C.STOR_CD
+             ,  'Y'                 AS CUST_YN
+             ,  C.CUST_WEB_ID
+             ,  C.CUST_STAT
+             ,  C.LVL_CD
+             ,  C.EMAIL
+             ,  C.SMS_RCV_YN
+             ,  C.EMAIL_RCV_YN
+             ,  C.PUSH_RCV_YN
+             ,  C.SAV_PT
+             ,  C.USE_PT
+             ,  C.LOS_PT
+             ,  C.SAV_MLG
+             ,  C.USE_MLG
+             ,  C.LOS_MLG
+          FROM  C_CUST      C
+         WHERE  C.COMP_CD       = ${SCH_COMP_CD}
+           AND  C.CUST_WEB_ID   = ${SCH_SEARCH_VAL}   -- 앱ID
+    )
+    SELECT  C1.COMP_CD
+         ,  C1.MEMBER_NO
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN DECRYPT(C3.CUST_NM)
+                 ELSE DECRYPT(C1.MEMBER_NM)
+            END                                                                             AS MEMBER_NM
+         ,  C3.CUST_WEB_ID
+         ,  CASE WHEN C3.CUST_STAT = '8' THEN FC_GET_FORMAT_HP_NO(DECRYPT(C3.MOBILE))
+                 ELSE FC_GET_FORMAT_HP_NO(DECRYPT(C1.MOBILE))
+            END                                                                             AS MOBILE
+         ,  C3.JOIN_DT
+         ,  C3.STOR_NM                                                      AS JOIN_STOR_NM
+         ,  C3.CUST_STAT
+         ,  C3.LVL_CD
+         ,  C3.EMAIL
+         ,  C3.SMS_RCV_YN
+         ,  C3.EMAIL_RCV_YN
+         ,  C3.PUSH_RCV_YN
+         ,  NVL(C3.SAV_PT, 0)                                               AS SAV_PT
+         ,  NVL(C3.USE_PT, 0)                                               AS USE_PT
+         ,  NVL(C3.LOS_PT, 0)                                               AS LOS_PT
+         ,  NVL(C3.SAV_PT, 0) - NVL(C3.USE_PT, 0) - NVL(C3.LOS_PT, 0)       AS RES_PT
+         ,  NVL(C3.SAV_MLG, 0)                                              AS SAV_MLG
+         ,  NVL(C3.USE_MLG, 0)                                              AS USE_MLG
+         ,  NVL(C3.LOS_MLG, 0)                                              AS LOS_MLG
+         ,  NVL(C3.SAV_MLG, 0) - NVL(C3.USE_MLG, 0) - NVL(C3.LOS_MLG, 0)    AS RES_MLG
+      FROM  MEMBER      C1
+         ,  (
+                SELECT  C.COMP_CD
+                     ,  C.MEMBER_NO                                                         AS CUST_ID
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.CUST_NM ELSE C.MEMBER_NM END     AS CUST_NM
+                     ,  CASE WHEN C.CUST_STAT = '8' THEN R.MOBILE  ELSE C.MOBILE    END     AS MOBILE
+                     ,  C.CUST_WEB_ID
+                     ,  C.CUST_STAT
+                     ,  C.LVL_CD
+                     ,  C.EMAIL
+                     ,  C.SMS_RCV_YN
+                     ,  C.EMAIL_RCV_YN
+                     ,  C.PUSH_RCV_YN
+                     ,  C.JOIN_DT
+                     ,  S.STOR_NM
+                     ,  C.SAV_PT
+                     ,  C.USE_PT
+                     ,  C.LOS_PT
+                     ,  C.SAV_MLG
+                     ,  C.USE_MLG
+                     ,  C.LOS_MLG
+                  FROM  MEMBER          C
+                     ,  C_CUST_REST     R
+                     ,  (
+                            SELECT  S.COMP_CD
+                                 ,  S.BRAND_CD
+                                 ,  S.STOR_CD
+                                 ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                              FROM  STORE       S
+                                 ,  LANG_STORE  L
+                             WHERE  S.COMP_CD   = L.COMP_CD(+)
+                               AND  S.BRAND_CD  = L.BRAND_CD(+)
+                               AND  S.STOR_CD   = L.STOR_CD(+)
+                               AND  S.COMP_CD   = ${SCH_COMP_CD}
+                               AND  L.LANGUAGE_TP(+) = ${SCH_LANGUAGE_TP}
+                               AND  L.USE_YN(+) = 'Y'
+                        )               S
+                 WHERE  C.COMP_CD   = R.COMP_CD(+)
+                   AND  C.MEMBER_NO = R.CUST_ID(+)
+                   AND  C.COMP_CD   = S.COMP_CD(+)
+                   AND  C.BRAND_CD  = S.BRAND_CD(+)
+                   AND  C.STOR_CD   = S.STOR_CD(+)
+                   AND  C.COMP_CD   = ${SCH_COMP_CD}
+            )   C3
+     WHERE  C1.COMP_CD      = C3.COMP_CD(+)
+       AND  C1.MEMBER_NO    = C3.CUST_ID(+)
+       AND  C1.COMP_CD      = ${SCH_COMP_CD}
+       AND  (${SCH_JOIN_DT}     IS NULL OR C1.JOIN_DT     = ${SCH_JOIN_DT})
+       AND  (${SCH_CUST_YN}     IS NULL OR C1.CUST_YN     = ${SCH_CUST_YN})
+       AND  (${SCH_CUST_STAT}   IS NULL OR C3.CUST_STAT   = ${SCH_CUST_STAT})
+     ORDER  BY C1.MEMBER_NO
+]]></query>
+
+</SQLResource>
+

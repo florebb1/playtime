@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!-- 공통코드 타입 조회 -->
+<query name='CODE_TP_Q'><![CDATA[   
+   SELECT  CODE_TP                         AS CODE_TP
+         , CODE_CD                         AS CODE_CD
+         , CODE_NM                         AS CODE_NM
+         , BRAND_CD                        AS BRAND_CD
+         , ACC_CD                          AS ACC_CD
+         , USE_YN                          AS USE_YN
+     FROM COMMON     
+    WHERE CODE_TP = '00000' 
+      AND CODE_CD = ${CODE_TP}
+      AND USE_YN  = 'Y'
+
+]]></query>
+
+ 
+<!-- 공통코드 내역 조회 -->
+<query name='COMMON_Q'><![CDATA[
+   
+   SELECT  C.CODE_TP                            AS CODE_TP
+         , C.CODE_CD                            AS CODE_CD
+         , C.CODE_NM                            AS CODE_NM
+         , L.CODE_NM                            AS LANG_NM
+         , C.BRAND_CD                           AS BRAND_CD
+         , C.SORT_SEQ                           AS SORT_SEQ
+         , C.VAL_C1                             AS VAL_C1
+         , C.ACC_CD                             AS ACC_CD
+         , C.USE_YN                             AS USE_YN
+         , NVL(U1.USER_NM, C.INST_USER)         AS INST_USER
+         , C.INST_DT                            AS INST_DT
+         , NVL(U2.USER_NM, C.UPD_USER )         AS UPD_USER
+         , C.UPD_DT                             AS UPD_DT
+         , DECODE(L.CODE_CD, NULL, 'I', 'S')    AS MULT_PRC
+     FROM COMMON      C,
+          ( SELECT CODE_TP, CODE_CD, CODE_NM
+              FROM LANG_COMMON
+             WHERE CODE_TP = ${CODE_TP}
+               AND LANGUAGE_TP = DECODE(${LANG_TP}, NULL, ' ', ${LANG_TP} )   
+               AND USE_YN      = 'Y'
+          )        L,
+          HQ_USER  U1,
+          HQ_USER  U2 
+    WHERE C.CODE_TP   = L.CODE_TP(+)
+      AND C.CODE_CD   = L.CODE_CD(+)
+      AND C.INST_USER = U1.USER_ID(+)
+      AND C.UPD_USER  = U2.USER_ID(+)
+      AND C.CODE_TP   = ${CODE_TP} 
+      AND C.USE_YN    LIKE ${USE_YN}
+
+]]></query>
+
+<!-- 공통코드 등록 -->
+<query name='COMMON_I'><![CDATA[
+    INSERT INTO COMMON
+              ( CODE_TP
+              , CODE_CD
+              , CODE_NM
+              , BRAND_CD
+              , SORT_SEQ
+              , ACC_CD
+              , VAL_C1
+              , USE_YN
+              , INST_DT
+              , INST_USER
+              , UPD_DT
+              , UPD_USER                        
+               )
+            VALUES
+            (   ${CODE_TP}
+              , ${CODE_CD}
+              , ${CODE_NM}
+              , ${BRAND_CD}
+              , ${SORT_SEQ}
+              , ${ACC_CD}
+              , ${VAL_C1}
+              , ${USE_YN}
+              , SYSDATE
+              , ${INST_USER}
+              , SYSDATE
+              , ${UPD_USER}   
+            ) 
+                           
+ ]]></query>                   
+
+<!-- 공통코드 수정 -->
+<query name='COMMON_U'><![CDATA[
+    UPDATE COMMON 
+       SET CODE_NM    = ${CODE_NM}
+        , BRAND_CD    = ${BRAND_CD}
+        , ACC_CD      = ${ACC_CD}
+        , VAL_C1      = ${VAL_C1}
+        , SORT_SEQ    = ${SORT_SEQ}
+        , USE_YN      = ${USE_YN}
+        , UPD_DT      = SYSDATE
+        , UPD_USER    = ${UPD_USER}
+     WHERE CODE_TP = ${CODE_TP}
+       AND CODE_CD = ${CODE_CD}
+                           
+ ]]></query> 
+ 
+ 
+ 
+<!-- 언업타입별 공통코드 타입 등록 -->
+<query name='COMMON_LANG_I'><![CDATA[
+    INSERT INTO LANG_COMMON
+             (  CODE_TP
+              , CODE_CD
+              , LANGUAGE_TP
+              , CODE_NM
+              , USE_YN
+              , INST_DT
+              , INST_USER
+              , UPD_DT
+              , UPD_USER                        
+               )
+            VALUES
+            (   ${CODE_TP}
+              , ${CODE_CD}
+              , ${LANG_TP}
+              , ${CODE_NM}
+              , ${USE_YN}
+              , SYSDATE
+              , ${INST_USER}
+              , SYSDATE
+              , ${UPD_USER}   
+            ) 
+                           
+ ]]></query>         
+     
+
+<!-- 언업타입별 공통코드 타입 수정 -->
+<query name='COMMON_LANG_U'><![CDATA[
+    UPDATE LANG_COMMON 
+       SET CODE_NM      = ${CODE_NM}
+         , USE_YN      = ${USE_YN}
+         , UPD_DT      = SYSDATE
+         , UPD_USER    = ${UPD_USER}
+     WHERE CODE_TP     = ${CODE_TP}
+       AND CODE_CD     = ${CODE_CD}
+       AND LANGUAGE_TP = ${LANG_TP}
+                           
+ ]]></query> 
+ 
+</SQLResource>
+

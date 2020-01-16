@@ -1,0 +1,514 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='M_COUPON_MST_Q'><![CDATA[
+    SELECT  CM.COMP_CD
+         ,  CM.COUPON_CD
+         ,  CM.COUPON_NM
+         ,  CM.ISSUE_DT
+         ,  CM.COUPON_DIV
+         ,  CM.CERT_YN
+         ,  CM.DEAL_ID
+         ,  CM.COUPON_MSG
+         ,  CM.COUPON_RMK
+         ,  CM.START_DT
+         ,  CM.CLOSE_DT
+         ,  CM.CUST_CNT
+         ,  CM.COUPON_STAT
+         ,  CM.CONF_DT
+         ,  CM.USE_YN
+      FROM  M_COUPON_MST    CM
+     WHERE  CM.COMP_CD      = ${SCH_COMP_CD}
+       AND  CM.ISSUE_DT     BETWEEN ${SCH_YM}||'01' AND ${SCH_YM}||'31'
+       AND  (${SCH_COUPON_DIV}  IS NULL OR CM.COUPON_DIV = ${SCH_COUPON_DIV})
+       AND  (${SCH_COUPON_STAT} IS NULL OR CM.COUPON_STAT = ${SCH_COUPON_STAT})
+       AND  (${SCH_USE_YN}      IS NULL OR CM.USE_YN = ${SCH_USE_YN})
+     ORDER  BY CM.COUPON_CD
+]]></query>
+
+<query name='M_COUPON_MST_U'><![CDATA[
+    MERGE   INTO M_COUPON_MST
+    USING   DUAL
+    ON  (
+                COMP_CD         = ${COMP_CD}
+            AND COUPON_CD       = ${COUPON_CD}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  COUPON_NM       = ${COUPON_NM}
+             ,  COUPON_MSG      = ${COUPON_MSG}
+             ,  COUPON_RMK      = ${COUPON_RMK}
+             ,  START_DT        = ${START_DT}
+             ,  CLOSE_DT        = ${CLOSE_DT}
+             ,  DEAL_ID         = ${DEAL_ID}
+             ,  COUPON_STAT     = ${COUPON_STAT}
+             ,  CONF_DT         = CASE WHEN ${COUPON_STAT} = '2' THEN TO_CHAR(SYSDATE, 'YYYYMMDD') ELSE NULL END
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  COUPON_CD
+             ,  COUPON_NM
+             ,  ISSUE_DT
+             ,  COUPON_DIV
+             ,  CERT_YN
+             ,  DEAL_ID
+             ,  COUPON_MSG
+             ,  COUPON_RMK
+             ,  START_DT
+             ,  CLOSE_DT
+             ,  COUPON_STAT
+             ,  CONF_DT
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  (
+                    SELECT  TO_CHAR(SYSDATE, 'YY') ||
+                            ${COUPON_DIV} ||
+                            LPAD(NVL(MAX(TO_NUMBER(SUBSTR(COUPON_CD, 5, LENGTH(COUPON_CD)))),0) + 1, 10, '0')  AS COUPON_CD
+                      FROM  M_COUPON_MST
+                     WHERE  COMP_CD                 = ${COMP_CD}
+                       AND  SUBSTR(COUPON_CD, 1, 4) = TO_CHAR(SYSDATE, 'YY')||${COUPON_DIV}
+                )
+             ,  ${COUPON_NM}
+             ,  ${ISSUE_DT}
+             ,  ${COUPON_DIV}
+             ,  ${CERT_YN}
+             ,  ${DEAL_ID}
+             ,  ${COUPON_MSG}
+             ,  ${COUPON_RMK}
+             ,  ${START_DT}
+             ,  ${CLOSE_DT}
+             ,  ${COUPON_STAT}
+             ,  CASE WHEN ${COUPON_STAT} = '2' THEN TO_CHAR(SYSDATE, 'YYYYMMDD') ELSE NULL END
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='M_COUPON_STORE_Q'><![CDATA[
+    SELECT  CS.COMP_CD
+         ,  CS.COUPON_CD
+         ,  CS.BRAND_CD
+         ,  CS.STOR_CD
+         ,  S.STOR_NM
+         ,  CS.STOR_ID
+         ,  CS.USE_YN
+      FROM  M_COUPON_STORE  CS
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE           S
+                     ,  LANG_STORE      L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+           )                S
+     WHERE  CS.COMP_CD      = S.COMP_CD
+       AND  CS.BRAND_CD     = S.BRAND_CD
+       AND  CS.STOR_CD      = S.STOR_CD
+       AND  CS.COMP_CD      = ${SCH_COMP_CD}
+       AND  CS.COUPON_CD    = ${SCH_COUPON_CD}
+       AND  (${SCH_USE_YN}  IS NULL OR CS.USE_YN = ${SCH_USE_YN})
+     ORDER  BY CS.COUPON_CD, CS.BRAND_CD, CS.STOR_CD
+]]></query>
+
+<query name='M_COUPON_STORE_U'><![CDATA[
+    MERGE   INTO M_COUPON_STORE
+    USING   DUAL
+    ON  (
+                COMP_CD         = ${COMP_CD}
+            AND COUPON_CD       = ${COUPON_CD}
+            AND BRAND_CD        = ${BRAND_CD}
+            AND STOR_CD         = ${STOR_CD}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  STOR_ID         = ${STOR_ID}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  COUPON_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  STOR_ID
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${COUPON_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${STOR_ID}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='M_COUPON_ITEM_Q'><![CDATA[
+    SELECT  CI.COMP_CD
+         ,  CI.COUPON_CD
+         ,  CI.ITEM_CD
+         ,  I.ITEM_NM
+         ,  CI.ITEM_ID
+         ,  CI.SALE_AMT
+         ,  CI.USE_AMT
+         ,  CI.USE_YN
+      FROM  M_COUPON_ITEM   CI
+         ,  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_NM, I.ITEM_NM)   AS ITEM_NM
+                  FROM  ITEM            I
+                     ,  LANG_ITEM       L
+                 WHERE  I.COMP_CD       = L.COMP_CD(+)
+                   AND  I.ITEM_CD       = L.ITEM_CD(+)
+                   AND  I.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+           )                I
+     WHERE  CI.COMP_CD      = I.COMP_CD
+       AND  CI.ITEM_CD      = I.ITEM_CD
+       AND  CI.COMP_CD      = ${SCH_COMP_CD}
+       AND  CI.COUPON_CD    = ${SCH_COUPON_CD}
+       AND  (${SCH_USE_YN}  IS NULL OR CI.USE_YN = ${SCH_USE_YN})
+     ORDER  BY CI.COUPON_CD, CI.ITEM_CD
+]]></query>
+
+<query name='M_COUPON_ITEM_U'><![CDATA[
+    MERGE   INTO M_COUPON_ITEM
+    USING   DUAL
+    ON  (
+                COMP_CD         = ${COMP_CD}
+            AND COUPON_CD       = ${COUPON_CD}
+            AND ITEM_CD         = ${ITEM_CD}
+        )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  ITEM_ID         = ${ITEM_ID}
+             ,  SALE_AMT        = ${SALE_AMT}
+             ,  USE_AMT         = ${USE_AMT}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  COUPON_CD
+             ,  ITEM_CD
+             ,  ITEM_ID
+             ,  SALE_AMT
+             ,  USE_AMT
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${COUPON_CD}
+             ,  ${ITEM_CD}
+             ,  ${ITEM_ID}
+             ,  ${SALE_AMT}
+             ,  ${USE_AMT}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='ITEM_Q'><![CDATA[
+    SELECT  L_CLASS_CD
+         ,  M_CLASS_CD
+         ,  S_CLASS_CD
+         ,  ITEM_CD
+         ,  ITEM_NM
+         ,  SALE_PRC
+      FROM  (
+                SELECT  I.L_CLASS_CD
+                     ,  ILC.L_CLASS_NM
+                     ,  ILC.L_SORT_ORDER
+                     ,  I.M_CLASS_CD
+                     ,  IMC.M_CLASS_NM
+                     ,  IMC.M_SORT_ORDER
+                     ,  I.S_CLASS_CD
+                     ,  ISC.S_CLASS_NM 
+                     ,  ISC.S_SORT_ORDER
+                     ,  I.ITEM_CD
+                     ,  NVL(LI.ITEM_NM, I.ITEM_NM)  AS ITEM_NM
+                     ,  I.SALE_PRC
+                 FROM  (
+                            SELECT  * 
+                              FROM  ITEM
+                             WHERE  COMP_CD         = ${SCH_COMP_CD}
+                               AND  SERVICE_ITEM_YN = 'Y'
+                               AND  USE_YN          = 'Y'
+                       ) I
+                    ,  (
+                            SELECT  ITEM_CD   
+                                 ,  ITEM_NM   
+                              FROM  LANG_ITEM
+                             WHERE  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  COMP_CD     = ${SCH_COMP_CD}
+                               AND  USE_YN      = 'Y'
+                       ) LI        
+                    ,  ( 
+                            SELECT  L_CLASS_CD                      AS L_CLASS_CD
+                                 ,  NVL(L.LANG_NM, C.L_CLASS_NM)    AS L_CLASS_NM
+                                 ,  C.SORT_ORDER                    AS L_SORT_ORDER
+                              FROM  ITEM_L_CLASS  C
+                                 ,  ( 
+                                        SELECT  PK_COL, LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  TABLE_NM    = 'ITEM_L_CLASS'
+                                           AND  COL_NM      = 'L_CLASS_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  USE_YN      = 'Y'
+                                    ) L
+                             WHERE  C.ORG_CLASS_CD || C.L_CLASS_CD = L.PK_COL(+)
+                               AND  C.COMP_CD = ${SCH_COMP_CD}
+                        ) ILC
+                     ,  ( 
+                            SELECT  L_CLASS_CD                      AS L_CLASS_CD
+                                 ,  M_CLASS_CD                      AS M_CLASS_CD
+                                 ,  NVL(L.LANG_NM, C.M_CLASS_NM)    AS M_CLASS_NM
+                                 ,  C.SORT_ORDER                    AS M_SORT_ORDER
+                              FROM  ITEM_M_CLASS  C
+                                 ,  ( 
+                                        SELECT  PK_COL, LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  TABLE_NM    = 'ITEM_M_CLASS'
+                                           AND  COL_NM      = 'M_CLASS_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  USE_YN      = 'Y'
+                                    ) L
+                             WHERE  C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD = L.PK_COL(+)
+                               AND  C.COMP_CD = ${SCH_COMP_CD}
+                        ) IMC
+                     ,  (
+                            SELECT  L_CLASS_CD                      AS L_CLASS_CD
+                                 ,  M_CLASS_CD                      AS M_CLASS_CD
+                                 ,  S_CLASS_CD                      AS S_CLASS_CD
+                                 ,  NVL(L.LANG_NM, C.S_CLASS_NM)    AS S_CLASS_NM
+                                 ,  C.SORT_ORDER                    AS S_SORT_ORDER
+                              FROM  ITEM_S_CLASS  C
+                                 ,  ( 
+                                        SELECT  PK_COL, LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  TABLE_NM    = 'ITEM_S_CLASS'
+                                           AND  COL_NM      = 'S_CLASS_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  USE_YN      = 'Y'
+                                    ) L
+                             WHERE  C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD || C.S_CLASS_CD = L.PK_COL(+)
+                               AND  C.COMP_CD = ${SCH_COMP_CD}
+                        ) ISC                        
+                 WHERE  I.ITEM_CD      = LI.ITEM_CD(+)     
+                   AND  I.L_CLASS_CD   = ILC.L_CLASS_CD(+)
+                   AND  I.L_CLASS_CD   = IMC.L_CLASS_CD(+)
+                   AND  I.M_CLASS_CD   = IMC.M_CLASS_CD(+)
+                   AND  I.L_CLASS_CD   = ISC.L_CLASS_CD(+)  
+                   AND  I.M_CLASS_CD   = ISC.M_CLASS_CD(+)
+                   AND  I.S_CLASS_CD   = ISC.S_CLASS_CD(+)  
+                   AND  I.USE_YN       = 'Y'    
+                   AND  (${SCH_L_CLASS_CD} IS NULL OR I.L_CLASS_CD = ${SCH_L_CLASS_CD})
+                   AND  (${SCH_M_CLASS_CD} IS NULL OR I.M_CLASS_CD = ${SCH_M_CLASS_CD})
+                   AND  (${SCH_S_CLASS_CD} IS NULL OR I.S_CLASS_CD = ${SCH_S_CLASS_CD})
+            )  I   
+     WHERE  (${SCH_ITEM_TXT} IS NULL OR (ITEM_NM LIKE '%'|| ${SCH_ITEM_TXT} || '%' OR ITEM_CD LIKE '%'|| ${SCH_ITEM_TXT} || '%'))
+     ORDER  BY L_SORT_ORDER, L_CLASS_CD, M_SORT_ORDER, M_CLASS_CD, S_SORT_ORDER, S_CLASS_CD, ITEM_CD
+]]></query>
+
+<query name='M_COUPON_MST_2_Q'><![CDATA[
+    SELECT  CM.COMP_CD
+         ,  CM.COUPON_CD
+         ,  CM.COUPON_NM
+         ,  CM.COUPON_DIV
+         ,  CM.START_DT
+         ,  CM.CLOSE_DT
+         ,  CASE WHEN NVL(CC2.CNT, 0) > 0 THEN 'N' ELSE 'Y' END  AS IS_DEL_ALL_YN
+      FROM  M_COUPON_MST    CM
+         ,  (
+                SELECT  CM.COMP_CD
+                     ,  CM.COUPON_CD
+                  FROM  M_COUPON_MST    CM
+                     ,  M_COUPON_CUST   CC
+                 WHERE  CM.COMP_CD  = CC.COMP_CD(+)
+                   AND  CM.COUPON_CD= CC.COUPON_CD(+)
+                   AND  CM.COMP_CD  = ${SCH_COMP_CD}
+                   AND  (
+                            CM.START_DT BETWEEN ${SCH_YM}||'01' AND ${SCH_YM}||'31'
+                            OR
+                            CM.CLOSE_DT BETWEEN ${SCH_YM}||'01' AND ${SCH_YM}||'31'
+                        )
+                   AND  CM.COUPON_STAT  = '2'
+                   AND  (${SCH_COUPON_DIV} IS NULL OR CM.COUPON_DIV = ${SCH_COUPON_DIV})
+                   AND  CM.USE_YN       = 'Y'
+                   AND  (${SCH_CERT_NO}  IS NULL OR CC.CERT_NO  = ${SCH_CERT_NO})
+                   AND  (${SCH_USE_STAT} IS NULL OR CC.USE_STAT = ${SCH_USE_STAT})
+                   AND  CC.USE_YN(+)     = 'Y'
+                 GROUP  BY CM.COMP_CD, CM.COUPON_CD
+            )               CC1
+         ,  (
+                SELECT  COMP_CD
+                     ,  COUPON_CD
+                     ,  COUNT(*)    AS CNT
+                  FROM  M_COUPON_CUST
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  USE_YN      = 'Y'
+                   AND  USE_STAT    <> '00'
+                 GROUP  BY COMP_CD, COUPON_CD
+            )               CC2
+     WHERE  CM.COMP_CD      = CC1.COMP_CD
+       AND  CM.COUPON_CD    = CC1.COUPON_CD
+       AND  CM.COMP_CD      = CC2.COMP_CD(+)
+       AND  CM.COUPON_CD    = CC2.COUPON_CD(+)
+       AND  CM.COMP_CD      = ${SCH_COMP_CD}
+       AND  (
+                CM.START_DT BETWEEN ${SCH_YM}||'01' AND ${SCH_YM}||'31'
+                OR
+                CM.CLOSE_DT BETWEEN ${SCH_YM}||'01' AND ${SCH_YM}||'31'
+            )
+       AND  CM.COUPON_STAT  = '2'
+       AND  (${SCH_COUPON_DIV}  IS NULL OR CM.COUPON_DIV = ${SCH_COUPON_DIV})
+       AND  CM.USE_YN       = 'Y'
+     ORDER  BY CM.START_DT DESC, CM.CLOSE_DT DESC, CM.COUPON_CD DESC
+]]></query>
+
+<query name='M_COUPON_CUST_Q'><![CDATA[
+    SELECT  /*+ INDEX(CM PK_CS_MEMBER) */
+            CC.COMP_CD
+         ,  CC.COUPON_CD
+         ,  CC.CERT_NO
+         ,  CC.CUST_ID
+         ,  DECRYPT(CM.MEMBER_NM)                   AS CUST_NM
+         ,  FN_GET_FORMAT_HP_NO(DECRYPT(CC.MOBILE)) AS MOBILE
+         ,  CC.CERT_FDT
+         ,  CC.CERT_TDT
+         ,  CC.USE_STAT
+         ,  CC.USE_DT
+         ,  CC.USE_TM
+         ,  CC.BRAND_CD
+         ,  CC.STOR_CD
+         ,  S.STOR_NM
+         ,  CC.POS_NO
+         ,  CC.BILL_NO
+         ,  CC.RETURN_CD
+         ,  CC.RETURN_MSG
+         ,  CC.USE_YN
+      FROM  M_COUPON_CUST   CC
+         ,  CS_MEMBER       CM
+         ,  (
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  NVL(L.STOR_NM, S.STOR_NM)   AS STOR_NM
+                  FROM  STORE       S
+                     ,  LANG_STORE  L
+                 WHERE  S.COMP_CD       = L.COMP_CD(+)
+                   AND  S.BRAND_CD      = L.BRAND_CD(+)
+                   AND  S.STOR_CD       = L.STOR_CD(+)
+                   AND  S.COMP_CD       = ${SCH_COMP_CD}
+                   AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+                   AND  L.USE_YN(+)     = 'Y'
+            )               S
+     WHERE  CC.COMP_CD      = CM.COMP_CD(+)
+       AND  CC.CUST_ID      = CM.MEMBER_NO(+)
+       AND  CC.COMP_CD      = S.COMP_CD(+)
+       AND  CC.BRAND_CD     = S.BRAND_CD(+)
+       AND  CC.STOR_CD      = S.STOR_CD(+)
+       AND  CC.COMP_CD      = ${SCH_COMP_CD}
+       AND  CC.COUPON_CD    = ${SCH_COUPON_CD}
+       AND  (${SCH_CERT_NO}  IS NULL OR CC.CERT_NO  = ${SCH_CERT_NO})
+       AND  (${SCH_USE_STAT} IS NULL OR CC.USE_STAT = ${SCH_USE_STAT})
+       AND  (${SCH_USE_YN}   IS NULL OR CC.USE_YN   = ${SCH_USE_YN})
+     ORDER  BY CC.CERT_NO
+]]></query>
+
+<query name='CERT_NO_Q'><![CDATA[
+    SELECT  FN_GET_CERTNO_CREATE(${COMP_CD}, DECODE(${COUPON_DIV}, '10', 'C', 'W'), TO_CHAR(SYSDATE, 'YYYYMMDD'))   AS CERT_NO
+      FROM  DUAL
+]]></query>
+
+<!-- 쿠팡 인증번호 수동생성 -->
+<query name='CERT_NO_I'><![CDATA[
+    INSERT  INTO M_COUPON_CUST
+    (
+            COMP_CD
+         ,  COUPON_CD
+         ,  CERT_NO
+         ,  CERT_FDT
+         ,  CERT_TDT
+         ,  USE_STAT
+         ,  USE_YN
+    ) VALUES (
+            ${COMP_CD}
+         ,  ${COUPON_CD}
+         ,  ${CERT_NO}
+         ,  ${CERT_FDT}
+         ,  ${CERT_TDT}
+         ,  '00'
+         ,  'Y'
+    )
+]]></query>
+
+<query name='CERT_NO_C'><![CDATA[
+    SELECT  CASE WHEN COUNT(*) > 0 THEN 'N'
+                 ELSE 'Y'
+            END             AS DELETE_YN
+      FROM  M_COUPON_CUST
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  COUPON_CD   = ${COUPON_CD}
+       AND  USE_STAT   <> '00'
+]]></query>
+
+<query name='CERT_NO_ALL_D'><![CDATA[
+    DELETE  M_COUPON_CUST
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  COUPON_CD   = ${COUPON_CD}
+]]></query>
+
+<query name='M_COUPON_CUST_U'><![CDATA[
+    UPDATE  M_COUPON_CUST
+       SET  CERT_TDT    = ${CERT_TDT}
+         ,  USE_STAT    = ${USE_STAT}
+         ,  USE_YN      = ${USE_YN}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  COUPON_CD   = ${COUPON_CD}
+       AND  CERT_NO     = ${CERT_NO}
+]]></query>
+
+</SQLResource>

@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='W_BOARD_TXT_Q'><![CDATA[
+    SELECT  *
+      FROM  W_BOARD_TXT
+     WHERE  COMP_CD         = ${SCH_COMP_CD}
+       AND  BOARD_LST_SQ    = ${SCH_BOARD_LST_SQ}
+       AND  BOARD_TXT_SQ    = ${SCH_BOARD_TXT_SQ}
+       AND  BOARD_REP_SQ    = ${SCH_BOARD_REP_SQ}
+]]></query>
+
+</SQLResource>
+

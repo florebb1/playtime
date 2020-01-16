@@ -1,0 +1,398 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='PAY_MST_Q'><![CDATA[
+    SELECT  PM.COMP_CD
+          , PM.BRAND_CD
+          , PM.PAY_DIV
+          , PM.PAY_NM
+          , L.LANG_NM 
+          , PM.POINT_ADD_YN
+          , PM.CASH_BILL_YN
+          , PM.CHANGE_YN
+          , PM.DISPLAY_YN
+          , PM.CONST_DIV
+          , PM.CONST_VAL
+          , PM.ALLOT_RATE
+          , PM.USE_YN
+      FROM  PAY_MST  PM
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'PAY_MST'
+                   AND  COL_NM      = 'PAY_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = PM.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(PM.COMP_CD, 3, ' ')||LPAD(PM.BRAND_CD, 4, ' ')||LPAD(PM.PAY_DIV, 2, ' ') 
+       AND  PM.COMP_CD       = ${SCH_COMP_CD}
+       AND  PM.BRAND_CD      = ${SCH_BRAND_CD}
+       AND  (${SCH_USE_YN} IS NULL OR PM.USE_YN = ${SCH_USE_YN})
+     ORDER  BY PM.PAY_DIV
+]]></query>
+
+<query name='PAY_GRP_Q'><![CDATA[
+    SELECT  PG.COMP_CD
+          , PG.BRAND_CD
+          , PG.PAY_GRP_CD
+          , PG.PAY_GRP_NM
+          , L.LANG_NM
+          , PG.USE_YN
+      FROM  PAY_GRP  PG
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'PAY_GRP'
+                   AND  COL_NM      = 'PAY_GRP_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = PG.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(PG.COMP_CD, 3, ' ')||LPAD(PG.BRAND_CD, 4, ' ')||LPAD(PG.PAY_GRP_CD, 2, ' ') 
+       AND  PG.COMP_CD       = ${SCH_COMP_CD}
+       AND  PG.BRAND_CD      = ${SCH_BRAND_CD}
+       AND  (${SCH_USE_YN} IS NULL OR PG.USE_YN = ${SCH_USE_YN})
+     ORDER  BY PG.PAY_GRP_CD
+]]></query>
+
+<query name='PAY_GRP_DTL_Q'><![CDATA[
+    SELECT  GD.COMP_CD
+          , GD.BRAND_CD
+          , GD.PAY_GRP_CD
+          , GD.PAY_DIV
+          , PM.PAY_NM
+          , GD.USE_YN
+      FROM  PAY_MST     PM
+          , PAY_GRP_DTL GD
+          ,(
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'PAY_MST'
+                   AND  COL_NM      = 'PAY_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )   L
+     WHERE  L.COMP_CD(+)    = PM.COMP_CD
+       AND  L.PK_COL(+)     = LPAD(PM.COMP_CD, 3, ' ')||LPAD(PM.BRAND_CD, 4, ' ')||LPAD(PM.PAY_DIV, 2, ' ')
+       AND  PM.COMP_CD      = GD.COMP_CD
+       AND  PM.BRAND_CD     = GD.BRAND_CD
+       AND  PM.PAY_DIV      = GD.PAY_DIV 
+       AND  GD.COMP_CD      = ${SCH_COMP_CD}
+       AND  GD.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  GD.PAY_GRP_CD   = ${SCH_PAY_GRP_CD}
+       AND  (${SCH_USE_YN} IS NULL OR GD.USE_YN = ${SCH_USE_YN})
+     ORDER  BY GD.PAY_DIV
+]]></query>
+
+<query name='TAB02_PAY_GRP_Q'><![CDATA[
+    SELECT  PG.COMP_CD
+          , PG.BRAND_CD
+          , PG.PAY_GRP_CD
+          , PG.PAY_GRP_NM
+      FROM  PAY_GRP  PG
+     WHERE  PG.COMP_CD       = ${SCH_COMP_CD}
+       AND  PG.BRAND_CD      = ${SCH_BRAND_CD}
+       AND  PG.USE_YN       = 'Y'
+     ORDER  BY PG.PAY_GRP_CD
+]]></query>
+
+<query name='TAB02_PAY_GRP_DTL_Q'><![CDATA[
+    SELECT  GD.COMP_CD
+          , GD.BRAND_CD
+          , GD.PAY_GRP_CD
+          , GD.PAY_DIV
+          , PM.PAY_NM
+      FROM  PAY_MST     PM
+          , PAY_GRP_DTL GD
+     WHERE  PM.COMP_CD      = GD.COMP_CD
+       AND  PM.BRAND_CD     = GD.BRAND_CD
+       AND  PM.PAY_DIV      = GD.PAY_DIV 
+       AND  GD.COMP_CD      = ${SCH_COMP_CD}
+       AND  GD.BRAND_CD     = ${SCH_BRAND_CD}
+       AND  GD.PAY_GRP_CD   = ${SCH_PAY_GRP_CD}
+       AND  GD.USE_YN       = 'Y'
+     ORDER  BY GD.PAY_DIV
+]]></query>
+
+<query name='PAY_GRP_STOR_Q'><![CDATA[
+    SELECT  S.COMP_CD
+         ,  S.BRAND_CD
+         ,  B.BRAND_NM
+         ,  S.STOR_CD
+         ,  S.STOR_TP
+         ,  S.STOR_TG
+         ,  S.STOR_NM
+         ,  S.SV_USER_ID
+         ,  H.USER_NM
+         ,  G.PAY_GRP_CD
+         ,  G.USE_YN
+      FROM  STORE           S
+         ,  BRAND           B
+         ,  HQ_USER         H
+         , (
+            SELECT  *
+            FROM    PAY_GRP_STORE   
+            WHERE   COMP_CD   = ${SCH_COMP_CD}
+            AND     BRAND_CD  = ${SCH_BRAND_CD}
+            AND     PAY_GRP_CD = ${SCH_PAY_GRP_CD}
+            AND    (${SCH_STOR_CD} IS NULL OR STOR_CD    = ${SCH_STOR_CD})
+           ) G
+         , (
+            SELECT  COMP_CD
+                  , CODE_CD AS STOR_TP
+            FROM    COMMON
+            WHERE   COMP_CD   = ${SCH_COMP_CD}
+            AND     CODE_TP   = '00565'
+            AND     VAL_C1    = 'S' -- 매장만
+            AND     USE_YN    = 'Y'
+           )   C
+     WHERE  S.COMP_CD   = B.COMP_CD
+       AND  S.BRAND_CD  = B.BRAND_CD
+       AND  S.COMP_CD   = C.COMP_CD
+       AND  S.STOR_TP   = C.STOR_TP
+       AND  S.COMP_CD   = G.COMP_CD(+)
+       AND  S.BRAND_CD  = G.BRAND_CD(+)
+       AND  S.STOR_CD   = G.STOR_CD(+)
+       AND  S.COMP_CD   = H.COMP_CD(+)
+       AND  S.SV_USER_ID= H.USER_ID(+)
+       AND  S.COMP_CD   = ${SCH_COMP_CD}
+       AND  S.BRAND_CD  = ${SCH_BRAND_CD}
+       AND (${SCH_STOR_TP}    IS NULL OR S.STOR_TP       = ${SCH_STOR_TP})
+       AND (${SCH_STOR_TG}    IS NULL OR S.STOR_TG       = ${SCH_STOR_TG})
+       AND (${SCH_STOR_CD}    IS NULL OR S.STOR_CD       = ${SCH_STOR_CD})
+       AND (${SCH_USER_ID}    IS NULL OR S.SV_USER_ID    = ${SCH_USER_ID}) 
+]]></query>
+
+<query name='PAY_MST_U'><![CDATA[
+    MERGE   INTO PAY_MST
+    USING   DUAL
+       ON   (
+                    COMP_CD         = ${COMP_CD}
+                AND BRAND_CD        = ${BRAND_CD}
+                AND PAY_DIV         = ${PAY_DIV}
+            )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  PAY_NM             = ${PAY_NM}
+             ,  POINT_ADD_YN       = ${POINT_ADD_YN}
+             ,  CASH_BILL_YN       = ${CASH_BILL_YN}
+             ,  CHANGE_YN          = ${CHANGE_YN}
+             ,  DISPLAY_YN         = ${DISPLAY_YN}
+             ,  CONST_DIV          = ${CONST_DIV}
+             ,  CONST_VAL          = ${CONST_VAL}
+             ,  ALLOT_RATE         = ${ALLOT_RATE}
+             ,  USE_YN             = ${USE_YN}
+             ,  UPD_DT             = SYSDATE
+             ,  UPD_USER           = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  PAY_DIV
+             ,  PAY_NM
+             ,  POINT_ADD_YN
+             ,  CASH_BILL_YN
+             ,  CHANGE_YN
+             ,  DISPLAY_YN
+             ,  CONST_DIV
+             ,  CONST_VAL
+             ,  ALLOT_RATE
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${PAY_DIV}
+             ,  ${PAY_NM}
+             ,  ${POINT_ADD_YN}
+             ,  ${CASH_BILL_YN}
+             ,  ${CHANGE_YN}
+             ,  ${DISPLAY_YN}
+             ,  ${CONST_DIV}
+             ,  ${CONST_VAL}
+             ,  ${ALLOT_RATE}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )  
+]]></query>
+
+<query name='PAY_GRP_U'><![CDATA[
+    MERGE   INTO PAY_GRP
+    USING   DUAL
+       ON   (
+                    COMP_CD         = ${COMP_CD}
+                AND BRAND_CD        = ${BRAND_CD}
+                AND PAY_GRP_CD      = ${PAY_GRP_CD}
+            )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  PAY_GRP_NM         = ${PAY_GRP_NM}
+             ,  USE_YN             = ${USE_YN}
+             ,  UPD_DT             = SYSDATE
+             ,  UPD_USER           = ${USER_ID}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  PAY_GRP_CD
+             ,  PAY_GRP_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${PAY_GRP_CD}
+             ,  ${PAY_GRP_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )  
+]]></query>
+
+<query name='PAY_GRP_DTL_U'><![CDATA[
+    MERGE   INTO PAY_GRP_DTL
+    USING   DUAL
+       ON   (
+                    COMP_CD         = ${COMP_CD}
+                AND BRAND_CD        = ${BRAND_CD}
+                AND PAY_GRP_CD      = ${PAY_GRP_CD}
+                AND PAY_DIV         = ${PAY_DIV}
+            )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  USE_YN             = ${USE_YN}
+             ,  UPD_DT             = SYSDATE
+             ,  UPD_USER           = ${USER_ID}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  PAY_GRP_CD
+             ,  PAY_DIV
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${PAY_GRP_CD}
+             ,  ${PAY_DIV}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )  
+]]></query>
+
+<query name='PAY_GRP_STORE_U'><![CDATA[
+    MERGE   INTO PAY_GRP_STORE
+    USING   DUAL
+       ON   (
+                    COMP_CD         = ${COMP_CD}
+                AND BRAND_CD        = ${BRAND_CD}
+                AND STOR_CD         = ${STOR_CD}
+            )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  PAY_GRP_CD         = ${PAY_GRP_CD}
+             ,  USE_YN             = ${USE_YN}
+             ,  UPD_DT             = SYSDATE
+             ,  UPD_USER           = ${USER_ID}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  PAY_GRP_CD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${PAY_GRP_CD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )  
+]]></query>
+
+<query name='LANG_TABLE_U'><![CDATA[      
+    MERGE   INTO LANG_TABLE
+    USING   DUAL
+       ON   (
+                    COMP_CD     = ${COMP_CD}
+                AND TABLE_NM    = ${TABLE_NM}
+                AND COL_NM      = ${COL_NM}
+                AND LANGUAGE_TP = ${LANGUAGE_TP}
+                AND PK_COL      = ${PK_COL}
+            )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+     WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER  
+             ,  UPD_DT
+             ,  UPD_USER 
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )
+]]></query>
+
+</SQLResource>

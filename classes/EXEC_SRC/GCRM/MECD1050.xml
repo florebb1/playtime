@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!--  카테고리 구분 조회 -->
+<query name='C_CARD_CTG_DIV_Q'><![CDATA[
+    SELECT  CATEGORY_DIV
+          , CATEGORY_CD
+          , CATEGORY_NM
+          , SORT_ORDER
+          , USE_YN
+    FROM    C_CARD_CTG
+    WHERE   COMP_CD      = ${SCH_COMP_CD}
+    AND     CATEGORY_DIV = '000'
+    AND  (${SCH_USE_YN} IS NULL OR USE_YN = ${SCH_USE_YN})
+    ORDER BY 
+            SORT_ORDER
+]]></query>
+
+<!--  카테고리 코드 조회 -->
+<query name='C_CARD_CTG_CD_Q'><![CDATA[
+    SELECT  CATEGORY_DIV
+          , CATEGORY_CD
+          , CATEGORY_NM
+          , SORT_ORDER
+          , USE_YN
+    FROM    C_CARD_CTG
+    WHERE   COMP_CD      = ${SCH_COMP_CD}
+    AND     CATEGORY_DIV = ${SCH_CTG_DIV}
+    AND  (${SCH_USE_YN} IS NULL OR USE_YN = ${SCH_USE_YN})
+    ORDER BY 
+            SORT_ORDER
+]]></query>
+
+<!-- 카테고리 코드 수정 -->
+<query name='C_CARD_CTG_DIV_I'><![CDATA[
+    INSERT INTO C_CARD_CTG (
+                            COMP_CD    , CATEGORY_DIV, CATEGORY_CD, 
+                            CATEGORY_NM, SORT_ORDER  , USE_YN     , 
+                            INST_DT    , INST_USER   ,
+                            UPD_DT     , UPD_USER
+                           )
+                    VALUES (
+                            ${COMP_CD}    , ${CATEGORY_DIV}, ${CATEGORY_CD}, 
+                            ${CATEGORY_NM}, ${SORT_ORDER}  , DECODE(${USE_YN}, 'Y', 'Y', 'N'), 
+                            SYSDATE       , ${UPD_USER}    ,
+                            SYSDATE       , ${UPD_USER}
+                           )
+]]></query>
+
+<!-- 카테고리 코드 수정 -->
+<query name='C_CARD_CTG_DIV_U'><![CDATA[
+    UPDATE  C_CARD_CTG
+       SET  CATEGORY_NM  = ${CATEGORY_NM}
+         ,  SORT_ORDER   = ${SORT_ORDER}
+         ,  USE_YN       = DECODE(${USE_YN}, 'Y', 'Y', 'N')
+         ,  UPD_DT       = SYSDATE
+         ,  UPD_USER     = ${UPD_USER}
+    WHERE   COMP_CD      = ${COMP_CD}
+    AND     CATEGORY_DIV = ${CATEGORY_DIV}
+    AND     CATEGORY_CD  = ${CATEGORY_CD}
+]]></query>
+
+<!-- 쿠폰검색 -->
+<query name='UNI_CARD_SELECT_Q'><![CDATA[
+    SELECT  NVL(SUM(CASE WHEN CUST_ID IS NULL AND CARD_STAT IN ('00','10') THEN 1 ELSE 0 END), 0) AS RTNCODE
+    FROM    C_CARD
+    WHERE   COMP_CD   = ${SCH_COMP_CD}
+    AND     CARD_ID   = encrypt(${SCH_CARD_ID})
+    AND     EXISTS (
+                    SELECT  1
+                    FROM    PCRM.C_CARD_TYPE     CCT
+                          , PCRM.C_CARD_TYPE_REP CTR 
+                    WHERE   CCT.COMP_CD   = CTR.COMP_CD
+                    AND     CCT.CARD_TYPE = CTR.CARD_TYPE
+                    AND     CTR.COMP_CD   = ${SCH_COMP_CD}
+                    AND     ${SCH_CARD_ID} BETWEEN decrypt(CTR.START_CARD_CD) AND decrypt(CTR.CLOSE_CARD_CD)
+                    AND     CCT.UNIQUE_YN = 'Y'
+                   )
+    AND NOT EXISTS (
+                    SELECT  1
+                    FROM    C_CARD_APPL APL
+                    WHERE   COMP_CD     = ${SCH_COMP_CD}
+                    AND     CARD_ID     = encrypt(${SCH_CARD_ID})
+                   )
+]]></query>
+
+<query name='ENCRYPT_CARD_ID_Q'><![CDATA[
+    SELECT  encrypt(${SCH_CARD_ID}) AS ENC_CARD_ID
+    FROM    DUAL
+]]></query>
+
+</SQLResource>

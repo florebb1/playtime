@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='SC_TRAN_SEQ_Q'><![CDATA[
+    SELECT  SC_TRAN_SEQ.NEXTVAL     AS SC_TRAN_SEQ
+      FROM  DUAL
+]]></query>
+
+<query name='CS_CONTENT_SEND_U'><![CDATA[
+    UPDATE  CS_CONTENT_SEND
+       SET  MSGKEY      = ${MSGKEY}
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  SEND_DT     = ${SEND_DT}
+       AND  SEND_SEQ    = ${SEND_SEQ}
+]]></query>
+
+<query name='SC_TRAN_I'><![CDATA[
+    INSERT INTO SC_TRAN
+    (       TR_NUM
+         ,  TR_SENDDATE
+         ,  TR_SENDSTAT
+         ,  TR_MSGTYPE
+         ,  TR_CALLBACK
+         ,  TR_PHONE
+         ,  TR_MSG
+    ) VALUES (
+            ${TR_NUM}
+         ,  TO_DATE(${TR_SENDDATE}, 'YYYYMMDDHH24MISS')
+         ,  '0'
+         ,  '0'
+         ,  DECRYPT(${TR_CALLBACK})
+         ,  REPLACE(${TR_PHONE}, '-', '')
+         ,  ${TR_MSG}
+    )
+]]></query>
+
+<query name='CS_CONTENT_SEND_LOG_I'><![CDATA[
+    INSERT  INTO CS_CONTENT_SEND_LOG
+    (
+            COMP_CD
+         ,  SEND_DT
+         ,  SEND_SEQ
+         ,  MSGKEY
+         ,  INST_DT
+         ,  INST_USER
+    ) VALUES (
+            ${COMP_CD}
+         ,  ${SEND_DT}
+         ,  ${SEND_SEQ}
+         ,  ${MSGKEY}
+         ,  SYSDATE
+         ,  ${UPD_USER}
+    )
+]]></query>
+
+</SQLResource>
+

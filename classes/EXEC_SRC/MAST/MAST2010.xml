@@ -1,0 +1,285 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='SALE_JDS_Q'><![CDATA[  
+    SELECT  JDS.COMP_CD
+          , JDS.SALE_DT
+          , JDS.BRAND_CD
+          , JDS.STOR_CD
+          , STO.STOR_NM
+          , JDS.SALE_AMT
+          , JDS.DC_AMT + JDS.ENR_AMT  AS DC_AMT
+          , JDS.GRD_AMT
+          , JDS.GRD_AMT - JDS.VAT_AMT AS NET_AMT
+          , JDS.VAT_AMT
+          , 'Y'                       AS USE_YN 
+    FROM    SALE_JDS     JDS
+          , STORE        STO
+          , STORE_OPTION OPT
+    WHERE   STO.COMP_CD   = OPT.COMP_CD
+    AND     STO.BRAND_CD  = OPT.BRAND_CD
+    AND     STO.STOR_CD   = OPT.STOR_CD
+    AND     STO.COMP_CD   = JDS.COMP_CD
+    AND     STO.BRAND_CD  = JDS.BRAND_CD
+    AND     STO.STOR_CD   = JDS.STOR_CD
+    AND     JDS.COMP_CD   = ${SCH_COMP_CD}
+    AND     JDS.SALE_DT   = ${SCH_SALE_DT}
+    AND     JDS.SALE_TYPE = '1'
+    AND     JDS.GIFT_DIV  = '0'
+    AND     STO.SELF_POS_YN = 'N'
+]]></query>
+
+<query name='STORE_HCS_Q'><![CDATA[  
+    SELECT  HCS.COMP_CD
+          , HCS.HCS_YM
+          , HCS.BRAND_CD
+          , HCS.STOR_CD
+          , STO.STOR_NM
+          , HCS.ENV_SCORE
+          , HCS.SAT_SCORE
+          , HCS.SVR_SCORE
+          , HCS.TOT_SCORE
+          , HCS.USE_YN 
+    FROM    STORE_HCS    HCS
+          , STORE        STO
+    WHERE   HCS.COMP_CD   = STO.COMP_CD
+    AND     HCS.BRAND_CD  = STO.BRAND_CD
+    AND     HCS.STOR_CD   = STO.STOR_CD
+    AND     HCS.COMP_CD   = ${SCH_COMP_CD}
+    AND     HCS.HCS_YM    = ${SCH_HCS_YM}
+    AND     HCS.USE_YN    = 'Y'
+]]></query>
+
+<query name='STORE_HSR_Q'><![CDATA[  
+    SELECT  HSR.COMP_CD
+          , HSR.HSR_YM
+          , HSR.BRAND_CD
+          , HSR.STOR_CD
+          , STO.STOR_NM
+          , HSR.QUA_SCORE
+          , HSR.SAN_SCORE
+          , HSR.SVR_SCORE
+          , HSR.TOT_SCORE
+          , HSR.USE_YN 
+    FROM    STORE_HSR    HSR
+          , STORE        STO
+    WHERE   HSR.COMP_CD   = STO.COMP_CD
+    AND     HSR.BRAND_CD  = STO.BRAND_CD
+    AND     HSR.STOR_CD   = STO.STOR_CD
+    AND     HSR.COMP_CD   = ${SCH_COMP_CD}
+    AND     HSR.HSR_YM    = ${SCH_HSR_YM}
+    AND     HSR.USE_YN    = 'Y'
+]]></query>
+
+<query name='STORE_OPTION_Q'><![CDATA[  
+    SELECT  CASE WHEN NVL(MAX(OPT.SELF_POS_YN), 'N') = 'N' THEN 'Y' ELSE 'N' END AS UPLOAD_YN 
+    FROM    STORE OPT
+    WHERE   OPT.COMP_CD   = ${SCH_COMP_CD}
+    AND     OPT.BRAND_CD  = ${SCH_BRAND_CD}
+    AND     OPT.STOR_CD   = ${SCH_STOR_CD}
+]]></query>
+
+<query name='SALE_JDS_U'><![CDATA[
+    MERGE   INTO SALE_JDS JDS
+    USING   DUAL
+    ON     ( 
+                COMP_CD     = ${COMP_CD}
+            AND SALE_DT     = ${SALE_DT}
+            AND BRAND_CD    = ${BRAND_CD}
+            AND STOR_CD     = ${STOR_CD}
+            AND SALE_TYPE   = '1'
+            AND GIFT_DIV    = '0'
+        )
+    WHEN MATCHED  THEN
+        UPDATE
+        SET STAY_TIME = TO_CHAR(SYSDATE, 'HH24MISS')
+          , SALE_QTY  = 0
+          , SALE_AMT  = CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${SALE_AMT}) END
+          , DC_AMT    = CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${DC_AMT})   END
+          , ENR_AMT   = 0
+          , GRD_AMT   = CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${GRD_AMT}) END
+          , GRD_I_AMT = CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${GRD_AMT}) END
+          , GRD_O_AMT = 0
+          , VAT_AMT   = CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${VAT_AMT}) END
+          , VAT_I_AMT = CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${VAT_AMT}) END
+          , VAT_O_AMT = 0
+    WHEN NOT MATCHED THEN
+        INSERT 
+           (
+            COMP_CD
+          , SALE_DT
+          , BRAND_CD
+          , STOR_CD
+          , SALE_TYPE
+          , GIFT_DIV
+          , BILL_CNT
+          , CUST_M_CNT
+          , CUST_F_CNT
+          , ETC_M_CNT
+          , ETC_F_CNT
+          , TABLE_CNT
+          , STAY_TIME
+          , SALE_QTY
+          , SALE_AMT
+          , DC_AMT
+          , ENR_AMT
+          , GRD_AMT
+          , GRD_I_AMT
+          , GRD_O_AMT
+          , VAT_AMT
+          , VAT_I_AMT
+          , VAT_O_AMT
+          , SVC_AMT
+          , SVC_VAT_AMT
+          , R_BILL_CNT
+          , R_SALE_QTY
+          , R_SALE_AMT
+          , R_GRD_AMT
+          , R_VAT_AMT
+          , SAV_PT
+          , SAV_MLG
+           )
+        VALUES
+           (
+            ${COMP_CD}
+          , ${SALE_DT}
+          , ${BRAND_CD}
+          , ${STOR_CD}
+          , '1'
+          , '0'
+          , 0
+          , 0
+          , 0
+          , 0
+          , 0
+          , 0
+          , TO_CHAR(SYSDATE, 'HH24MISS')
+          , 0
+          , CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${SALE_AMT}) END
+          , CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${DC_AMT})   END
+          , 0
+          , CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${GRD_AMT}) END
+          , CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${GRD_AMT}) END
+          , 0
+          , CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${VAT_AMT}) END
+          , CASE WHEN ${USE_YN} = 'N' THEN 0 ELSE TO_NUMBER(${VAT_AMT}) END
+          , 0
+          , 0
+          , 0
+          , 0
+          , 0
+          , 0
+          , 0
+          , 0
+          , 0
+          , 0
+        )
+]]></query>
+    
+<query name='STORE_HCS_U'><![CDATA[
+    MERGE   INTO STORE_HCS
+    USING   DUAL
+    ON     ( 
+                COMP_CD     = ${COMP_CD}
+            AND HCS_YM      = ${HCS_YM}
+            AND BRAND_CD    = ${BRAND_CD}
+            AND STOR_CD     = ${STOR_CD}
+        )
+    WHEN MATCHED  THEN
+        UPDATE
+        SET ENV_SCORE   = ${ENV_SCORE}
+          , SAT_SCORE   = ${SAT_SCORE}
+          , SVR_SCORE   = ${SVR_SCORE}
+          , TOT_SCORE   = ${TOT_SCORE}
+          , USE_YN      = ${USE_YN}
+          , UPD_DT      = SYSDATE
+          , UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT 
+           (
+            COMP_CD
+          , HCS_YM
+          , BRAND_CD
+          , STOR_CD
+          , ENV_SCORE
+          , SAT_SCORE
+          , SVR_SCORE
+          , TOT_SCORE
+          , USE_YN
+          , INST_DT
+          , INST_USER
+          , UPD_DT
+          , UPD_USER
+           )
+        VALUES
+           (
+            ${COMP_CD}
+          , ${HCS_YM}
+          , ${BRAND_CD}
+          , ${STOR_CD}
+          , ${ENV_SCORE}
+          , ${SAT_SCORE}
+          , ${SVR_SCORE}
+          , ${TOT_SCORE}
+          , ${USE_YN}
+          , SYSDATE
+          , ${USER_ID}
+          , SYSDATE
+          , ${USER_ID}
+        )
+]]></query>
+    
+<query name='STORE_HSR_U'><![CDATA[
+    MERGE   INTO STORE_HSR
+    USING   DUAL
+    ON     ( 
+                COMP_CD     = ${COMP_CD}
+            AND HSR_YM      = ${HSR_YM}
+            AND BRAND_CD    = ${BRAND_CD}
+            AND STOR_CD     = ${STOR_CD}
+        )
+    WHEN MATCHED  THEN
+        UPDATE
+        SET QUA_SCORE   = ${QUA_SCORE}
+          , SAN_SCORE   = ${SAN_SCORE}
+          , SVR_SCORE   = ${SVR_SCORE}
+          , TOT_SCORE   = ${TOT_SCORE}
+          , USE_YN      = ${USE_YN}
+          , UPD_DT      = SYSDATE
+          , UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT 
+           (
+            COMP_CD
+          , HSR_YM
+          , BRAND_CD
+          , STOR_CD
+          , QUA_SCORE
+          , SAN_SCORE
+          , SVR_SCORE
+          , TOT_SCORE
+          , USE_YN
+          , INST_DT
+          , INST_USER
+          , UPD_DT
+          , UPD_USER
+           )
+        VALUES
+           (
+            ${COMP_CD}
+          , ${HSR_YM}
+          , ${BRAND_CD}
+          , ${STOR_CD}
+          , ${QUA_SCORE}
+          , ${SAN_SCORE}
+          , ${SVR_SCORE}
+          , ${TOT_SCORE}
+          , ${USE_YN}
+          , SYSDATE
+          , ${USER_ID}
+          , SYSDATE
+          , ${USER_ID}
+        )
+]]></query>
+
+</SQLResource>

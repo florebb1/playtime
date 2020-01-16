@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='ITEM_SINGLE_Q'><![CDATA[
+    SELECT  I.ITEM_CD
+         ,  I.ITEM_NM
+      FROM  ITEM    I
+     WHERE  I.COMP_CD   = ${SCH_COMP_CD}
+       AND  (${SCH_ITEM_TXT} IS NULL OR (I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%'))
+       AND  I.USE_YN    = 'Y'
+]]></query>
+
+<query name='ITEM_LIST_Q'><![CDATA[
+    SELECT  I.COMP_CD
+         ,  I.L_CLASS_CD
+         ,  LC.L_CLASS_NM
+         ,  I.M_CLASS_CD
+         ,  MC.M_CLASS_NM
+         ,  I.S_CLASS_CD
+         ,  SC.S_CLASS_NM
+         ,  I.ITEM_CD
+         ,  I.ITEM_NM
+         ,  I.SALE_PRC
+      FROM  ITEM        I
+         ,  (
+                SELECT  COMP_CD
+                     ,  ITEM_CD
+                     ,  ITEM_NM
+                  FROM  LANG_ITEM
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )           L
+         ,  (
+                SELECT  COMP_CD
+                     ,  L_CLASS_CD
+                     ,  L_CLASS_NM
+                     ,  SORT_ORDER
+                  FROM  ITEM_L_CLASS
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  ORG_CLASS_CD= ${SCH_ORG_CLASS_CD}
+                   AND  USE_YN      = 'Y'
+            )   LC
+         ,  (
+                SELECT  COMP_CD
+                     ,  L_CLASS_CD
+                     ,  M_CLASS_CD
+                     ,  M_CLASS_NM
+                     ,  SORT_ORDER
+                  FROM  ITEM_M_CLASS
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  ORG_CLASS_CD= ${SCH_ORG_CLASS_CD}
+                   AND  USE_YN      = 'Y'
+            )   MC
+         ,  (
+                SELECT  COMP_CD
+                     ,  L_CLASS_CD
+                     ,  M_CLASS_CD
+                     ,  S_CLASS_CD
+                     ,  S_CLASS_NM
+                     ,  SORT_ORDER
+                  FROM  ITEM_S_CLASS
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  ORG_CLASS_CD= ${SCH_ORG_CLASS_CD}
+                   AND  USE_YN      = 'Y'
+            )   SC
+     WHERE  I.COMP_CD       = L.COMP_CD(+)
+       AND  I.ITEM_CD       = L.ITEM_CD(+)
+       AND  I.COMP_CD       = LC.COMP_CD(+)
+       AND  I.L_CLASS_CD    = LC.L_CLASS_CD(+)
+       AND  I.COMP_CD       = MC.COMP_CD(+)
+       AND  I.L_CLASS_CD    = MC.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD    = MC.M_CLASS_CD(+)
+       AND  I.COMP_CD       = SC.COMP_CD(+)
+       AND  I.L_CLASS_CD    = SC.L_CLASS_CD(+)
+       AND  I.M_CLASS_CD    = SC.M_CLASS_CD(+)
+       AND  I.S_CLASS_CD    = SC.S_CLASS_CD(+)
+       AND  I.COMP_CD       = ${SCH_COMP_CD}
+       AND  (${SCH_L_CLASS_CD}      IS NULL OR I.L_CLASS_CD     = ${SCH_L_CLASS_CD})
+       AND  (${SCH_M_CLASS_CD}      IS NULL OR I.M_CLASS_CD     = ${SCH_M_CLASS_CD})
+       AND  (${SCH_S_CLASS_CD}      IS NULL OR I.S_CLASS_CD     = ${SCH_S_CLASS_CD})
+       AND  (${SCH_SERVICE_ITEM_YN} IS NULL OR I.SERVICE_ITEM_YN= ${SCH_SERVICE_ITEM_YN})
+       AND  (${SCH_ITEM_TXT}        IS NULL OR (I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%'))
+       AND  I.USE_YN    = 'Y'
+     ORDER  BY I.ITEM_CD
+]]></query>
+
+</SQLResource>
+

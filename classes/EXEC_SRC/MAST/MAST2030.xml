@@ -1,0 +1,257 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+<query name='STORE_DEVICE_Q'><![CDATA[  
+    SELECT  DM.COMP_CD
+         ,  NVL(SD.BRAND_CD , ${SCH_BRAND_CD})      AS BRAND_CD
+         ,  NVL(SD.STOR_CD  , ${SCH_STOR_CD})       AS STOR_CD
+         ,  NVL(SD.POS_NO   , ${SCH_POS_NO})        AS POS_NO
+         ,  DM.DEVICE_DIV
+         ,  DM.DEVICE_CD
+         ,  MAX(DM.DEVICE_NM)                       AS DEVICE_NM
+         ,  MAX(NVL(CASE WHEN INSTR(SD.DEVICE_KEY, 'TYPE') > 0 THEN DEVICE_VAL
+                         ELSE ''
+                    END, '0'))                      AS DEVICE_TYPE
+         ,  MAX(NVL(CASE WHEN INSTR(SD.DEVICE_KEY, 'KIND') > 0 THEN DEVICE_VAL
+                         ELSE ''
+                    END, ''))                       AS DEVICE_KIND
+         ,  MAX(NVL(CASE WHEN INSTR(SD.DEVICE_KEY, 'IP') > 0 THEN DEVICE_VAL
+                         ELSE ''
+                    END, ''))                       AS DEVICE_IP
+         ,  MAX(NVL(CASE WHEN INSTR(SD.DEVICE_KEY, 'PORT') > 0 THEN DEVICE_VAL
+                         ELSE ''
+                    END, ''))                       AS DEVICE_PORT
+         ,  MAX(NVL(CASE WHEN INSTR(SD.DEVICE_KEY, 'COM') > 0 THEN DEVICE_VAL
+                         ELSE ''
+                    END, ''))                       AS DEVICE_COM
+         ,  MAX(NVL(CASE WHEN INSTR(SD.DEVICE_KEY, 'BAUD') > 0 THEN DEVICE_VAL
+                         ELSE ''
+                    END, ''))                       AS DEVICE_BAUD
+         ,  MAX(NVL(CASE WHEN INSTR(SD.DEVICE_KEY, 'NAME') > 0 THEN DEVICE_VAL
+                         ELSE ''
+                    END, ''))                       AS DEVICE_NAME
+         ,  MAX(PC.KD_PORT)                         AS KD_PORT
+      FROM  DEVICE_MST      DM
+         ,  STORE_DEVICE    SD
+         ,  (
+                SELECT  NVL(PC.PARA_VAL, PM.PARA_DEFAULT)   AS KD_PORT
+                  FROM  PARA_MST        PM
+                     ,  PARA_COMPANY    PC
+                 WHERE  PM.PARA_CD      = PC.PARA_CD(+)
+                   AND  PM.PARA_TABLE   = 'PARA_COMPANY'
+                   AND  PM.PARA_CD      = '2008'
+                   AND  PC.COMP_CD(+)   = ${SCH_COMP_CD}
+                   AND  PC.USE_YN(+)    = 'Y'
+            )   PC
+     WHERE  DM.COMP_CD      = SD.COMP_CD(+)
+       AND  DM.DEVICE_DIV   = SD.DEVICE_DIV(+)
+       AND  DM.DEVICE_CD    = SD.DEVICE_CD(+)
+       AND  DM.COMP_CD      = ${SCH_COMP_CD}
+       AND  DM.DEVICE_DIV   = ${SCH_DEVICE_DIV}
+       AND  SD.BRAND_CD(+)  = ${SCH_BRAND_CD}
+       AND  SD.STOR_CD(+)   = ${SCH_STOR_CD}
+       AND  SD.POS_NO(+)    = ${SCH_POS_NO}
+     GROUP  BY DM.COMP_CD, SD.BRAND_CD, SD.STOR_CD, SD.POS_NO, DM.DEVICE_DIV, DM.DEVICE_CD
+     ORDER  BY DM.DEVICE_DIV, MAX(DM.SORT_ORDER), DM.DEVICE_CD
+]]></query>
+
+<query name='COMMON_Q'><![CDATA[  
+    SELECT  C.COMP_CD
+         ,  C.CODE_TP
+         ,  C.CODE_CD
+         ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+      FROM  COMMON          C
+         ,  LANG_COMMON     L
+     WHERE  C.COMP_CD       = L.COMP_CD(+)
+       AND  C.CODE_TP       = L.CODE_TP(+)
+       AND  C.CODE_CD       = L.CODE_CD(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CODE_TP       IN (@SCH_CODE_TP@)
+       AND  C.USE_YN        = 'Y'
+       AND  L.LANGUAGE_TP(+)= ${SCH_LANGUAGE_TP}
+       AND  L.USE_YN(+)     = 'Y'
+     ORDER  BY SORT_SEQ, CODE_CD
+]]></query>
+
+<query name='DEVICE_IF_Q'><![CDATA[  
+    SELECT  *
+      FROM  DEVICE_IF
+     WHERE  COMP_CD     = ${SCH_COMP_CD}
+       AND  DEVICE_DIV  = ${SCH_DEVICE_DIV}
+       AND  USE_YN      = 'Y'
+     ORDER  BY DEVICE_CD, DEVICE_KEY
+]]></query>
+
+<query name='STORE_DEVICE_U'><![CDATA[
+    MERGE   INTO STORE_DEVICE
+    USING   DUAL
+    ON (
+                COMP_CD             = ${COMP_CD}
+           AND  BRAND_CD            = ${BRAND_CD}
+           AND  STOR_CD             = ${STOR_CD}
+           AND  POS_NO              = ${POS_NO}
+           AND  DEVICE_DIV          = ${DEVICE_DIV}
+           AND  DEVICE_CD           = ${DEVICE_CD}
+           AND  DEVICE_KEY          = ${DEVICE_KEY}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  DEVICE_VAL          = ${DEVICE_VAL}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${UPD_USER}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+            ,   BRAND_CD
+            ,   STOR_CD
+            ,   POS_NO
+            ,   DEVICE_DIV
+            ,   DEVICE_CD
+            ,   DEVICE_KEY
+            ,   DEVICE_VAL
+            ,   USE_YN
+            ,   INST_DT
+            ,   INST_USER
+            ,   UPD_DT
+            ,   UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+            ,   ${BRAND_CD}
+            ,   ${STOR_CD}
+            ,   ${POS_NO}
+            ,   ${DEVICE_DIV}
+            ,   ${DEVICE_CD}
+            ,   ${DEVICE_KEY}
+            ,   ${DEVICE_VAL}
+            ,   'Y'
+            ,   SYSDATE
+            ,   ${UPD_USER}
+            ,   SYSDATE
+            ,   ${UPD_USER}
+        )  
+]]></query>
+
+<query name='STORE_Q'><![CDATA[
+    WITH CM AS
+        (
+            SELECT  C.CODE_TP                   AS CODE_TP
+                 ,  C.CODE_CD                   AS CODE_CD
+                 ,  NVL(L.CODE_NM, C.CODE_NM)   AS CODE_NM
+                 ,  VAL_C1
+              FROM  COMMON C
+                 ,  (
+                        SELECT  CODE_TP, CODE_CD, CODE_NM
+                          FROM  LANG_COMMON
+                         WHERE  CODE_TP      IN ( '00565', '00650')
+                           AND  LANGUAGE_TP  = DECODE(${SCH_LANGUAGE}, NULL, ' ', ${SCH_LANGUAGE} )
+                           AND  COMP_CD      = ${SCH_COMP_CD}
+                           AND  USE_YN       = 'Y'
+                    )   L
+             WHERE  C.CODE_TP  = L.CODE_TP(+)
+               AND  C.CODE_CD  = L.CODE_CD(+)
+               AND  C.CODE_TP  IN ( '00565', '00650' )
+               AND  C.COMP_CD  = ${SCH_COMP_CD}
+               AND  C.USE_YN   = 'Y'
+        )
+    SELECT  STOR_CD
+         ,  STOR_NM
+         ,  STOR_TP
+         ,  STOR_TP_NM
+         ,  SV_USER_ID
+         ,  SV_USER_NM
+         ,  APP_DIV
+         ,  APP_DIV_NM
+         ,  TEL_NO
+      FROM  (
+                SELECT  A.STOR_CD        AS STOR_CD
+                     ,  NVL(LT.STOR_NM,B.STOR_NM)   AS STOR_NM
+                     ,  B.STOR_TP        AS STOR_TP
+                     ,  C.CODE_NM        AS STOR_TP_NM
+                     ,  B.SV_USER_ID     AS SV_USER_ID
+                     ,  D.USER_NM        AS SV_USER_NM
+                     ,  B.APP_DIV        AS APP_DIV
+                     ,  E.CODE_NM        AS APP_DIV_NM
+                     ,  B.TEL_NO         AS TEL_NO
+                  FROM THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO )
+                              FROM DUAL ) A
+                     ,  STORE B
+                     ,  ( 
+                            SELECT  CODE_CD, CODE_NM, VAL_C1 
+                              FROM  CM 
+                             WHERE  CODE_TP = '00565' 
+                        )   C
+                     ,  ( 
+                            SELECT  CODE_CD, CODE_NM 
+                              FROM  CM 
+                             WHERE  CODE_TP = '00650' 
+                        )   E
+                     , HQ_USER D
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE}
+                               AND  USE_YN  = 'Y'
+                        )   LT
+                 WHERE  A.COMP_CD    = B.COMP_CD
+                   AND  A.STOR_CD    = B.STOR_CD
+                   AND  B.STOR_TP    = C.CODE_CD(+)
+                   AND  B.COMP_CD    = D.COMP_CD(+)
+                   AND  B.SV_USER_ID = D.USER_ID(+)
+                   AND  B.APP_DIV    = E.CODE_CD(+)
+                   AND  B.COMP_CD    = LT.COMP_CD(+)
+                   AND  B.BRAND_CD   = LT.BRAND_CD(+)
+                   AND  B.STOR_CD    = LT.STOR_CD(+)
+                   AND  B.COMP_CD    = ${SCH_COMP_CD}
+                   AND  B.BRAND_CD   = ${SCH_BRAND_CD}
+                   AND  B.USE_YN     = 'Y'
+                   AND  (${SCH_STOR_TP} IS NULL OR B.STOR_TP = ${SCH_STOR_TP})
+                   AND  (${SCH_STOR_TP_GRP} IS NULL OR INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0)
+                   AND  EXISTS (
+                                    SELECT  '1'
+                                      FROM  STORE_POS_MST
+                                     WHERE  COMP_CD = A.COMP_CD
+                                       AND  BRAND_CD= A.BRAND_CD
+                                       AND  STOR_CD = A.STOR_CD
+                                       AND  POS_NO  = ${SCH_POS_NO}
+                               )
+            )
+     WHERE (${SCH_STOR_TXT} IS NULL OR (STOR_NM LIKE '%'|| ${SCH_STOR_TXT} || '%' OR STOR_CD LIKE '%'|| ${SCH_STOR_TXT} || '%'))
+    ORDER BY STOR_CD
+]]></query>
+
+<query name='STORE_DEVICE_D'><![CDATA[
+    DELETE  STORE_DEVICE
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  BRAND_CD    = ${BRAND_CD}
+       AND  STOR_CD     = ${STOR_CD}
+       AND  POS_NO      = ${POS_NO}
+]]></query>
+
+<query name='STORE_DEVICE_I'><![CDATA[
+    INSERT  INTO STORE_DEVICE
+    SELECT  COMP_CD
+         ,  BRAND_CD
+         ,  ${TGT_STOR_CD}  AS STOR_CD
+         ,  ${TGT_POS_NO}   AS POS_NO
+         ,  DEVICE_DIV
+         ,  DEVICE_CD
+         ,  DEVICE_KEY
+         ,  DEVICE_VAL
+         ,  USE_YN
+         ,  SYSDATE         AS INST_DT
+         ,  ${UPD_USER}     AS INST_USER
+         ,  SYSDATE         AS UPD_DT
+         ,  ${UPD_USER}     AS UPD_USER
+      FROM  STORE_DEVICE
+     WHERE  COMP_CD  = ${COMP_CD}
+       AND  BRAND_CD = ${BRAND_CD}
+       AND  STOR_CD  = ${STOR_CD}
+       AND  POS_NO   = ${POS_NO}
+       AND  USE_YN   = 'Y'
+]]></query>
+
+</SQLResource>

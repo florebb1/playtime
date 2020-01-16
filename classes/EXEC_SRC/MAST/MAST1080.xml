@@ -1,0 +1,227 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- KDS출력상품정보  조회 -->
+<query name='ITEM_PRT_MULTI_Q'><![CDATA[
+    SELECT  IP.COMP_CD
+         ,  IP.BRAND_CD
+         ,  IP.ITEM_CD
+         ,  I.ITEM_NM
+         ,  I.ITEM_KDS_NM
+         ,  IP.PRT_NO
+         ,  IP.USE_YN
+      FROM  ITEM_PRT_MULTI  IP 
+         ,  (
+                SELECT  I.COMP_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_NM, I.ITEM_NM)           AS ITEM_NM
+                     ,  NVL(L.ITEM_KDS_NM, I.ITEM_KDS_NM)   AS ITEM_KDS_NM
+                     ,  NVL(IC.L_CLASS_CD, I.L_CLASS_CD)    AS L_CLASS_CD
+                     ,  NVL(IC.M_CLASS_CD, I.M_CLASS_CD)    AS M_CLASS_CD
+                     ,  NVL(IC.S_CLASS_CD, I.S_CLASS_CD)    AS S_CLASS_CD
+                  FROM  ITEM        I
+                     ,  ITEM_CLASS  IC
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_NM
+                                 ,  ITEM_KDS_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )               L
+                 WHERE  I.COMP_CD   = IC.COMP_CD(+)
+                   AND  I.ITEM_CD   = IC.ITEM_CD(+)
+                   AND  I.COMP_CD   = L.COMP_CD(+)
+                   AND  I.ITEM_CD   = L.ITEM_CD(+)
+                   AND  I.COMP_CD   = ${SCH_COMP_CD}
+                   AND  I.USE_YN    = 'Y'
+                   AND  IC.ORG_CLASS_CD(+) = ${SCH_ORG_CLASS_CD}
+            )               I
+         
+     WHERE  IP.COMP_CD  = I.COMP_CD
+       AND  IP.ITEM_CD  = I.ITEM_CD  
+       AND  IP.COMP_CD  = ${SCH_COMP_CD}
+       AND  (${SCH_BRAND_CD}   IS NULL OR IP.BRAND_CD  = ${SCH_BRAND_CD})
+       AND  (${SCH_USE_YN}     IS NULL OR IP.USE_YN    = ${SCH_USE_YN})
+       AND  (${SCH_L_CLASS_CD} IS NULL OR I.L_CLASS_CD = ${SCH_L_CLASS_CD})
+       AND  (${SCH_M_CLASS_CD} IS NULL OR I.M_CLASS_CD = ${SCH_M_CLASS_CD})
+       AND  (${SCH_S_CLASS_CD} IS NULL OR I.S_CLASS_CD = ${SCH_S_CLASS_CD})
+       AND  (${SCH_ITEM_TXT}   IS NULL OR (I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_KDS_NM LIKE '%'||${SCH_ITEM_TXT}||'%'))
+     ORDER  BY IP.ITEM_CD, IP.PRT_NO
+]]></query>
+
+<!-- KDS출력상품정보  등록 -->
+<query name='ITEM_PRT_MULTI_U'><![CDATA[
+    MERGE INTO ITEM_PRT_MULTI
+    USING DUAL
+    ON 
+    (
+            COMP_CD         = ${COMP_CD} 
+        AND BRAND_CD        = ${BRAND_CD}
+        AND PRT_NO          = ${PRT_NO}
+        AND ITEM_CD         = ${ITEM_CD}
+    )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${USER_ID}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  BRAND_CD 
+             ,  PRT_NO
+             ,  ITEM_CD
+             ,  USE_YN 
+             ,  INST_DT 
+             ,  INST_USER 
+             ,  UPD_DT 
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${PRT_NO}
+             ,  ${ITEM_CD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )
+]]></query>
+
+<query name='ITEM_Q'><![CDATA[
+    SELECT  L_CLASS_NM
+         ,  M_CLASS_NM
+         ,  S_CLASS_NM
+         ,  COMP_CD
+         ,  BRAND_CD
+         ,  ITEM_CD
+         ,  ITEM_NM
+         ,  ITEM_KDS_NM
+      FROM  (
+                SELECT  ILC.L_CLASS_NM
+                     ,  IMC.M_CLASS_NM
+                     ,  ISC.S_CLASS_NM 
+                     ,  I.COMP_CD
+                     ,  I.BRAND_CD
+                     ,  I.ITEM_CD
+                     ,  NVL(L.ITEM_NM, I.ITEM_NM)           AS ITEM_NM
+                     ,  NVL(L.ITEM_KDS_NM, I.ITEM_KDS_NM)   AS ITEM_KDS_NM
+                     ,  ILC.SORT_ORDER              AS L_SORT_ORDER
+                     ,  IMC.SORT_ORDER              AS M_SORT_ORDER
+                     ,  ISC.SORT_ORDER              AS S_SORT_ORDER
+                  FROM  (
+                            SELECT  /*+ USE_NL(I, IC) */
+                                    I.COMP_CD
+                                 ,  I.BRAND_CD
+                                 ,  I.ITEM_CD
+                                 ,  I.ITEM_NM
+                                 ,  I.ITEM_KDS_NM
+                                 ,  NVL(IC.L_CLASS_CD, I.L_CLASS_CD)    AS L_CLASS_CD
+                                 ,  NVL(IC.M_CLASS_CD, I.M_CLASS_CD)    AS M_CLASS_CD
+                                 ,  NVL(IC.S_CLASS_CD, I.S_CLASS_CD)    AS S_CLASS_CD
+                              FROM  ITEM        I
+                                 ,  ITEM_CLASS  IC
+                             WHERE  I.COMP_CD   = IC.COMP_CD(+)
+                               AND  I.ITEM_CD   = IC.ITEM_CD(+)
+                               AND  I.COMP_CD   = ${SCH_COMP_CD}
+                               AND  I.USE_YN    = 'Y'
+                               AND  (${SCH_RECIPE_DIV} IS NULL OR RECIPE_DIV = ${SCH_RECIPE_DIV})
+                               AND  (${SCH_L_CLASS_CD}  IS NULL OR NVL(IC.L_CLASS_CD, I.L_CLASS_CD) = ${SCH_L_CLASS_CD})
+                               AND  (${SCH_M_CLASS_CD}  IS NULL OR NVL(IC.M_CLASS_CD, I.M_CLASS_CD) = ${SCH_M_CLASS_CD})
+                               AND  (${SCH_S_CLASS_CD}  IS NULL OR NVL(IC.S_CLASS_CD, I.S_CLASS_CD) = ${SCH_S_CLASS_CD})
+                        )   I
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD   
+                                 ,  ITEM_NM
+                                 ,  ITEM_KDS_NM   
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   L
+                     ,  (   
+                            SELECT  C.COMP_CD
+                                 ,  C.L_CLASS_CD                    AS L_CLASS_CD
+                                 ,  NVL(L.LANG_NM, C.L_CLASS_NM)    AS L_CLASS_NM
+                                 ,  C.SORT_ORDER
+                              FROM  ITEM_L_CLASS    C
+                                 ,  ( 
+                                        SELECT  COMP_CD, PK_COL, LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  TABLE_NM    = 'ITEM_L_CLASS'
+                                           AND  COL_NM      = 'L_CLASS_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )               L
+                             WHERE  C.COMP_CD||C.ORG_CLASS_CD || C.L_CLASS_CD = L.PK_COL(+)
+                               AND  C.COMP_CD       = ${SCH_COMP_CD}
+                               AND  C.ORG_CLASS_CD  = '00'
+                               AND  C.USE_YN        = 'Y'
+                        )   ILC
+                     ,  (
+                            SELECT  C.COMP_CD
+                                 ,  C.L_CLASS_CD                    AS L_CLASS_CD
+                                 ,  C.M_CLASS_CD                    AS M_CLASS_CD
+                                 ,  NVL(L.LANG_NM, C.M_CLASS_NM)    AS M_CLASS_NM
+                                 ,  C.SORT_ORDER
+                              FROM  ITEM_M_CLASS    C
+                                 ,  ( 
+                                        SELECT  PK_COL, LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  TABLE_NM    = 'ITEM_M_CLASS'
+                                           AND  COL_NM      = 'M_CLASS_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )              L
+                             WHERE  C.COMP_CD||C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD = L.PK_COL(+)
+                               AND  C.COMP_CD       = ${SCH_COMP_CD}
+                               AND  C.ORG_CLASS_CD  = '00'
+                               AND  C.USE_YN        = 'Y'
+                        )   IMC
+                     ,  (
+                            SELECT  C.COMP_CD
+                                 ,  C.L_CLASS_CD                    AS L_CLASS_CD
+                                 ,  C.M_CLASS_CD                    AS M_CLASS_CD
+                                 ,  C.S_CLASS_CD                    AS S_CLASS_CD
+                                 ,  NVL(L.LANG_NM, C.S_CLASS_NM)    AS S_CLASS_NM
+                                 ,  C.SORT_ORDER
+                              FROM  ITEM_S_CLASS    C
+                                 ,  (
+                                        SELECT  COMP_CD, PK_COL, LANG_NM
+                                          FROM  LANG_TABLE
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  TABLE_NM    = 'ITEM_S_CLASS'
+                                           AND  COL_NM      = 'S_CLASS_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )               L
+                             WHERE  C.COMP_CD||C.ORG_CLASS_CD || C.L_CLASS_CD || C.M_CLASS_CD || C.S_CLASS_CD = L.PK_COL(+)
+                               AND  C.COMP_CD       = ${SCH_COMP_CD}
+                               AND  C.ORG_CLASS_CD  = '00'
+                               AND  C.USE_YN        = 'Y'
+                        )   ISC
+                 WHERE  I.COMP_CD      = L.COMP_CD(+)
+                   AND  I.ITEM_CD      = L.ITEM_CD(+)
+                   AND  I.COMP_CD      = ILC.COMP_CD(+)
+                   AND  I.L_CLASS_CD   = ILC.L_CLASS_CD(+)
+                   AND  I.COMP_CD      = IMC.COMP_CD(+)
+                   AND  I.L_CLASS_CD   = IMC.L_CLASS_CD(+)
+                   AND  I.M_CLASS_CD   = IMC.M_CLASS_CD(+)
+                   AND  I.COMP_CD      = ISC.COMP_CD(+)
+                   AND  I.L_CLASS_CD   = ISC.L_CLASS_CD(+)  
+                   AND  I.M_CLASS_CD   = ISC.M_CLASS_CD(+)
+                   AND  I.S_CLASS_CD   = ISC.S_CLASS_CD(+)
+            )  I   
+     WHERE  (${SCH_ITEM_TXT} IS NULL OR (I.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%' OR I.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%'))
+     ORDER  BY L_SORT_ORDER, M_SORT_ORDER, S_SORT_ORDER, ITEM_NM
+]]></query>
+
+</SQLResource>

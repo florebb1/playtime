@@ -1,0 +1,214 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='TAB01_LEFT_Q'><![CDATA[
+    SELECT  S.COMP_CD                                                         AS COMP_CD
+          , S.BRAND_CD                                                        AS BRAND_CD
+          , B.BRAND_NM                                                        AS BRAND_NM
+          , GET_COMMON_CODE_NM(S.COMP_CD, '00565', S.STOR_TP, ${SCH_LANG_TP}) AS STOR_TP
+          , S.STOR_CD                                                         AS STOR_CD
+          , S.STOR_NM                                                         AS STOR_NM
+      FROM  STORE    S
+          , BRAND    B
+     WHERE  S.COMP_CD = B.COMP_CD
+       AND  S.BRAND_CD = B.BRAND_CD
+       AND  S.COMP_CD = ${SCH_COMP_CD}
+       AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+       AND  (${SCH_STOR_TP} IS NULL OR S.STOR_TP = ${SCH_STOR_TP})
+       AND  (${SCH_STOR_CD} IS NULL OR S.STOR_CD = ${SCH_STOR_CD})
+     ORDER  BY BRAND_CD, STOR_TP
+]]></query>
+
+<query name='TAB01_RIGHT_Q'><![CDATA[
+    SELECT  V.VAN_CD                                                        AS VAN_CD
+          , V.VAN_DIV                                                       AS VAN_DIV 
+          , C.CAT_ID                                                        AS CAT_ID
+          , C.CAT_ID_GIFT                                                   AS CAT_ID_GIFT
+          , C.VAN_RATE                                                      AS VAN_RATE
+          , C.CAT_PWD                                                       AS CAT_PWD
+          , C.USE_YN                                                        AS USE_YN
+      FROM  CATID   C
+          , VAN     V
+     WHERE  V.COMP_CD = C.COMP_CD(+)
+       AND  V.VAN_CD  = C.VAN_CD(+)
+       AND  V.VAN_UNIT = '01'
+       AND  V.USE_YN = 'Y'
+       AND  V.COMP_CD = ${SCH_COMP_CD}
+       AND  C.BRAND_CD(+) = ${SCH_BRAND_CD}
+       AND  C.STOR_CD(+) = ${SCH_STOR_CD}
+       AND  C.USE_YN(+) = 'Y'
+     ORDER  BY V.VAN_CD
+]]></query>
+
+<query name='TAB02_LEFT_Q'><![CDATA[
+    SELECT  COMP_CD
+          , BRAND_CD
+          , BRAND_NM
+      FROM  BRAND
+      WHERE COMP_CD = ${SCH_COMP_CD}
+      AND   USE_YN  = 'Y'
+     ORDER  BY BRAND_CD
+]]></query>
+
+<query name='TAB02_RIGHT_Q'><![CDATA[
+    SELECT  V.VAN_CD          AS VAN_CD
+          , C.CAT_ID          AS CAT_ID
+          , C.CAT_ID_GIFT     AS CAT_ID_GIFT
+          , C.CAT_PWD         AS CAT_PWD
+          , C.USE_YN          AS USE_YN
+      FROM  CATID   C
+          , VAN     V
+     WHERE  V.COMP_CD  = C.COMP_CD(+)
+       AND  V.VAN_CD   = C.VAN_CD(+)
+       AND  V.COMP_CD  = ${SCH_COMP_CD}
+       AND  V.VAN_UNIT = '02'
+       AND  V.USE_YN = 'Y'
+       AND  C.BRAND_CD(+) = ${SCH_BRAND_CD}
+       AND  C.USE_YN(+) = 'Y' 
+     ORDER  BY V.VAN_CD
+]]></query>
+
+<query name='TAB01_RIGHT_U'><![CDATA[
+    MERGE   INTO CATID
+    USING   DUAL
+       ON   (
+                    COMP_CD         = ${COMP_CD}
+                AND BRAND_CD        = ${BRAND_CD}
+                AND STOR_CD         = ${STOR_CD}
+                AND VAN_CD          = ${VAN_CD}
+            )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  CAT_ID              = ${CAT_ID}
+             ,  CAT_ID_GIFT         = ${CAT_ID_GIFT}
+             ,  VAN_RATE            = ${VAN_RATE}
+             ,  CAT_PWD             = ${CAT_PWD}
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${USER_ID}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  VAN_CD
+             ,  CAT_ID
+             ,  CAT_ID_GIFT
+             ,  VAN_RATE
+             ,  CAT_PWD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${VAN_CD}
+             ,  ${CAT_ID}
+             ,  ${CAT_ID_GIFT}
+             ,  ${VAN_RATE}
+             ,  ${CAT_PWD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )  
+]]></query>
+
+<query name='TAB02_RIGHT_U'><![CDATA[
+    MERGE   INTO CATID
+    USING   DUAL
+       ON   (
+                    COMP_CD         = ${COMP_CD}
+                AND BRAND_CD        = ${BRAND_CD}
+                AND STOR_CD         = '0000000'
+                AND VAN_CD          = ${VAN_CD}
+            )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  CAT_ID              = ${CAT_ID}
+             ,  CAT_ID_GIFT         = ${CAT_ID_GIFT}
+             ,  CAT_PWD             = ${CAT_PWD}
+             ,  USE_YN              = ${USE_YN}
+             ,  UPD_DT              = SYSDATE
+             ,  UPD_USER            = ${USER_ID}  
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (  
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  VAN_CD
+             ,  CAT_ID
+             ,  CAT_ID_GIFT
+             ,  CAT_PWD
+             ,  USE_YN  
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER  
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  '0000000'
+             ,  ${VAN_CD}
+             ,  ${CAT_ID}
+             ,  ${CAT_ID_GIFT}
+             ,  ${CAT_PWD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${USER_ID}
+             ,  SYSDATE
+             ,  ${USER_ID}
+        )  
+]]></query>
+
+<query name='TAB03_LEFT_Q'><![CDATA[
+    SELECT  COMP_CD
+          , BRAND_CD
+          , BRAND_NM
+      FROM  BRAND
+      WHERE COMP_CD = ${SCH_COMP_CD}
+      AND   USE_YN  = 'Y'
+     ORDER  BY BRAND_CD
+]]></query>
+
+<query name='TAB03_RIGHT_Q'><![CDATA[
+    SELECT  V.COMP_CD 
+          , C.BRAND_CD 
+          , V.VAN_CD
+          , C.START_DT
+          , C.CLOSE_DT
+          , C.VAN_RATE
+          , C.USE_YN
+      FROM (
+            SELECT  COMP_CD
+                  , BRAND_CD
+                  , VAN_CD
+                  , START_DT
+                  , CLOSE_DT
+                  , VAN_RATE
+                  , USE_YN
+                  , ROW_NUMBER() OVER(PARTITION BY COMP_CD, BRAND_CD, VAN_CD ORDER BY START_DT) R_NUM 
+            FROM    VAN_BRAND_RATE C
+            WHERE   COMP_CD  = ${SCH_COMP_CD}
+            AND     BRAND_CD = ${SCH_BRAND_CD}
+            AND     ${SCH_GFR_DATE} BETWEEN START_DT AND CLOSE_DT
+            AND     USE_YN   = 'Y'
+           ) C
+          , VAN              V
+     WHERE  V.COMP_CD  = C.COMP_CD(+)
+       AND  V.VAN_CD   = C.VAN_CD (+)
+       AND  1          = C.R_NUM  (+)
+       AND  V.COMP_CD  = ${SCH_COMP_CD}
+       AND  V.VAN_UNIT = '01'
+       AND  V.USE_YN   = 'Y'
+     ORDER  BY 
+            V.VAN_CD
+]]></query>
+
+</SQLResource>

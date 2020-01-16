@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='CATID_Q'><![CDATA[
+    SELECT  S.COMP_CD
+         ,  S.BRAND_CD
+         ,  S.STOR_CD
+         ,  S.STOR_NM
+         ,  S.BUSI_NO
+         ,  S.BUSI_NM
+         ,  S.TEL_NO
+         ,  NVL(C.VAN_CD, S.VAN_CD)         AS VAN_CD
+         ,  S.PWD_USE_YN
+         ,  C.CAT_ID
+         ,  C.CAT_PWD
+         ,  C.USE_YN
+      FROM  ( 
+                SELECT  S.COMP_CD
+                     ,  S.BRAND_CD
+                     ,  S.STOR_CD
+                     ,  S.STOR_NM
+                     ,  S.BUSI_NO
+                     ,  S.BUSI_NM
+                     ,  S.TEL_NO 
+                     ,  V.VAN_CD
+                     ,  V.PWD_USE_YN
+                  FROM  STORE  S
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                               AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                               AND  (${SCH_STOR_CD}  IS NULL OR STOR_CD  = ${SCH_STOR_CD})
+                        )       L
+                     ,  VAN     V
+                     ,  COMMON  C
+                 WHERE  S.COMP_CD   = L.COMP_CD(+)
+                   AND  S.BRAND_CD  = L.BRAND_CD(+)
+                   AND  S.STOR_CD   = L.STOR_CD(+)
+                   AND  S.COMP_CD   = C.COMP_CD
+                   AND  S.STOR_TP   = C.CODE_CD
+                   AND  S.COMP_CD   = ${SCH_COMP_CD}
+                   AND  V.COMP_CD   = ${SCH_COMP_CD}
+                   AND  C.CODE_TP   = '00565'
+                   AND  (${SCH_BRAND_CD} IS NULL OR S.BRAND_CD = ${SCH_BRAND_CD})
+                   AND  (${SCH_STOR_CD}  IS NULL OR S.STOR_CD  = ${SCH_STOR_CD})
+                   AND  (${SCH_VAN_CD}   IS NULL OR V.VAN_CD   = ${SCH_VAN_CD})
+                   AND  S.USE_YN    = 'Y'
+                   AND  V.USE_YN    = 'Y'
+                   AND  C.USE_YN    = 'Y'
+                   AND  INSTR(${SCH_STOR_TP_GRP}, C.VAL_C1, 1) > 0
+            )       S
+         ,  ( 
+                SELECT  COMP_CD
+                     ,  BRAND_CD
+                     ,  STOR_CD
+                     ,  VAN_CD
+                     ,  CAT_ID
+                     ,  CAT_PWD
+                     ,  USE_YN
+                  FROM  CATID
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  (${SCH_BRAND_CD} IS NULL OR BRAND_CD = ${SCH_BRAND_CD})
+                   AND  (${SCH_STOR_CD}  IS NULL OR STOR_CD  = ${SCH_STOR_CD})
+                   AND  (${SCH_VAN_CD}   IS NULL OR VAN_CD   = ${SCH_VAN_CD})
+            )        C
+     WHERE  S.COMP_CD   = C.COMP_CD(+)
+       AND  S.BRAND_CD  = C.BRAND_CD(+)
+       AND  S.STOR_CD   = C.STOR_CD(+)
+       AND  S.VAN_CD    = C.VAN_CD(+)
+     ORDER  BY S.STOR_CD, NVL(C.VAN_CD, S.VAN_CD)
+                  
+]]></query>
+
+<query name='CATID_U'><![CDATA[
+    MERGE INTO CATID
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  BRAND_CD    = ${BRAND_CD}
+           AND  STOR_CD     = ${STOR_CD}
+           AND  VAN_CD      = ${VAN_CD}
+       )
+    WHEN MATCHED THEN
+        UPDATE  
+           SET  CAT_ID      = ${CAT_ID}
+             ,  CAT_PWD     = ${CAT_PWD}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT   
+        (          
+                COMP_CD
+             ,  BRAND_CD
+             ,  STOR_CD
+             ,  VAN_CD
+             ,  CAT_ID
+             ,  CAT_PWD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (    
+                ${COMP_CD}
+             ,  ${BRAND_CD}
+             ,  ${STOR_CD}
+             ,  ${VAN_CD}
+             ,  ${CAT_ID}
+             ,  ${CAT_PWD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>
+

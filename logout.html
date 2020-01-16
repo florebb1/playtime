@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<link rel='stylesheet' href='//cdn.jsdelivr.net/foundation/5.5.0/css/foundation.css'>
+<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+<script src="//code.jquery.com/jquery-2.2.0.min.js" type="text/javascript"></script>
+<script src="/js/sweetalert.min.js"></script>
+</head>
+<body>
+<form id="membership_frm">
+    <input id="USER_ID" name="USER_ID" type="hidden" value="MOBILE">
+    <input id="CUST_ID" name="CUST_ID" type="hidden">
+    <input id="EMAIL_RCV_YN" name="EMAIL_RCV_YN" type="hidden">
+    <input id="SMS_RCV_YN" name="SMS_RCV_YN" type="hidden">
+    <input id="PUSH_RCV_YN" name="PUSH_RCV_YN" type="hidden">
+	<!-- 디바이스 정보 -->
+    <input id="DEVICE_DIV" name="DEVICE_DIV" type="hidden">
+    <input id="DEVICE_NM" name="DEVICE_NM" type="hidden">
+    <input id="MOBILE_KIND" name="MOBILE_KIND" type="hidden">
+    <input id="AUTH_TOKEN" name="AUTH_TOKEN" type="hidden" value="">
+ </form>
+<script>
+function setCookie(name, value, days) {
+    var d = new Date;
+    d.setTime(d.getTime() + 24*60*60*1000*days);
+    document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+}
+function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+}
+$(document).ready(function(){
+    setCookie('user', null, -1);
+    setCookie('web_id', null, -1);
+    document.location.href='login.html';
+})
+</script>
+</body>
+</html>

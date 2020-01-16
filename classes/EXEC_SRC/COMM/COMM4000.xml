@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- 매장 조회 -->
+<query name='STOR_Q'><![CDATA[
+   SELECT  STOR_CD
+      ,    STOR_NM 
+      ,    APP_DIV
+      ,    SV_USER_ID
+     FROM  STORE
+    WHERE  BRAND_CD  = ${SCH_BRAND_CD}
+      AND  USE_YN =  NVL(${SCH_USE_YN}, USE_YN)
+      AND  (NVL(LENGTH(${SCH_STOR_TXT} ),0)=0 OR (NVL(LENGTH(${SCH_STOR_TXT} ),0)>0
+             AND (STOR_NM LIKE ('%'|| ${SCH_STOR_TXT} || '%') OR STOR_CD LIKE ('%'|| ${SCH_STOR_TXT} || '%')) ))
+]]></query>
+
+
+        
+</SQLResource>
+

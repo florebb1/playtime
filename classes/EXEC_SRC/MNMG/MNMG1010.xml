@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<query name='PROGRAM_USE_HIS_Q'><![CDATA[
+    SELECT  PUH.COMP_CD
+         ,  PUH.USER_ID
+         ,  NVL(HU.USER_NM, SU.USER_NM)     AS USER_NM
+         ,  PUH.USE_DTM
+         ,  TO_CHAR(TO_DATE(PUH.USE_DTM, 'YYYYMMDDHH24MISS'), 'YYYYMMDD')   AS BLOCK_DT
+         ,  PUH.BRAND_CD
+         ,  PUH.STOR_CD
+         ,  PUH.MENU_CD
+         ,  PUH.IP
+         ,  PUH.BLOCK_DIV
+      FROM  PROGRAM_USE_HIS     PUH
+         ,  (
+                SELECT  HU.COMP_CD
+                     ,  HU.USER_ID
+                     ,  NVL(L.LANG_NM, HU.USER_NM)  AS USER_NM
+                  FROM  HQ_USER     HU
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'HQ_USER'
+                               AND  COL_NM      = 'USER_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )           L
+                 WHERE  L.COMP_CD(+)    = HU.COMP_CD
+                   AND  L.PK_COL(+)     = LPAD(HU.USER_ID, 10, ' ')
+                   AND  HU.COMP_CD      = ${SCH_COMP_CD}
+            )   HU
+         ,  (
+                SELECT  SU.COMP_CD
+                     ,  SU.BRAND_CD
+                     ,  SU.STOR_CD
+                     ,  SU.USER_ID
+                     ,  NVL(L.LANG_NM, SU.USER_NM)  AS USER_NM
+                  FROM  STORE_USER  SU
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  PK_COL
+                                 ,  LANG_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'STORE_USER'
+                               AND  COL_NM      = 'USER_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )           L
+                 WHERE  L.COMP_CD(+)    = SU.COMP_CD
+                   AND  L.PK_COL(+)     = LPAD(SU.BRAND_CD, 4, ' ')||LPAD(SU.STOR_CD, 10, ' ')||LPAD(SU.USER_ID, 10, ' ')
+                   AND  SU.COMP_CD      = ${SCH_COMP_CD}
+            )   SU
+     WHERE  PUH.COMP_CD     = HU.COMP_CD(+)
+       AND  PUH.USER_ID     = HU.USER_ID(+)
+       AND  PUH.COMP_CD     = SU.COMP_CD(+)
+       AND  PUH.BRAND_CD    = SU.BRAND_CD(+)
+       AND  PUH.STOR_CD     = SU.STOR_CD(+)
+       AND  PUH.USER_ID     = SU.USER_ID(+)
+       AND  PUH.COMP_CD     = ${SCH_COMP_CD}
+       AND  PUH.USE_YN      = 'Y'
+       AND  (PUH.USE_DIV    = '2' OR (PUH.USE_DIV = '0' AND PUH.BLOCK_DIV = '0'))
+       AND  (${SCH_BLOCK_DIV} IS NULL OR PUH.BLOCK_DIV = ${SCH_BLOCK_DIV})
+       AND  (${SCH_USER_TXT}  IS NULL OR (NVL(HU.USER_NM, SU.USER_NM) LIKE '%'||${SCH_USER_TXT}||'%' OR PUH.USER_ID LIKE '%'||${SCH_USER_TXT}||'%'))
+     ORDER  BY PUH.COMP_CD, PUH.USE_DTM DESC
+]]></query>
+
+<query name='PROGRAM_USE_HIS_U'><![CDATA[
+    UPDATE  PROGRAM_USE_HIS
+       SET  USE_YN      = 'N'
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  USER_ID     = ${USER_ID}
+       AND  USE_DTM     = ${USE_DTM}
+]]></query>
+
+<query name='PROGRAM_USE_HIS_I'><![CDATA[
+    INSERT  INTO PROGRAM_USE_HIS
+    (
+            COMP_CD
+         ,  USER_ID
+         ,  USE_DTM
+         ,  BRAND_CD
+         ,  STOR_CD
+         ,  MENU_CD
+         ,  IP
+         ,  USE_DIV
+         ,  BLOCK_DIV
+         ,  USE_YN
+    ) VALUES (
+            ${COMP_CD}
+         ,  ${USER_ID}
+         ,  TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+         ,  ${BRAND_CD}
+         ,  ${STOR_CD}
+         ,  ${MENU_CD}
+         ,  ${IP}
+         ,  ${USE_DIV}
+         ,  ${BLOCK_DIV}
+         ,  'Y'
+    )
+]]></query>
+
+</SQLResource>

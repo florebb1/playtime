@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='CS_CONTENT_Q'><![CDATA[
+    SELECT  C.COMP_CD
+         ,  C.CONTENT_SEQ
+         ,  C.CONTENT_FG
+         ,  C.CONTENT_DIV1
+         ,  C.CONTENT_DIV2
+         ,  C.SUBJECT
+         ,  REPLACE(C.CONTENT, '@$', CHR(13)||CHR(10))  AS CONTENT
+         ,  C.TEMPLETE_ID
+         ,  C.REPLACE_CONTENT
+         ,  C.BRAND_CD
+         ,  C.SEND_POINT
+         ,  C.MBS_DIV
+         ,  C.USE_YN
+         ,  NVL(U.USER_NM, C.UPD_USER)                  AS UPD_USER
+         ,  TO_CHAR(C.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')  AS UPD_DT
+      FROM  CS_CONTENT      C
+         ,  (
+                SELECT  COMP_CD
+                     ,  USER_ID
+                     ,  USER_NM
+                  FROM  HQ_USER
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+            )   U
+     WHERE  C.COMP_CD       = U.COMP_CD(+)
+       AND  C.UPD_USER      = U.USER_ID(+)
+       AND  C.COMP_CD       = ${SCH_COMP_CD}
+       AND  C.CONTENT_FG    = ${SCH_CONTENT_FG}
+       AND  C.STOR_CD       IS NULL
+       AND  (${SCH_CONTENT_DIV1} IS NULL OR C.CONTENT_DIV1  = ${SCH_CONTENT_DIV1})
+       AND  (${SCH_CONTENT_DIV2} IS NULL OR C.CONTENT_DIV2  = ${SCH_CONTENT_DIV2})
+       AND  (${SCH_USE_YN}       IS NULL OR C.USE_YN        = ${SCH_USE_YN})
+     ORDER  BY C.CONTENT_DIV1, C.CONTENT_DIV2, C.CONTENT_SEQ
+]]></query>
+
+<query name='CS_CONTENT_U'><![CDATA[
+    MERGE   INTO CS_CONTENT
+    USING   DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  CONTENT_SEQ     = ${CONTENT_SEQ}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  SUBJECT         = ${SUBJECT}
+             ,  CONTENT         = TRIM(REPLACE(REPLACE(${CONTENT}, CHR(13), ''), CHR(10), '@$'))
+             ,  CONTENT_DIV1    = ${CONTENT_DIV1}
+             ,  CONTENT_DIV2    = ${CONTENT_DIV2}
+             ,  TEMPLETE_ID     = ${TEMPLETE_ID}
+             ,  REPLACE_CONTENT = TRIM(REPLACE(REPLACE(${REPLACE_CONTENT}, CHR(13), ''), CHR(10), '@$'))
+             ,  SEND_POINT      = ${SEND_POINT}
+             ,  MBS_DIV         = ${MBS_DIV}
+             ,  BRAND_CD        = ${BRAND_CD}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  CONTENT_SEQ
+             ,  SUBJECT
+             ,  CONTENT
+             ,  CONTENT_FG
+             ,  CONTENT_DIV1
+             ,  CONTENT_DIV2
+             ,  TEMPLETE_ID
+             ,  REPLACE_CONTENT
+             ,  SEND_POINT
+             ,  MBS_DIV
+             ,  BRAND_CD
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        )VALUES(
+                ${COMP_CD}
+             ,  (
+                    SELECT  NVL(MAX(TO_NUMBER(CONTENT_SEQ)),0) + 1  AS CONTENT_SEQ
+                      FROM  CS_CONTENT
+                     WHERE  COMP_CD         = ${COMP_CD}
+                )
+             ,  ${SUBJECT}
+             ,  TRIM(REPLACE(REPLACE(${CONTENT}, CHR(13), ''), CHR(10), '@$'))
+             ,  ${CONTENT_FG}
+             ,  ${CONTENT_DIV1}
+             ,  ${CONTENT_DIV2}
+             ,  ${TEMPLETE_ID}
+             ,  TRIM(REPLACE(REPLACE(${REPLACE_CONTENT}, CHR(13), ''), CHR(10), '@$'))
+             ,  ${SEND_POINT}
+             ,  ${MBS_DIV}
+             ,  ${BRAND_CD}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+</SQLResource>

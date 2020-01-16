@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PlayTime</title>
+        <meta charset="UTF-8">
+        <meta content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+        <link crossorigin="anonymous" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" rel="stylesheet">
+        <link href="https://cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css" rel="stylesheet" type="text/css">
+        <link href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css" rel="stylesheet">
+	    <link href="/css/bootstrap4.min.css" rel="stylesheet" type="text/css">
+        <link href="/css/style.css?date=<?=time()?>" rel="stylesheet" type="text/css">
+        <style>
+			a:focus, a:hover, a:visited, a:link {
+				text-decoration:none;
+				color: #000;
+				font-weight: 800;
+			}
+			/* Always set the map height explicitly to define the size of the div
+			* element that contains the map. */
+			#map {
+				height: calc(100% - 79px);
+			}
+			/* Optional: Makes the sample page fill the window. */
+			html, body {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+           .qazxswedc {
+	            margin: 20px 8%;
+	            font-weight: 900;
+	            font-size: 20px;
+	            text-align: center;
+	            color: #808080;
+            }
+            .qazxswedc:after {
+	            content:'';
+	            display: block;
+	            clear: both;
+            }
+            .qazxswedc span {
+/* 	            width:160px; */
+	            text-align: center;
+	            display: inline-block;
+	            color:#333333;
+	            font-weight:500;
+	            font-size:16px;
+            }
+			.container {
+				display: flex;
+				padding: 10px 0;
+				background-color: #f8f8f8;
+			}
+			.box-flex {
+				flex: 1;
+				text-align: center;
+				color: #000;
+				position: relative;
+			}
+			.map-btn {
+				text-align: center;
+				background-color: gold;
+				border-radius: 5px;
+				color: #fff;
+				border: none;
+				padding: 3px;
+				display: block;
+			    margin-block-start: 1em;
+			    margin-block-end: 1em;
+			    margin-inline-start: 0px;
+			    margin-inline-end: 0px;
+			}
+	        .gm-svpc {
+	        	display: none   
+            }
+            .gm-style .gm-style-iw-c {
+	            padding: 12px 12px 0 !important;
+            }
+            /* iPhone XR */
+			@media only screen 
+			    and (device-width : 414px) 
+			    and (device-height : 896px) 
+			    and (-webkit-device-pixel-ratio : 2) { 
+				    .qazxswedc {
+						margin: 50px 8% 20px;
+					}
+		            #map {
+						height: calc(100vh - 94px) !important;
+					}
+			    }
+			
+			/* iPhone XS */
+			@media only screen 
+			    and (device-width : 375px) 
+			    and (device-height : 812px) 
+			    and (-webkit-device-pixel-ratio : 3) { 
+				    .qazxswedc {
+						margin: 50px 8% 20px;
+					}
+		            #map {
+						height: calc(100vh - 94px) !important;
+					}
+			    }
+			
+			/* iPhone XS MAX */
+			@media only screen 
+			    and (device-width : 414px) 
+			    and (device-height : 896px) 
+			    and (-webkit-device-pixel-ratio : 3) { 
+				    .qazxswedc {
+						margin: 50px 8% 20px;
+					}
+		            #map {
+						height: calc(100vh - 94px) !important;
+					}
+			    }
+            
+        </style>
+    </head>
+    <body>
+	    <form id="mapForm">
+		    <input type="hidden" name="COMP_CD" value="010">
+			<input type="hidden" name="USER_ID" value="MOBILE">
+			<input type="hidden" name="BRAND_CD">
+			<input type="hidden" name="LOC_LAT">
+			<input type="hidden" name="LOC_LNG">
+			<input type="hidden" name="RADIUS">
+	    </form>
+        <div class="qazxswedc d-flex">
+	        <div class="col">
+                <i class="fas fa-chevron-left" id="back" onclick="history.go(-1)"></i>		        
+	        </div>
+			<div class="col-10">
+	            <span>매장위치정보 ( <span id="title">0</span>km )</span>
+			</div>
+			<div class="col">
+			</div>
+        </div>
+        
+        <div id="map"></div>
+            
+
+        <script src="js/jquery.js" type="text/javascript"></script>
+        <script src="/js/sweetalert.min.js"></script>
+        <script src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"></script>
+        <script type="text/javascript">
+			function getParameterByName(name) {
+				name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+				var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+				results = regex.exec(location.search);
+				return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+			}
+			function initMap(a) {
+				var BRAND_CD = getParameterByName('BRAND_CD');
+				$("input[name=BRAND_CD]").val(BRAND_CD);
+				var LOC_LAT = parseFloat(getParameterByName('LOC_LAT'));
+				$("input[name=LOC_LAT]").val(LOC_LAT);
+				var LOC_LNG = parseFloat(getParameterByName('LOC_LNG'));
+				$("input[name=LOC_LNG]").val(LOC_LNG);
+				var RADIUS = getParameterByName('RADIUS');
+				$("input[name=RADIUS]").val(RADIUS);
+				$("#title").text(RADIUS);
+				var zoomin;
+				if(RADIUS == 10) {
+					zoomin = 11;
+				}else if(RADIUS == 15 || RADIUS == 20) {
+					zoomin = 10;
+				}else {
+					zoomin = 12;
+				}
+                var datas = $("#mapForm").serialize();
+                $.ajax({
+					url: '/api/mbl_0730.jsp',
+					type: 'POST',
+					dataType: 'JSON',
+					data: datas,
+					success: function(response) {
+						var myLatlng = {lat: LOC_LAT, lng: LOC_LNG};
+						var locations = [];
+						for (var i = 0; i < response.RESULT.length; i++) {
+							locations.push(['<p style="font-size:1.17em; font-weight:bold;">'+response.RESULT[i].BRAND_NM+'</p><p>'+response.RESULT[i].STOR_NM+'</p><a href="/store_detail.html?SIDO_NM='+response.RESULT[i].SIDO_NM+'&BRAND_CD='+response.RESULT[i].BRAND_CD+'&STOR_CD='+response.RESULT[i].STOR_CD+'"><div class="map-btn">매장상세보기</div></a>', response.RESULT[i].LOC_LAT, response.RESULT[i].LOC_LNG]);
+						}
+
+						var infowindow =  new google.maps.InfoWindow({});
+						
+						var map = new google.maps.Map(document.getElementById('map'), {
+							zoom: zoomin,
+							center: myLatlng
+						});
+						
+						var marker, count;
+						
+						for (count = 0; count < locations.length; count++) {
+						    marker = new google.maps.Marker({
+								position: new google.maps.LatLng(locations[count][1], locations[count][2]),
+								map: map,
+								title: locations[count][0]
+						    });
+							google.maps.event.addListener(marker, 'click', (function (marker, count) {
+								return function () {
+									infowindow.setContent(locations[count][0]);
+									infowindow.open(map, marker);
+								}
+						    })(marker, count));
+						    
+						    marker = new google.maps.Marker({
+								position: myLatlng,
+								map: map,
+								icon: '/images/icon/me.png'
+						    });
+						}
+						
+					}
+                });
+                return false;
+			}
+	    </script>
+	    <script async defer
+	    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAXdwI6nvt49Z99RvWLmKFyl2d9fY8Aq_k&callback=initMap">
+	    </script>
+    </body>
+</html>

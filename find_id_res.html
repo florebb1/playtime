@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PlayTime</title>
+<meta charset="UTF-8">
+<meta content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link rel="stylesheet" type="text/css" href="/css/style.css?date=<?=time()?>">
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="//cdn.rawgit.com/innks/NanumSquareRound/master/nanumsquareround.min.css">
+<link rel="stylesheet" href="//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css">
+<!-- Bootstrap -->
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+<style> 
+	body {
+		margin: 0px;
+		width: 100%;
+		height:100vh;
+	}
+	
+	.find  { 
+		width: 100%;
+		height: 100%;
+		font-size: 13px;
+		border-radius: 10px;
+		border:1px solid #ddd;
+		padding: 12px 20px;
+	}
+	.content  {
+		line-height: 30px;
+		padding-top: 25px;
+		color: #000;
+	}
+
+	.button {
+		height: 100%;
+		background-color: #808080;
+		border-color: #fff;
+		border-radius:10px;
+		color: #fff;
+	}
+	.footer {
+	    bottom: 0;
+	    height: 90px;
+	    width: 100%;
+	    text-align: center;
+	    background-color: #FFCA02;
+	    border: none;
+	    color: #fff;
+	    font-size: 15px;
+	}
+
+  a:link, a:visited, a:hover, a:active { color: #808080; text-decoration: none;}
+</style>
+</head>
+<body>
+  <div style="text-align:center; padding-top:25px; padding-top:60px;">
+    <img src="/images/logo.png" style="height:33px;;">
+  </div>
+  <div id="content" style="min-height: 300px;"> 
+	  <div style="text-align:center; height: 160.62px;">
+	    <div class="content nsrB" style="font-size:22px; padding-top:50px;">ID를 찾았습니다!</div>
+	  </div>
+	  <div style="text-align:center; margin-top:40px;">
+	    <div class="content nsR" style="font-size:26px;"><p id="find">Your ID</p></div>
+	  </div>
+  </div>
+  <button type="button" class="footer nsrEB" style="font-size:22px;">확인</div>
+
+<script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script type="text/javascript">
+$(window).resize(function() {
+    $('#content').height($(window).height() - 183);
+});
+
+$(window).trigger('resize');
+	function setCookie(name, value, days) {
+	var d = new Date;
+	d.setTime(d.getTime() + 24*60*60*1000*days);
+	document.cookie = name + "=" + value + ";path=/;expires=" + d.toGMTString();
+	}
+	function getCookie(name) {
+	var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+	return v ? v[2] : null;
+	}
+	$(document).ready(function(){
+	var id = getCookie('find_id');
+	$("#find").html(id);
+	
+	$(".footer").click(function(){
+	  setCookie('find_id', id,-1);
+	  document.location.href="/login.html";
+	})
+	
+	$('#back').click(function(){
+	  document.location.href="/login.html";
+	});
+});
+</script>
+</body>
+</html>

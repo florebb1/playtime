@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- 계정코드 마스터 조회 -->
+<query name='ACC_HD_Q'><![CDATA[
+    SELECT  A.COMP_CD
+         ,  A.ACC_CD
+         ,  NVL(L.LANG_NM, A.ACC_NM)    AS ACC_NM
+         ,  A.ACC_SEQ
+         ,  A.USE_YN
+      FROM  ACC_HD      A
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM 
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ACC_HD'
+                   AND  COL_NM      = 'ACC_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND  USE_YN      = 'Y'
+            )           L
+     WHERE  L.COMP_CD(+) = A.COMP_CD
+       AND  L.PK_COL(+)  = LPAD(A.ACC_CD, 10, ' ') 
+       AND  A.COMP_CD    = ${SCH_COMP_CD}
+       AND  (${SCH_USE_YN} IS NULL OR A.USE_YN = ${SCH_USE_YN})
+     ORDER  BY A.ACC_SEQ, A.ACC_CD
+]]></query>
+
+<!-- 기타 입출금 계정 조회 -->
+<query name='ACC_MST_Q'><![CDATA[
+    SELECT  A.COMP_CD
+         ,  A.ETC_CD
+         ,  A.STOR_TP
+         ,  A.ETC_NM
+         ,  L.LANG_NM
+         ,  A.ETC_DIV
+         ,  A.ACC_CD
+         ,  A.PURCHASE_DIV
+         ,  A.POS_USE_YN
+         ,  A.USE_YN 
+      FROM  ACC_MST      A
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM 
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ACC_MST'
+                   AND  COL_NM      = 'ETC_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )           L
+     WHERE  L.COMP_CD(+) = A.COMP_CD
+       AND  L.PK_COL(+)  = LPAD(A.ETC_CD, 3, ' ')||LPAD(A.STOR_TP, 2, ' ')
+       AND  A.COMP_CD = ${SCH_COMP_CD}
+       AND  A.ACC_CD  = ${SCH_ACC_CD}
+       AND  (${SCH_STOR_TP} IS NULL OR A.STOR_TP = ${SCH_STOR_TP})
+       AND  (${SCH_USE_YN}  IS NULL OR A.USE_YN = ${SCH_USE_YN})
+     ORDER  BY A.STOR_TP, A.ETC_DIV, A.ETC_CD
+]]></query>
+
+<!-- 기타 입출금 계정 조회 -->
+<query name='ACC_RMK_Q'><![CDATA[
+    SELECT  A.COMP_CD
+         ,  A.ETC_CD
+         ,  A.STOR_TP
+         ,  A.RMK_SEQ
+         ,  A.RMK_NM
+         ,  L.LANG_NM
+         ,  A.RMK_DESC
+         ,  A.SORT_SEQ
+         ,  A.USE_YN 
+      FROM  ACC_RMK      A
+         ,  (
+                SELECT  COMP_CD
+                     ,  PK_COL
+                     ,  LANG_NM 
+                  FROM  LANG_TABLE
+                 WHERE  COMP_CD     = ${SCH_COMP_CD}
+                   AND  TABLE_NM    = 'ACC_RMK'
+                   AND  COL_NM      = 'RMK_NM'
+                   AND  LANGUAGE_TP = ${SCH_LANG_TP}
+                   AND  USE_YN      = 'Y'
+            )           L
+     WHERE  L.COMP_CD(+) = A.COMP_CD
+       AND  L.PK_COL(+)  = LPAD(A.ETC_CD, 3, ' ')||LPAD(A.STOR_TP, 2, ' ')||LPAD(A.RMK_SEQ, 3, ' ')
+       AND  A.COMP_CD    = ${SCH_COMP_CD}
+       AND  A.ETC_CD     = ${SCH_ETC_CD}
+       AND  (${SCH_STOR_TP} IS NULL OR A.STOR_TP = ${SCH_STOR_TP})
+       AND  (${SCH_USE_YN}  IS NULL OR A.USE_YN = ${SCH_USE_YN})
+     ORDER  BY 
+            A.SORT_SEQ
+]]></query>
+
+<!-- 기타 입출금 계정 등록, 수정 -->
+<query name='ACC_MST_U'><![CDATA[
+    MERGE INTO ACC_MST
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  ETC_CD          = ${ETC_CD}
+           AND  STOR_TP         = ${STOR_TP}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  ETC_NM          = ${ETC_NM}
+             ,  ETC_DIV         = ${ETC_DIV}
+             ,  ACC_CD          = ${ACC_CD}
+             ,  PURCHASE_DIV    = ${PURCHASE_DIV}
+             ,  POS_USE_YN      = ${POS_USE_YN}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (  
+                COMP_CD
+             ,  ETC_CD
+             ,  STOR_TP
+             ,  ETC_NM
+             ,  ETC_DIV
+             ,  ACC_CD
+             ,  PURCHASE_DIV
+             ,  POS_USE_YN
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES ( 
+                ${COMP_CD}
+             ,  ${ETC_CD}
+             ,  ${STOR_TP}
+             ,  ${ETC_NM}
+             ,  ${ETC_DIV}
+             ,  ${ACC_CD}
+             ,  ${PURCHASE_DIV}
+             ,  ${POS_USE_YN}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query> 
+
+<!-- 기타 입출금 계정 등록, 수정 -->
+<query name='ACC_RMK_U'><![CDATA[
+    MERGE INTO ACC_RMK
+    USING DUAL
+    ON (
+                COMP_CD         = ${COMP_CD}
+           AND  ETC_CD          = ${ETC_CD}
+           AND  STOR_TP         = ${STOR_TP}
+           AND  RMK_SEQ         = ${RMK_SEQ}
+       )
+    WHEN MATCHED THEN
+        UPDATE 
+           SET  RMK_NM          = ${RMK_NM}
+             ,  RMK_DESC        = ${RMK_DESC}
+             ,  SORT_SEQ        = ${SORT_SEQ}
+             ,  USE_YN          = ${USE_YN}
+             ,  UPD_DT          = SYSDATE
+             ,  UPD_USER        = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (  
+                COMP_CD
+             ,  ETC_CD
+             ,  STOR_TP
+             ,  RMK_SEQ
+             ,  RMK_NM
+             ,  RMK_DESC
+             ,  SORT_SEQ
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES ( 
+                ${COMP_CD}
+             ,  ${ETC_CD}
+             ,  ${STOR_TP}
+             ,  ${RMK_SEQ}
+             ,  ${RMK_NM}
+             ,  ${RMK_DESC}
+             ,  ${SORT_SEQ}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query> 
+
+<query name='LANG_TABLE_U'><![CDATA[
+    MERGE INTO LANG_TABLE
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  TABLE_NM    = ${TABLE_NM}
+           AND  COL_NM      = ${COL_NM}
+           AND  LANGUAGE_TP = ${LANGUAGE_TP}
+           AND  PK_COL      = ${PK_COL}
+       )
+    WHEN MATCHED  THEN
+        UPDATE      
+           SET  LANG_NM     = ${LANG_NM}
+             ,  USE_YN      = ${USE_YN}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT 
+        (
+                COMP_CD
+             ,  TABLE_NM
+             ,  COL_NM
+             ,  LANGUAGE_TP
+             ,  PK_COL
+             ,  LANG_NM
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER    
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${TABLE_NM}
+             ,  ${COL_NM}
+             ,  ${LANGUAGE_TP}
+             ,  ${PK_COL}
+             ,  ${LANG_NM}
+             ,  ${USE_YN}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER} 
+        )
+]]></query>
+
+</SQLResource>

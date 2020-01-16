@@ -1,0 +1,9 @@
+<script src='js/jquery-2.2.4.min.js'></script>
+<script src='js/swiper.jquery.min.js'></script>
+<script src="js/sweetalert.min.js"></script>
+<script src='js/popper.min.js'></script>
+<script src='js/bootstrap.min.js'></script>
+<script src="js/qrcode.min.js"></script>
+<script src="js/barcode.js"></script>
+<script src="js/cookie.js"></script>
+<script src="js/index.js"></script>

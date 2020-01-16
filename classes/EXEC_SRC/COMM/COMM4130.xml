@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+   <!-- 
+      [ORDR4280M0]찬스로스대상품목 , [ORDR4290M0]찬스로스재고관리 START ======================================================================//
+      REMARK : STORE_PROD_ITEM TABLE의 PK.관리구분(MNG_DIV) => 공통(01320) [1:찬스로스, 2:재고관리]
+   -->   
+    <!-- 점포상품복사 팝업 창  ( 데이터 조회) -->   
+    <query name='PROD_STOR_SEARCH_P'><![CDATA[
+        SELECT  SS.STOR_CD
+             ,  NVL(LS.STOR_NM, S.STOR_NM) AS STOR_NM
+          FROM  STORE_PROD_ITEM SS
+             ,  (
+                    SELECT  * 
+                      FROM  STORE 
+                     WHERE  BRAND_CD  = ${BRAND_CD}
+                       AND  USE_YN    = 'Y'
+                       @SEARCH_STOR_TP@   
+                ) S
+             ,  (
+                    SELECT  STOR_CD
+                         ,  STOR_NM
+                      FROM  LANG_STORE
+                     WHERE  LANGUAGE_TP = DECODE(${LANGUAGE}, NULL, ' ', ${LANGUAGE} )
+                       AND  BRAND_CD    = ${BRAND_CD}
+                       AND  USE_YN      = 'Y'
+                ) LS
+         WHERE  SS.BRAND_CD   = ${BRAND_CD}
+           AND  SS.MNG_DIV    = ${MNG_DIV}
+           AND  SS.BRAND_CD   = S.BRAND_CD
+           AND  SS.STOR_CD    = S.STOR_CD(+)
+           AND  S.STOR_CD     = LS.STOR_CD(+) 
+           AND  SS.USE_YN     = 'Y'
+           AND  (NVL(LENGTH(${SCH_STOR_TXT} ),0)=0 OR (NVL(LENGTH(${SCH_STOR_TXT} ),0)>0 AND (S.STOR_NM LIKE ('%'|| ${SCH_STOR_TXT} || '%') OR S.STOR_CD LIKE ('%'|| ${SCH_STOR_TXT} || '%')) ))
+         GROUP BY SS.STOR_CD, LS.STOR_NM, S.STOR_NM
+         ORDER BY STOR_CD
+    ]]></query>
+   
+  <!-- 
+      [ORDR4280M0]찬스로스대상품목 , [ORDR4290M0]찬스로스재고관리   END ======================================================================//
+   -->  
+                
+</SQLResource>
+

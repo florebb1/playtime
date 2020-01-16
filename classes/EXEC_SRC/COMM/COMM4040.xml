@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+  
+<!-- 우편번호 조회  -->
+<query name='POST_SEARCH_Q'><![CDATA[   
+        SELECT  /*+ INDEX(POST IDX01_POST) */
+            P.ZIP_CD
+         ,  P.ZIP_SEQ
+         ,  P.ADDRESS
+         ,  PR.CITY_CD
+         ,  PR.REGION_CD
+      FROM  POST        P
+         ,  POST_REGION PR
+     WHERE  P.COMP_CD = PR.COMP_CD
+       AND  P.ZIP_CD  = PR.ZIP_CD
+       AND  P.ZIP_SEQ = PR.ZIP_SEQ
+       AND  P.COMP_CD = 'ZZZ'
+       AND  (       P.ZIP_CD  LIKE ${SCH_ZIP_CD} || '%'
+                OR  P.ADDRESS LIKE '%' || ${SCH_ZIP_CD} || '%' 
+            )
+       AND  P.USE_YN  = 'Y'
+]]></query>
+
+      
+</SQLResource>
+

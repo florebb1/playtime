@@ -1,0 +1,243 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<!-- 점별 판매가 조회 -->
+<query name='ITEM_Q'><![CDATA[
+    SELECT  B1.*
+         ,  NVL(B2.SALE_START_DT , '' )                     AS SALE_START_DT
+         ,  NVL(B2.SALE_CLOSE_DT , '' )                     AS SALE_CLOSE_DT
+         ,  NVL(B2.STOR_SALE_PRC , B1.SALE_PRC )            AS STOR_SALE_PRC 
+         ,  '1'                                             AS PRC_CHANGE_DIV       -- FIX
+         ,  DECODE( B2.SALE_START_DT , null , 'I', 'U' )    AS M_MODE
+         ,  B2.SALE_START_DT                                AS CHG_START_DT
+         ,  B2.SALE_CLOSE_DT                                AS CHG_CLOSE_DT
+         ,  NVL(B2.STOR_SALE_PRC, 0)                        AS CHG_SALE_PRC
+      FROM  (
+                SELECT  A1.COMP_CD
+                     ,  A1.BRAND_CD
+                     ,  A1.STOR_CD
+                     ,  NVL(LS.STOR_NM,A1.STOR_NM)          AS STOR_NM
+                     ,  P.PROGRAM_ID
+                     ,  P.PROGRAM_NM
+                     ,  A2.ITEM_CD
+                     ,  NVL(LI.ITEM_NM,A2.ITEM_NM)          AS ITEM_NM
+                     ,  A2.SALE_PRC
+                     ,  A2.SALE_VAT_YN
+                     ,  A2.SALE_VAT_RULE
+                     ,  A2.SALE_VAT_IN_RATE
+                     ,  A2.SALE_VAT_OUT_RATE
+                  FROM  (
+                            SELECT  PI.COMP_CD
+                                 ,  PI.BRAND_CD
+                                 ,  S.STOR_TP
+                                 ,  PI.STOR_CD
+                                 ,  PI.PROGRAM_ID                   AS PROGRAM_ID
+                                 ,  NVL(L.LANG_NM, P.PROGRAM_NM)    AS PROGRAM_NM
+                                 ,  PI.ITEM_CD
+                              FROM  (
+                                        SELECT  P.COMP_CD
+                                             ,  P.BRAND_CD
+                                             ,  PS.STOR_CD
+                                             ,  MAX(P.PROGRAM_ID)   AS PROGRAM_ID 
+                                             ,  P.PGM_ITEM_CD       AS ITEM_CD
+                                          FROM  CS_PROGRAM          P
+                                             ,  CS_PROGRAM_STORE    PS
+                                         WHERE  P.COMP_CD   = PS.COMP_CD
+                                           AND  P.PROGRAM_ID= PS.PROGRAM_ID
+                                           AND  P.COMP_CD   = ${SCH_COMP_CD}
+                                           AND  P.BRAND_CD  = ${SCH_BRAND_CD}
+                                           AND  (${SCH_STOR_CD} IS NULL OR PS.STOR_CD  = ${SCH_STOR_CD})
+                                           AND  P.USE_YN    = 'Y'
+                                           AND  PS.USE_YN   = 'Y'
+                                           AND  P.PGM_ITEM_CD IS NOT NULL
+                                         GROUP  BY P.COMP_CD, P.BRAND_CD, PS.STOR_CD, P.PGM_ITEM_CD
+                                        UNION ALL
+                                        SELECT  P.COMP_CD
+                                             ,  P.BRAND_CD
+                                             ,  PS.STOR_CD
+                                             ,  MAX(P.PROGRAM_ID)   AS PROGRAM_ID
+                                             ,  P.ADD_ITEM_CD       AS ITEM_CD
+                                          FROM  CS_PROGRAM          P
+                                             ,  CS_PROGRAM_STORE    PS
+                                         WHERE  P.COMP_CD   = PS.COMP_CD
+                                           AND  P.PROGRAM_ID= PS.PROGRAM_ID
+                                           AND  P.COMP_CD   = ${SCH_COMP_CD}
+                                           AND  P.BRAND_CD  = ${SCH_BRAND_CD}
+                                           AND  (${SCH_STOR_CD} IS NULL OR PS.STOR_CD  = ${SCH_STOR_CD})
+                                           AND  P.USE_YN    = 'Y'
+                                           AND  PS.USE_YN   = 'Y'
+                                           AND  P.ADD_ITEM_CD IS NOT NULL
+                                         GROUP  BY P.COMP_CD, P.BRAND_CD, PS.STOR_CD, P.ADD_ITEM_CD
+                                        UNION ALL
+                                        SELECT  P.COMP_CD
+                                             ,  P.BRAND_CD
+                                             ,  PS.STOR_CD
+                                             ,  MAX(P.PROGRAM_ID)   AS PROGRAM_ID
+                                             ,  P.GDN_ITEM_CD       AS ITEM_CD
+                                          FROM  CS_PROGRAM          P
+                                             ,  CS_PROGRAM_STORE    PS
+                                         WHERE  P.COMP_CD   = PS.COMP_CD
+                                           AND  P.PROGRAM_ID= PS.PROGRAM_ID
+                                           AND  P.COMP_CD   = ${SCH_COMP_CD}
+                                           AND  P.BRAND_CD  = ${SCH_BRAND_CD}
+                                           AND  (${SCH_STOR_CD} IS NULL OR PS.STOR_CD  = ${SCH_STOR_CD})
+                                           AND  P.USE_YN    = 'Y'
+                                           AND  PS.USE_YN   = 'Y'
+                                           AND  P.GDN_ITEM_CD IS NOT NULL
+                                         GROUP  BY P.COMP_CD, P.BRAND_CD, PS.STOR_CD, P.GDN_ITEM_CD
+                                        UNION ALL
+                                        SELECT  P.COMP_CD
+                                             ,  P.BRAND_CD
+                                             ,  PS.STOR_CD
+                                             ,  MAX(P.PROGRAM_ID)   AS PROGRAM_ID
+                                             ,  P.ORG_ITEM_CD       AS ITEM_CD
+                                          FROM  CS_PROGRAM          P
+                                             ,  CS_PROGRAM_STORE    PS
+                                         WHERE  P.COMP_CD   = PS.COMP_CD
+                                           AND  P.PROGRAM_ID= PS.PROGRAM_ID
+                                           AND  P.COMP_CD   = ${SCH_COMP_CD}
+                                           AND  P.BRAND_CD  = ${SCH_BRAND_CD}
+                                           AND  (${SCH_STOR_CD} IS NULL OR PS.STOR_CD  = ${SCH_STOR_CD})
+                                           AND  P.USE_YN    = 'Y'
+                                           AND  PS.USE_YN   = 'Y'
+                                           AND  P.ORG_ITEM_CD IS NOT NULL
+                                         GROUP  BY P.COMP_CD, P.BRAND_CD, PS.STOR_CD, P.ORG_ITEM_CD
+                                        UNION ALL
+                                        SELECT  M.COMP_CD
+                                             ,  M.BRAND_CD
+                                             ,  M.STOR_CD
+                                             ,  MAX(M.PROGRAM_ID)   AS PROGRAM_ID
+                                             ,  M.ITEM_CD
+                                          FROM  (
+                                                    SELECT  M.COMP_CD
+                                                         ,  M.BRAND_CD
+                                                         ,  MS.USE_STOR_CD  AS STOR_CD
+                                                         ,  M.PROGRAM_ID
+                                                         ,  M.MBS_ITEM_CD   AS ITEM_CD
+                                                      FROM  CS_MEMBERSHIP       M
+                                                         ,  CS_MEMBERSHIP_STORE MS
+                                                     WHERE  M.COMP_CD       = MS.COMP_CD
+                                                       AND  M.PROGRAM_ID    = MS.PROGRAM_ID
+                                                       AND  M.MBS_NO        = MS.MBS_NO
+                                                       AND  M.COMP_CD       = ${SCH_COMP_CD}
+                                                       AND  M.BRAND_CD      = ${SCH_BRAND_CD}
+                                                       AND  (${SCH_STOR_CD} IS NULL OR MS.USE_STOR_CD  = ${SCH_STOR_CD})
+                                                       AND  M.USE_YN        = 'Y'
+                                                       AND  MS.USE_YN       = 'Y'
+                                                       AND  M.MBS_ITEM_CD   IS NOT NULL
+                                                )                   M
+                                             ,  CS_PROGRAM          P
+                                             ,  CS_PROGRAM_STORE    PS
+                                         WHERE  M.COMP_CD       = P.COMP_CD
+                                           AND  M.PROGRAM_ID    = P.PROGRAM_ID
+                                           AND  M.COMP_CD       = PS.COMP_CD
+                                           AND  M.PROGRAM_ID    = PS.PROGRAM_ID
+                                           AND  M.BRAND_CD      = PS.BRAND_CD
+                                           AND  M.STOR_CD       = PS.STOR_CD
+                                           AND  P.USE_YN        = 'Y'
+                                           AND  PS.USE_YN       = 'Y'
+                                         GROUP  BY M.COMP_CD, M.BRAND_CD, M.STOR_CD, M.ITEM_CD
+                                    )   PI
+                                 ,  STORE       S
+                                 ,  CS_PROGRAM  P
+                                 ,  (
+                                        SELECT  COMP_CD
+                                             ,  PK_COL
+                                             ,  LANG_NM
+                                          FROM  LANG_TABLE  L
+                                         WHERE  COMP_CD     = ${SCH_COMP_CD}
+                                           AND  TABLE_NM    = 'CS_PROGRAM'
+                                           AND  COL_NM      = 'PROGRAM_NM'
+                                           AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                                           AND  USE_YN      = 'Y'
+                                    )   L
+                             WHERE  PI.COMP_CD      = S.COMP_CD
+                               AND  PI.BRAND_CD     = S.BRAND_CD
+                               AND  PI.STOR_CD      = S.STOR_CD
+                               AND  PI.COMP_CD      = P.COMP_CD
+                               AND  PI.PROGRAM_ID   = P.PROGRAM_ID
+                               AND  L.COMP_CD(+)    = P.COMP_CD
+                               AND  L.PK_COL(+)     = LPAD(P.PROGRAM_ID, 30, ' ')
+                        )   P
+                     ,  (
+                            SELECT  A.COMP_CD
+                                 ,  A.BRAND_CD
+                                 ,  A.STOR_TP
+                                 ,  A.STOR_CD
+                                 ,  S.STOR_NM
+                              FROM  THE ( SELECT CAST(FC_GET_AUTH_STORE_INFO(${SCH_COMP_CD}, ${SCH_USER_ID}) AS TBL_STORE_INFO ) FROM DUAL )    A
+                                 ,  STORE   S
+                             WHERE  A.COMP_CD   = S.COMP_CD
+                               AND  A.BRAND_CD  = S.BRAND_CD
+                               AND  A.STOR_CD   = S.STOR_CD
+                               AND  A.COMP_CD   = ${SCH_COMP_CD}
+                               AND  A.BRAND_CD  = ${SCH_BRAND_CD}
+                               AND  (${SCH_STOR_CD} IS NULL OR A.STOR_CD  = ${SCH_STOR_CD})
+                               AND  S.USE_YN    = 'Y'
+                        )   A1 
+                     ,  ITEM_CHAIN   A2
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  BRAND_CD
+                                 ,  STOR_CD
+                                 ,  STOR_NM
+                              FROM  LANG_STORE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   LS
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  ITEM_CD
+                                 ,  ITEM_NM
+                              FROM  LANG_ITEM
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                               AND  USE_YN      = 'Y'
+                        )   LI
+                 WHERE  P.COMP_CD   = A1.COMP_CD
+                   AND  P.BRAND_CD  = A1.BRAND_CD
+                   AND  P.STOR_CD   = A1.STOR_CD
+                   AND  P.COMP_CD   = A2.COMP_CD
+                   AND  P.BRAND_CD  = A2.BRAND_CD
+                   AND  P.STOR_TP   = A2.STOR_TP
+                   AND  P.ITEM_CD   = A2.ITEM_CD
+                   AND  A1.COMP_CD  = LS.COMP_CD(+)
+                   AND  A1.BRAND_CD = LS.BRAND_CD(+)
+                   AND  A1.STOR_CD  = LS.STOR_CD(+)
+                   AND  A2.COMP_CD  = LI.COMP_CD(+)
+                   AND  A2.ITEM_CD  = LI.ITEM_CD(+)
+                   AND  A1.COMP_CD  = ${SCH_COMP_CD}
+                   AND  A1.BRAND_CD = ${SCH_BRAND_CD}
+                   AND  (${SCH_STOR_CD} IS NULL OR A1.STOR_CD  = ${SCH_STOR_CD})
+                   AND  (${SCH_ITEM_TXT} IS NULL OR ( A2.ITEM_CD LIKE '%'||${SCH_ITEM_TXT}||'%' OR A2.ITEM_NM LIKE '%'||${SCH_ITEM_TXT}||'%' ))
+                   AND  (${SCH_L_CLASS_CD} IS NULL  OR A2.L_CLASS_CD  = ${SCH_L_CLASS_CD})
+                   AND  (${SCH_M_CLASS_CD} IS NULL  OR A2.M_CLASS_CD  = ${SCH_M_CLASS_CD})
+                   AND  (${SCH_S_CLASS_CD} IS NULL  OR A2.S_CLASS_CD  = ${SCH_S_CLASS_CD})
+                   AND  A2.SERVICE_ITEM_YN  = 'Y'
+                   AND  A2.USE_YN           = 'Y'
+                   AND  1 = (
+                                CASE WHEN ${SCH_AUTH_CD} >= '90' AND A2.SALE_PRC_CTRL = 'S' THEN 1 
+                                     WHEN ${SCH_AUTH_CD} <  '90'                            THEN 1
+                                     ELSE 0
+                                END
+                             )
+            )   B1 
+         ,  (         
+                SELECT  A2.*
+                  FROM  ITEM_STORE A2
+                 WHERE  A2.COMP_CD  = ${SCH_COMP_CD}
+                   AND  A2.BRAND_CD = ${SCH_BRAND_CD}
+                   AND  (${SCH_STOR_CD} IS NULL OR A2.STOR_CD  = ${SCH_STOR_CD})
+                   AND  A2.PRC_DIV  = '02'
+                   AND  ${SCH_DATE} BETWEEN A2.START_DT AND NVL(A2.CLOSE_DT, '99991231')
+            )   B2
+     WHERE  B1.COMP_CD    = B2.COMP_CD(+)
+       AND  B1.BRAND_CD   = B2.BRAND_CD(+)
+       AND  B1.STOR_CD    = B2.STOR_CD(+)
+       AND  B1.ITEM_CD    = B2.ITEM_CD(+)
+     ORDER  BY B1.BRAND_CD, B1.STOR_CD, B1.PROGRAM_ID, B1.ITEM_CD 
+]]></query>
+
+</SQLResource>
+

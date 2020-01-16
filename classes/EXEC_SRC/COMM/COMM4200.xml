@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+ 
+<!-- 조직항목 공통코드 조회 -->
+<query name='ITEM_Q'><![CDATA[
+   SELECT  C.CODE_CD                                       AS CODE_CD
+      ,    DECODE(L.CODE_NM, NULL, C.CODE_NM, L.CODE_NM)   AS CODE_NM
+   FROM COMMON C,
+        ( 
+            SELECT   CODE_CD
+               ,     CODE_NM
+            FROM LANG_COMMON
+            WHERE CODE_TP     = '01290'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) L
+   WHERE C.CODE_CD = L.CODE_CD(+)
+     AND C.COMP_CD = ${SCH_COMP_CD}
+     AND C.CODE_TP = '01290'
+     @SCH_ITEM_DIV@
+     AND C.USE_YN  = 'Y'
+   ORDER BY C.SORT_SEQ
+]]></query>
+
+<!-- 조직항목 공통코드 조회 -->
+<query name='ITEM_EXT_Q'><![CDATA[
+   SELECT  C.CODE_CD                                       AS CODE_CD
+      ,    DECODE(L.CODE_NM, NULL, C.CODE_NM, L.CODE_NM)   AS CODE_NM
+   FROM COMMON C,
+        ( 
+            SELECT   CODE_CD
+               ,     CODE_NM
+            FROM LANG_COMMON
+            WHERE CODE_TP     = '01291'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) L
+   WHERE C.CODE_CD = L.CODE_CD(+)
+     AND C.COMP_CD = ${SCH_COMP_CD}
+     AND C.CODE_TP = '01291'
+     @SCH_ITEM_DIV@
+     AND C.USE_YN  = 'Y'
+   ORDER BY C.SORT_SEQ
+]]></query>
+
+<!-- 측정값 공통코드 조회 -->
+<query name='MSRE_Q'><![CDATA[
+   SELECT   C.CODE_CD                                       AS CODE_CD
+        ,   DECODE(L.CODE_NM, NULL, C.CODE_NM, L.CODE_NM)   AS CODE_NM
+        ,   C.VAL_C1
+        ,   C.VAL_C3
+   FROM COMMON C,
+        ( 
+            SELECT   CODE_CD
+               ,     CODE_NM
+            FROM LANG_COMMON
+            WHERE CODE_TP     = '01295'
+              AND LANGUAGE_TP = ${SCH_LANGUAGE}
+              AND COMP_CD     = ${SCH_COMP_CD}
+              AND USE_YN      = 'Y'
+        ) L
+   WHERE C.CODE_CD = L.CODE_CD(+)
+     AND C.COMP_CD = ${SCH_COMP_CD}
+     AND C.CODE_TP = '01295'
+     AND C.USE_YN  = 'Y'
+   ORDER BY C.SORT_SEQ
+]]></query>
+
+<!-- 분석 양식 조회 -->
+<query name='ANALYSIS_Q'><![CDATA[
+   SELECT   ANALYSIS_SEQ
+      ,      ANALYSIS_NM
+      ,      ANALYSIS_VAL
+      ,      USER_ID
+   FROM     MULTI_ANALYSIS
+   WHERE    USER_ID = ${SCH_USER_ID}
+     AND    COMP_CD = ${SCH_COMP_CD}
+]]></query>
+
+           
+</SQLResource>
+

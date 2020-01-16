@@ -1,0 +1,419 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SQLResource version='1'>
+
+<query name='GIFT_SET_Q'><![CDATA[
+    SELECT  COMP_CD
+         ,  MAX(GIFT_CD_ISSUE_DIV)  AS GIFT_CD_ISSUE_DIV
+         ,  MAX(GIFT_CD_DIGIT)      AS GIFT_CD_DIGIT
+      FROM  (
+                SELECT  COMP_CD
+                     ,  VAL_C1      AS GIFT_CD_ISSUE_DIV
+                     ,  ''          AS GIFT_CD_DIGIT
+                  FROM  COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '01205'
+                   AND  CODE_CD = '01'
+                UNION ALL
+                SELECT  COMP_CD
+                     ,  ''          AS GIFT_CD_ISSUE_DIV
+                     ,  VAL_C1      AS GIFT_CD_DIGIT
+                  FROM  COMMON
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  CODE_TP = '01205'
+                   AND  CODE_CD = '02'
+            )
+     GROUP  BY COMP_CD
+]]></query>
+
+<query name='GIFT_PRICE_Q'><![CDATA[
+    SELECT  GCM.COMP_CD
+         ,  GCM.GIFT_CD
+         ,  GCM.GIFT_PUB_DIV
+         ,  GCM.GIFT_LCD
+         ,  GCM.PRICE
+         ,  GCM.STAMP_TAX
+         ,  GCM.CHECKSUM_MASK1      AS CHECKSUM_MASK1
+         ,  GCM.CHECKSUM_MASK2      AS CHECKSUM_MASK2
+         ,  GCM.USE_ISSUE_DT        AS ISSUE_DT_SEQ_USE_YN
+         ,  DECODE(GCM.USE_ISSUE_DT, '' , LENGTH(GCM.CHECKSUM_MASK1) - DECODE(GCM.USE_ISSUE_DT, 'N', 0, 4) - 1, LENGTH(GCM.CHECKSUM_MASK2)) - DECODE(GCM.USE_ISSUE_DT, 'N', 0, 4) - 2   AS LANGTH_GIFT_CD
+         ,  GCB.T_BRAND_CD
+      FROM  GIFT_CODE_MST   GCM
+         ,  (
+                SELECT  COMP_CD
+                     ,  GIFT_CD
+                     ,  SUBSTR(xmlagg(xmlelement(a,BRAND_CD || '$') order by BRAND_CD).extract('//text()'), 1)    AS T_BRAND_CD
+                  FROM  GIFT_CODE_BRAND
+                 WHERE  COMP_CD = ${SCH_COMP_CD}
+                   AND  USE_YN  = 'Y'
+                 GROUP  BY COMP_CD, GIFT_CD
+            )   GCB
+     WHERE  GCM.COMP_CD = GCB.COMP_CD(+)
+       AND  GCM.GIFT_CD = GCB.GIFT_CD(+)
+       AND  GCM.COMP_CD = ${SCH_COMP_CD}   
+       AND  GCM.USE_YN  = 'Y'
+]]></query>
+
+<query name='GIFT_IN_HD_Q'><![CDATA[
+    SELECT  GIH.COMP_CD
+         ,  GIH.BRAND_CD
+         ,  B.BRAND_NM
+         ,  GIH.IN_DT
+         ,  GIH.IN_SEQ
+         ,  GIH.GIFT_CD
+         ,  GCM.GIFT_NM
+         ,  GIH.ISSUE_DT
+         ,  GIH.ISSUE_YEAR
+         ,  GIH.ISSUE_SEQ
+         ,  GIH.PRICE
+         ,  GIH.STAMP_TAX
+         ,  GIH.GIFT_NO_FROM
+         ,  GIH.GIFT_NO_TO
+         ,  GIH.IN_QTY
+         ,  GIH.IN_AMT
+         ,  GIH.EXP_DT
+         ,  GIH.REMARKS
+         ,  GIH.CONFIRM_YN
+         ,  GIH.INST_DT
+         ,  GIH.INST_USER
+         ,  TO_CHAR(GIH.UPD_DT, 'YYYY-MM-DD HH24:MI:SS')   AS UPD_DT
+         ,  GIH.UPD_USER
+         ,  GCM.CHECKSUM_MASK1
+         ,  GCM.CHECKSUM_MASK2
+         ,  GCM.USE_ISSUE_DT      AS ISSUE_DT_SEQ_USE_YN
+         ,  DECODE(GCM.CHECKSUM_MASK2 , '' , LENGTH(GCM.CHECKSUM_MASK1) - DECODE(GCM.USE_ISSUE_DT, 'N' , 0 , 4) - 1 , LENGTH(GCM.CHECKSUM_MASK2)) - DECODE(GCM.USE_ISSUE_DT, 'N' , 0 , 4) - 2  AS LANGTH_GIFT_CD
+         ,  GCM.GIFT_PUB_DIV
+         ,  GCM.GIFT_LCD
+      FROM  GIFT_IN_HD      GIH
+         ,  (
+                SELECT  ${SCH_COMP_CD}      AS COMP_CD
+                     ,  '0000'              AS BRAND_CD
+                     ,  FC_GET_WORDPACK(${SCH_COMP_CD}, ${SCH_LANGUAGE_TP}, 'COMMON')   AS BRAND_NM
+                  FROM  DUAL
+                 WHERE  ROWNUM  = 1
+                UNION
+                SELECT  B.COMP_CD
+                     ,  B.BRAND_CD
+                     ,  NVL(L.BRAND_NM, B.BRAND_NM)     AS BRAND_NM
+                  FROM  BRAND       B
+                     ,  (
+                            SELECT  COMP_CD  
+                                 ,  PK_COL
+                                 ,  LANG_NM     AS BRAND_NM
+                              FROM  LANG_TABLE
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  TABLE_NM    = 'BRAND'
+                               AND  COL_NM      = 'BRAND_NM'
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP} 
+                               AND  USE_YN      = 'Y'
+                        )   L
+                 WHERE  L.COMP_CD(+)    = B.COMP_CD
+                   AND  L.PK_COL(+)     = LPAD(B.BRAND_CD, 4, ' ')
+            )   B
+         ,  GIFT_CODE_MST   GCM
+     WHERE  GIH.COMP_CD     = B.COMP_CD
+       AND  GIH.BRAND_CD    = B.BRAND_CD
+       AND  GIH.COMP_CD     = GCM.COMP_CD
+       AND  GIH.GIFT_CD     = GCM.GIFT_CD
+       AND  GIH.COMP_CD     = ${SCH_COMP_CD}
+       AND  GIH.BRAND_CD    = ${SCH_BRAND_CD}
+       AND  SUBSTR(GIH.IN_DT, 1, 6) = ${SCH_YM}
+     ORDER  BY GIH.IN_DT DESC, GIH.IN_SEQ DESC
+]]></query>
+
+<query name='GIFT_BRAND_Q'><![CDATA[
+    SELECT  A.COMP_CD                     AS COMP_CD
+         ,  A.BRAND_CD                    AS CODE_CD
+         ,  NVL(LB.LANG_NM, B.BRAND_NM)   AS CODE_NM
+      FROM  GIFT_CODE_BRAND   A
+         ,  BRAND             B
+         ,  (
+                SELECT   *
+                  FROM   LANG_TABLE
+                 WHERE   COMP_CD     = ${SCH_COMP_CD}
+                   AND   TABLE_NM    = 'BRAND'
+                   AND   COL_NM      = 'BRAND_NM'
+                   AND   LANGUAGE_TP = ${SCH_LANGUAGE_TP}
+                   AND   USE_YN      = 'Y'
+            )   LB
+     WHERE  A.COMP_CD  = B.COMP_CD
+       AND  A.BRAND_CD = B.BRAND_CD
+       AND  A.COMP_CD  = LB.COMP_CD(+)
+       AND  A.BRAND_CD = LB.PK_COL(+)
+       AND  A.USE_YN   = 'Y'
+       AND  A.COMP_CD  = ${SCH_COMP_CD}
+       AND  A.GIFT_CD  = ${SCH_GIFT_CD}
+     ORDER  BY A.BRAND_CD
+]]></query>
+
+<query name='GIFT_IN_HD_U'><![CDATA[
+    MERGE INTO GIFT_IN_HD
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  IN_DT       = ${IN_DT}
+           AND  IN_SEQ      = ${IN_SEQ}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  BRAND_CD    = ${BRAND_CD}
+             ,  GIFT_CD     = ${GIFT_CD}
+             ,  ISSUE_DT    = ${ISSUE_DT}
+             ,  EXP_DT      = ${EXP_DT}
+             ,  PRICE       = ${PRICE}
+             ,  STAMP_TAX   = ${STAMP_TAX}
+             ,  REMARKS     = ${REMARKS}
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+                COMP_CD
+             ,  IN_DT
+             ,  IN_SEQ
+             ,  GIFT_CD
+             ,  BRAND_CD
+             ,  ISSUE_DT
+             ,  EXP_DT
+             ,  ISSUE_YEAR
+             ,  ISSUE_SEQ
+             ,  IN_QTY
+             ,  IN_AMT
+             ,  PRICE
+             ,  STAMP_TAX
+             ,  GIFT_NO_FROM
+             ,  GIFT_NO_TO
+             ,  CONFIRM_YN
+             ,  REMARKS
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${IN_DT}
+             ,  (
+                    SELECT  LPAD(NVL(MAX(TO_NUMBER(IN_SEQ)) + 1, '01'), 2, '0')     AS IN_SEQ
+                      FROM  GIFT_IN_HD
+                     WHERE  COMP_CD = ${COMP_CD}
+                       AND  IN_DT   = ${IN_DT}
+                )
+             ,  ${GIFT_CD}
+             ,  ${BRAND_CD}
+             ,  ${ISSUE_DT}
+             ,  ${EXP_DT}
+             ,  ${ISSUE_YEAR}
+             ,  (
+                    SELECT  LPAD(NVL(MAX(TO_NUMBER(ISSUE_SEQ)) + 1, '01'), 2, '0')  AS ISSUE_SEQ
+                      FROM  GIFT_IN_HD
+                     WHERE  COMP_CD     = ${COMP_CD}
+                       AND  ISSUE_YEAR  = ${ISSUE_YEAR}
+                       AND  GIFT_CD     = ${GIFT_CD}
+                )
+             ,  0
+             ,  0
+             ,  ${PRICE}
+             ,  ${STAMP_TAX}
+             ,  ${GIFT_NO_FROM}
+             ,  ${GIFT_NO_TO}
+             ,  'N'
+             ,  ${REMARKS}
+             ,  'Y'
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+   )
+]]></query>
+
+<query name='GIFT_IN_HD_D'><![CDATA[
+    DELETE  FROM GIFT_IN_HD
+     WHERE  COMP_CD = ${COMP_CD}
+       AND  IN_DT   = ${IN_DT}
+       AND  IN_SEQ  = ${IN_SEQ}
+]]></query>
+
+<query name='GIFT_IN_HD_C'><![CDATA[
+    UPDATE  GIFT_IN_HD
+       SET  CONFIRM_YN  = 'Y'
+         ,  UPD_DT      = SYSDATE
+         ,  UPD_USER    = ${UPD_USER}
+     WHERE  COMP_CD     = ${COMP_CD}
+       AND  IN_DT       = ${IN_DT}
+       AND  IN_SEQ      = ${IN_SEQ}
+]]></query>
+
+<query name='GIFT_IN_DT_Q'><![CDATA[
+    SELECT  GD.COMP_CD
+         ,  GD.IN_DT
+         ,  GD.IN_SEQ
+         ,  GD.GIFT_NO
+         ,  GD.GIFT_CREATE_FG
+         ,  C.GIFT_CREATE_FG_STR
+         ,  CASE WHEN GH.CONFIRM_YN = 'N' AND GM.GIFT_NO IS NOT NULL THEN 'Y'
+                 ELSE 'N'
+            END     AS DUP_YN
+      FROM  GIFT_IN_HD  GH
+         ,  GIFT_IN_DT  GD
+         ,  (
+                SELECT  A1.COMP_CD
+                     ,  A1.CODE_CD                      AS GIFT_CREATE_FG
+                     ,  NVL(A2.CODE_NM, A1.CODE_NM)     AS GIFT_CREATE_FG_STR
+                  FROM  COMMON      A1
+                     ,  (
+                            SELECT  COMP_CD
+                                 ,  CODE_CD
+                                 ,  CODE_NM
+                              FROM  LANG_COMMON 
+                             WHERE  COMP_CD     = ${SCH_COMP_CD}
+                               AND  LANGUAGE_TP = ${SCH_LANGUAGE_TP} 
+                               AND  CODE_TP     = '00180'
+                               AND  USE_YN      = 'Y'
+                        )  A2
+                 WHERE  A1.COMP_CD = ${SCH_COMP_CD}
+                   AND  A1.CODE_TP = '00180'
+                   AND  A1.COMP_CD = A2.COMP_CD(+)
+                   AND  A1.CODE_CD = A2.CODE_CD(+)
+            )           C
+         ,  GIFT_MST    GM
+     WHERE  GH.COMP_CD          = GD.COMP_CD
+       AND  GH.IN_DT            = GD.IN_DT
+       AND  GH.IN_SEQ           = GD.IN_SEQ
+       AND  GD.COMP_CD          = C.COMP_CD
+       AND  GD.GIFT_CREATE_FG   = C.GIFT_CREATE_FG
+       AND  GD.COMP_CD          = GM.COMP_CD(+)
+       AND  GD.GIFT_NO          = GM.GIFT_NO(+)
+       AND  GH.COMP_CD          = ${SCH_COMP_CD}
+       AND  GH.IN_DT            = ${SCH_IN_DT}
+       AND  GH.IN_SEQ           = ${SCH_IN_SEQ}
+     ORDER  BY GD.GIFT_NO
+]]></query>
+
+<query name='GIFT_IN_DT_D'><![CDATA[
+    DELETE  FROM GIFT_IN_DT
+     WHERE  COMP_CD = ${COMP_CD}
+       AND  IN_DT   = ${IN_DT}
+       AND  IN_SEQ  = ${IN_SEQ}
+       AND  (${GIFT_NO} IS NULL OR GIFT_NO = ${GIFT_NO})
+]]></query>
+
+<query name='GIFT_IN_HD_U2'><![CDATA[
+    UPDATE  GIFT_IN_HD  A
+       SET  IN_QTY      = (
+                            SELECT  COUNT(*)
+                              FROM  GIFT_IN_DT
+                             WHERE  COMP_CD = ${COMP_CD}
+                               AND  IN_DT   = ${IN_DT}
+                               AND  IN_SEQ  = ${IN_SEQ}
+                          )
+         ,  IN_AMT      = (
+                            SELECT  COUNT(*)
+                              FROM  GIFT_IN_DT
+                             WHERE  COMP_CD = ${COMP_CD}
+                               AND  IN_DT   = ${IN_DT}
+                               AND  IN_SEQ  = ${IN_SEQ}
+                          ) * PRICE
+         ,  CONFIRM_YN  = CASE WHEN ${CONFIRM_YN} IS NULL THEN CONFIRM_YN ELSE ${CONFIRM_YN} END
+     WHERE  COMP_CD = ${COMP_CD}
+       AND  IN_DT   = ${IN_DT}
+       AND  IN_SEQ  = ${IN_SEQ}
+]]></query>
+
+<query name='GIFT_IN_DT_U'><![CDATA[
+    MERGE INTO GIFT_IN_DT GDT
+    USING DUAL
+    ON (
+                COMP_CD     = ${COMP_CD}
+           AND  IN_DT       = ${IN_DT}
+           AND  IN_SEQ      = ${IN_SEQ}
+           AND  GIFT_NO     = ${GIFT_NO}
+       )
+    WHEN MATCHED THEN
+        UPDATE
+           SET  USE_YN      = 'Y'
+             ,  UPD_DT      = SYSDATE
+             ,  UPD_USER    = ${UPD_USER}
+    WHEN NOT MATCHED THEN
+        INSERT
+        ( 
+                COMP_CD
+             ,  IN_DT
+             ,  IN_SEQ
+             ,  GIFT_NO
+             ,  GIFT_CREATE_FG
+             ,  USE_YN
+             ,  INST_DT
+             ,  INST_USER
+             ,  UPD_DT
+             ,  UPD_USER
+        ) VALUES (
+                ${COMP_CD}
+             ,  ${IN_DT}
+             ,  ${IN_SEQ}
+             ,  ${GIFT_NO}
+             ,  ${GIFT_CREATE_FG}
+             ,  'Y'
+             ,  SYSDATE
+             ,  ${UPD_USER}
+             ,  SYSDATE
+             ,  ${UPD_USER}
+        )
+]]></query>
+
+<query name='GIFT_CONFIRM_Q'><![CDATA[
+    INSERT  INTO GIFT_MST
+    (
+            COMP_CD
+         ,  GIFT_NO
+         ,  GIFT_CD
+         ,  GIFT_STAT_CD
+         ,  STAT_CHG_DT
+         ,  IN_DT
+         ,  IN_SEQ
+         ,  ISSUE_DT
+         ,  ISSUE_YEAR
+         ,  ISSUE_SEQ
+         ,  EXP_DT
+         ,  PRICE
+         ,  STAMP_TAX
+         ,  IRR_YN
+         ,  STOCK_DIV
+         ,  GIFT_USE_YN
+         ,  USE_YN
+         ,  INST_DT
+         ,  INST_USER
+         ,  UPD_DT
+         ,  UPD_USER
+    )
+    SELECT  GIH.COMP_CD
+         ,  GID.GIFT_NO
+         ,  GIH.GIFT_CD
+         ,  '10'                            AS GIFT_STAT_CD
+         ,  TO_CHAR(SYSDATE, 'YYYYMMDD')    AS STAT_CHG_DT
+         ,  GIH.IN_DT
+         ,  GIH.IN_SEQ
+         ,  GIH.ISSUE_DT
+         ,  GIH.ISSUE_YEAR
+         ,  GIH.ISSUE_SEQ
+         ,  GIH.EXP_DT
+         ,  GIH.PRICE
+         ,  GIH.STAMP_TAX
+         ,  'N'                             AS IRR_YN
+         ,  '1'                             AS STOCK_DIV
+         ,  'Y'                             AS GIFT_USE_YN
+         ,  'Y'                             AS USE_YN
+         ,  SYSDATE
+         ,  ${UPD_USER}
+         ,  SYSDATE
+         ,  ${UPD_USER}
+      FROM  GIFT_IN_HD      GIH
+         ,  GIFT_IN_DT      GID
+     WHERE  GIH.COMP_CD = GID.COMP_CD
+       AND  GIH.IN_SEQ  = GID.IN_SEQ
+       AND  GIH.IN_DT   = GID.IN_DT
+       AND  GIH.COMP_CD = ${COMP_CD}
+       AND  GIH.IN_DT   = ${IN_DT}
+       AND  GIH.IN_SEQ  = ${IN_SEQ}
+]]></query>
+
+</SQLResource>
